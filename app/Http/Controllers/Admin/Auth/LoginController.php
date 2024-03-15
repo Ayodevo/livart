@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Admin\Auth;
 
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
-use Brian2694\Toastr\Facades\Toastr;
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class LoginController extends Controller
 {
@@ -17,9 +21,12 @@ class LoginController extends Controller
         $this->middleware('guest:admin', ['except' => ['logout']]);
     }
 
-    public function captcha($tmp)
+    /**
+     * @param $tmp
+     * @return void
+     */
+    public function captcha($tmp): void
     {
-
         $phrase = new PhraseBuilder;
         $code = $phrase->build(4);
         $builder = new CaptchaBuilder($code, $phrase);
@@ -30,7 +37,7 @@ class LoginController extends Controller
         $builder->build($width = 100, $height = 40, $font = null);
         $phrase = $builder->getPhrase();
 
-        if(Session::has('default_captcha_code')) {
+        if (Session::has('default_captcha_code')) {
             Session::forget('default_captcha_code');
         }
         Session::put('default_captcha_code', $phrase);
@@ -39,19 +46,33 @@ class LoginController extends Controller
         $builder->output();
     }
 
-    public function login()
+    /**
+     * @return Application|Factory|View
+     */
+    public function login(): Factory|View|Application
     {
-        return view('admin-views.auth.login');
+        $logo = Helpers::get_business_settings('logo');
+
+        $logo = Helpers::onErrorImage(
+            $logo,
+            asset('storage/app/public/ecommerce') . '/' . $logo,
+            asset('public/assets/admin/img/160x160/img2.jpg'),
+            'ecommerce/');
+
+        return view('admin-views.auth.login', compact('logo'));
     }
 
-    public function submit(Request $request)
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function submit(Request $request): RedirectResponse
     {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6'
         ]);
 
-        //recaptcha validation
         $recaptcha = Helpers::get_business_settings('recaptcha');
         if (isset($recaptcha) && $recaptcha['status'] == 1) {
             $request->validate([
@@ -63,7 +84,7 @@ class LoginController extends Controller
                         $response = \file_get_contents($url);
                         $response = json_decode($response);
                         if (!$response->success) {
-                            $fail(\App\CentralLogics\translate('ReCAPTCHA Failed'));
+                            $fail(translate('ReCAPTCHA Failed'));
                         }
                     },
                 ],
@@ -71,11 +92,11 @@ class LoginController extends Controller
         } else {
             if (strtolower($request->default_captcha_value) != strtolower(Session('default_captcha_code'))) {
                 Session::forget('default_captcha_code');
-                return back()->withErrors(\App\CentralLogics\translate('Captcha Failed'));
+                return back()->withErrors(translate('Captcha Failed'));
             }
         }
 
-        if(Session::has('default_captcha_code')) {
+        if (Session::has('default_captcha_code')) {
             Session::forget('default_captcha_code');
         }
 
@@ -87,7 +108,11 @@ class LoginController extends Controller
             ->withErrors(['Credentials does not match.']);
     }
 
-    public function logout(Request $request)
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function logout(Request $request): RedirectResponse
     {
         auth()->guard('admin')->logout();
         return redirect()->route('admin.auth.login');

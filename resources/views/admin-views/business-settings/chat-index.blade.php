@@ -2,16 +2,12 @@
 
 @section('title', translate('Social Media chat'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-4">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="">
-                {{\App\CentralLogics\translate('3rd_Party')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="{{ translate('img') }}">
+                {{translate('3rd_Party')}}
             </h2>
         </div>
 
@@ -20,9 +16,7 @@
         </div>
 
         <div class="row gx-2 gx-lg-3">
-
             <div class="col-sm-12 col-lg-12 mb-3 mb-lg-2">
-
                 <div class="card">
                     <div class="card-body">
                         <form action="{{route('admin.business-settings.update-social-media-chat')}}" method="post" enctype="multipart/form-data">
@@ -91,14 +85,11 @@
                                             <input type="text" name="messenger_user_name"  class="form-control" placeholder="{{ translate('user name') }}" value="{{$messenger_data['user_name']}}">
                                         </div>
                                     </div>
-
                                 </div>
-
                             </div>
                             <div class="d-flex justify-content-end">
                                 <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
-                                        onclick="{{env('APP_MODE')!='demo'?'':'call_demo()'}}"
-                                        class="btn btn-primary">{{\App\CentralLogics\translate('update')}}
+                                        class="btn btn-primary demo-form-submit">{{translate('update')}}
                                 </button>
                             </div>
                         </form>
@@ -106,11 +97,6 @@
                 </div>
             </div>
         </div>
-
-
     </div>
 @endsection
 
-@push('script_2')
-
-@endpush

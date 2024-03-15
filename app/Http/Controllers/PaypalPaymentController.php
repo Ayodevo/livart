@@ -90,7 +90,7 @@ class PaypalPaymentController extends Controller
                     'name' => $business_name,
                     'desc'  => 'payment ID :' . $data->id,
                     'amount' => [
-                        'currency_code' => 'USD',
+                        'currency_code' => $data->currency_code ?? 'USD',
                         'value' => round($data->payment_amount, 2)
                     ]
                 ]

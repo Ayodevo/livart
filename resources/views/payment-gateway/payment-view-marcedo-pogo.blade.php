@@ -13,29 +13,21 @@
 </head>
 <body>
 <main>
-    <!-- Hidden input to store your integration public key -->
     <input type="hidden" id="mercado-pago-public-key" value="{{$config->public_key}}">
 
-    <!-- Payment -->
     <section class="payment-form dark">
         <div class="container__payment">
             <div class="block-heading">
-                <h2>Card Payment</h2>
-                <!-- <p>This is an example of a Mercado Pago integration</p> -->
+                <h2>{{ translate('Card Payment') }}</h2>
             </div>
             <div class="form-payment">
                 <div class="products">
-                    <!-- <h2 class="title">Summary</h2> -->
-                    <!-- <div class="item">
-                        <span class="price" id="summary-price"></span>
-                        <p class="item-name">Book x <span id="summary-quantity"></span></p>
-                    </div> -->
                     <p class="alert alert-danger" role="alert" id="error_alert" style="display:none;"></p>
-                    <div class="total">Amount to be paid {{$data->currency_code}}<span class="price">{{$data->payment_amount}}</span></div>
+                    <div class="total">{{ translate('Amount to be paid') }} {{$data->currency_code}}<span class="price">{{$data->payment_amount}}</span></div>
                 </div>
                 <div class="payment-details">
                     <form id="form-checkout">
-                        <h3 class="title">Buyer Details</h3>
+                        <h3 class="title">{{ translate('Buyer Details') }}</h3>
                         <div class="row">
                             <div class="form-group col">
                                 <input id="form-checkout__cardholderEmail" name="cardholderEmail" type="email" class="form-control"/>
@@ -50,7 +42,7 @@
                             </div>
                         </div>
                         <br>
-                        <h3 class="title">Card Details</h3>
+                        <h3 class="title">{{ translate('Card Details') }}</h3>
                         <div class="row">
                             <div class="form-group col-sm-8">
                                 <input id="form-checkout__cardholderName" name="cardholderName" type="text" class="form-control"/>
@@ -78,7 +70,7 @@
                                 <br>
                                 <button id="form-checkout__submit" type="submit" class="btn btn--primary btn-block">Pay</button>
                                 <br>
-                                <p id="loading-message">Loading, please wait...</p>
+                                <p id="loading-message">{{ translate('Loading, please wait') }}...</p>
                                 <br>
                             </div>
                         </div>
@@ -90,6 +82,8 @@
 </main>
 </body>
 <script>
+    "use strict"
+
     const publicKey = document.getElementById("mercado-pago-public-key").value;
     const mercadopago = new MercadoPago(publicKey);
 

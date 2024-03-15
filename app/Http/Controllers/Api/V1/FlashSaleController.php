@@ -12,54 +12,54 @@ use Illuminate\Http\Request;
 class FlashSaleController extends Controller
 {
     public function __construct(
-        private FlashSale $flash_sale,
-        private FlashSaleProduct $flash_sale_product,
-        private Product $product
+        private FlashSale        $flashSale,
+        private FlashSaleProduct $flashSaleProduct,
+        private Product          $product
     )
-    {}
-
-    public function get_flash_sale(Request $request)
     {
-        $sort_by = $request['sort_by'];
-        $flash_sale = $this->flash_sale->active()->first();
+    }
 
-        if (!isset($flash_sale)){
-           // return response()->json(null, 200);
+    public function getFlashSale(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $sortBy = $request['sort_by'];
+        $flashSale = $this->flashSale->active()->first();
+
+        if (!isset($flashSale)) {
             $products = [
                 'total_size' => null,
                 'limit' => $request['limit'],
                 'offset' => $request['offset'],
-                'flash_sale' => $flash_sale,
+                'flash_sale' => $flashSale,
                 'products' => []
             ];
             return response()->json($products, 200);
 
         }
 
-        $product_ids = $this->flash_sale_product->with(['product'])
-            ->whereHas('product',function($q){
+        $productIds = $this->flashSaleProduct->with(['product'])
+            ->whereHas('product', function ($q) {
                 $q->active();
             })
-            ->where(['flash_sale_id' => $flash_sale->id])
+            ->where(['flash_sale_id' => $flashSale->id])
             ->pluck('product_id')
             ->toArray();
 
         $paginator = $this->product->with(['rating'])
-            ->when(isset($sort_by) && $sort_by == 'price_high_to_low', function ($query){
+            ->when(isset($sortBy) && $sortBy == 'price_high_to_low', function ($query) {
                 return $query->orderBy('price', 'desc');
             })
-            ->when(isset($sort_by) && $sort_by == 'price_low_to_high', function ($query){
+            ->when(isset($sortBy) && $sortBy == 'price_low_to_high', function ($query) {
                 return $query->orderBy('price', 'asc');
             })
             ->latest()
-            ->whereIn('id', $product_ids)
+            ->whereIn('id', $productIds)
             ->paginate($request['limit'], ['*'], 'page', $request['offset']);
 
         $products = [
             'total_size' => $paginator->total(),
             'limit' => $request['limit'],
             'offset' => $request['offset'],
-            'flash_sale' => $flash_sale,
+            'flash_sale' => $flashSale,
             'products' => $paginator->items()
         ];
 

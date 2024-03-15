@@ -10,7 +10,6 @@ use App\Model\DMReview;
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\Product;
-use App\Model\Review;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,19 +20,20 @@ use function App\CentralLogics\translate;
 class OrderController extends Controller
 {
     public function __construct(
-        private CustomerAddress $customer_address,
-        private DMReview $dm_review,
-        private Order $order,
-        private OrderDetail $order_detail,
-        private Product $product,
-        private Review $review
-    ){}
+        private CustomerAddress $customerAddress,
+        private DMReview        $dmReview,
+        private Order           $order,
+        private OrderDetail     $orderDetail,
+        private Product         $product,
+    )
+    {
+    }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function track_order(Request $request): JsonResponse
+    public function trackOrder(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'order_id' => 'required'
@@ -48,7 +48,7 @@ class OrderController extends Controller
         if (!isset($order)) {
             return response()->json([
                 'errors' => [
-                    ['code' => 'order', 'message' => 'Order not found!']
+                    ['code' => 'order', 'message' => translate('Order not found')]
                 ]
             ], 404);
         }
@@ -60,7 +60,7 @@ class OrderController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function place_order(Request $request): JsonResponse
+    public function placeOrder(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'order_amount' => 'required',
@@ -69,11 +69,10 @@ class OrderController extends Controller
             'branch_id' => 'required'
         ]);
 
-        if (count($request['cart']) <1) {
+        if (count($request['cart']) < 1) {
             return response()->json(['errors' => [['code' => 'empty-cart', 'message' => translate('cart is empty')]]], 403);
         }
 
-        //check stock
         foreach ($request['cart'] as $c) {
             $product = $this->product->find($c['product_id']);
             if (count(json_decode($product['variations'], true)) > 0) {
@@ -95,10 +94,10 @@ class OrderController extends Controller
         }
 
         try {
-            $o_id = 100000 + $this->order->all()->count() + 1;
+            $orderId = 100000 + $this->order->all()->count() + 1;
 
             $or = [
-                'id' => $o_id,
+                'id' => $orderId,
                 'user_id' => $request->user()->id,
                 'order_amount' => $request['order_amount'],
                 'coupon_discount_amount' => $request->coupon_discount_amount,
@@ -107,20 +106,18 @@ class OrderController extends Controller
                 'order_status' => $request->payment_method == 'cash_on_delivery' ? 'pending' : 'confirmed',
                 'coupon_code' => $request['coupon_code'],
                 'payment_method' => $request->payment_method,
-                'transaction_reference' => null,
+                'transaction_reference' =>  $request->transaction_reference ?? null,
                 'order_note' => $request['order_note'],
                 'order_type' => $request['order_type'],
                 'branch_id' => $request['branch_id'],
                 'delivery_address_id' => $request->delivery_address_id,
                 'delivery_charge' => $request['order_type'] == 'self_pickup' ? 0 : Helpers::get_delivery_charge($request['distance']),
-                'delivery_address' => json_encode($this->customer_address->find($request->delivery_address_id) ?? null),
+                'delivery_address' => json_encode($this->customerAddress->find($request->delivery_address_id) ?? null),
                 'created_at' => now(),
                 'updated_at' => now()
             ];
 
-            $total_tax_amount = 0;
-
-           // DB::table('orders')->insertGetId($or);
+            $totalTaxAmount = 0;
 
             foreach ($request['cart'] as $c) {
                 $product = $this->product->find($c['product_id']);
@@ -129,8 +126,8 @@ class OrderController extends Controller
                 } else {
                     $price = $product['price'];
                 }
-                $or_d = [
-                    'order_id' => $o_id,
+                $orderDetails = [
+                    'order_id' => $orderId,
                     'product_id' => $c['product_id'],
                     'product_details' => $product,
                     'quantity' => $c['quantity'],
@@ -146,19 +143,19 @@ class OrderController extends Controller
                     'updated_at' => now()
                 ];
 
-                $total_tax_amount += $or_d['tax_amount'] * $c['quantity'];
+                $totalTaxAmount += $orderDetails['tax_amount'] * $c['quantity'];
 
                 if (count(json_decode($product['variations'], true)) > 0) {
                     $type = $c['variation'][0]['type'];
-                    $var_store = [];
+                    $varStore = [];
                     foreach (json_decode($product['variations'], true) as $var) {
                         if ($type == $var['type']) {
                             $var['stock'] -= $c['quantity'];
                         }
-                        $var_store[] = $var;
+                        $varStore[] = $var;
                     }
                     $this->product->where(['id' => $product['id']])->update([
-                        'variations' => json_encode($var_store),
+                        'variations' => json_encode($varStore),
                         'total_stock' => $product['total_stock'] - $c['quantity']
                     ]);
                 } else {
@@ -167,38 +164,37 @@ class OrderController extends Controller
                     ]);
                 }
 
-                DB::table('order_details')->insert($or_d);
+                DB::table('order_details')->insert($orderDetails);
             }
 
-            $or['total_tax_amount'] = $total_tax_amount;
+            $or['total_tax_amount'] = $totalTaxAmount;
             DB::table('orders')->insertGetId($or);
 
-            $fcm_token = $request->user()->cm_firebase_token;
+            $fcmToken = $request->user()->cm_firebase_token;
             $value = Helpers::order_status_update_message('pending');
             try {
                 if ($value) {
                     $data = [
                         'title' => 'Order',
                         'description' => $value,
-                        'order_id' => $o_id,
+                        'order_id' => $orderId,
                         'image' => '',
                         'type' => 'general',
                     ];
-                    Helpers::send_push_notif_to_device($fcm_token, $data);
+                    Helpers::send_push_notif_to_device($fcmToken, $data);
                 }
 
-                //send email
                 $emailServices = Helpers::get_business_settings('mail_config');
                 if (isset($emailServices['status']) && $emailServices['status'] == 1) {
-                    Mail::to($request->user()->email)->send(new \App\Mail\OrderPlaced($o_id));
+                    Mail::to($request->user()->email)->send(new \App\Mail\OrderPlaced($orderId));
                 }
 
             } catch (\Exception $e) {
             }
 
             return response()->json([
-                'message' => 'Order placed successfully!',
-                'order_id' => $o_id
+                'message' => translate('Order placed successfully'),
+                'order_id' => $orderId
             ], 200);
 
         } catch (\Exception $e) {
@@ -210,7 +206,7 @@ class OrderController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_order_list(Request $request): JsonResponse
+    public function getOrderList(Request $request): JsonResponse
     {
         $orders = $this->order->with(['customer', 'delivery_man.rating'])
             ->withCount('details')
@@ -227,7 +223,7 @@ class OrderController extends Controller
         });
 
         $orders->map(function ($data) {
-            $data['deliveryman_review_count'] = $this->dm_review->where(['delivery_man_id' => $data['delivery_man_id'], 'order_id' => $data['id']])->count();
+            $data['deliveryman_review_count'] = $this->dmReview->where(['delivery_man_id' => $data['delivery_man_id'], 'order_id' => $data['id']])->count();
             return $data;
         });
 
@@ -241,7 +237,7 @@ class OrderController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_order_details(Request $request): JsonResponse
+    public function getOrderDetails(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'order_id' => 'required'
@@ -251,10 +247,10 @@ class OrderController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $details = $this->order_detail->with(['order'])
+        $details = $this->orderDetail->with(['order'])
             ->where(['order_id' => $request['order_id']])
-            ->whereHas('order', function ($q) use ($request){
-                $q->where([ 'user_id' => $request->user()->id ]);
+            ->whereHas('order', function ($q) use ($request) {
+                $q->where(['user_id' => $request->user()->id]);
             })
             ->get();
 
@@ -274,15 +270,15 @@ class OrderController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function cancel_order(Request $request): JsonResponse
+    public function cancelOrder(Request $request): JsonResponse
     {
         $order = $this->order::find($request['order_id']);
 
-        if (!isset($order)){
+        if (!isset($order)) {
             return response()->json(['errors' => [['code' => 'order', 'message' => 'Order not found!']]], 404);
         }
 
-        if ($order->order_status != 'pending'){
+        if ($order->order_status != 'pending') {
             return response()->json(['errors' => [['code' => 'order', 'message' => 'Order can only cancel when order status is pending!']]], 403);
         }
 
@@ -294,18 +290,18 @@ class OrderController extends Controller
                 if ($detail['is_stock_decreased'] == 1) {
                     $product = $this->product->find($detail['product_id']);
 
-                    if ($product){
+                    if ($product) {
                         if (count(json_decode($product['variations'], true)) > 0) {
                             $type = json_decode($detail['variation'])[0]->type;
-                            $var_store = [];
+                            $varStore = [];
                             foreach (json_decode($product['variations'], true) as $var) {
                                 if ($type == $var['type']) {
                                     $var['stock'] += $detail['quantity'];
                                 }
-                                $var_store[] = $var;
+                                $varStore[] = $var;
                             }
                             $this->product->where(['id' => $product['id']])->update([
-                                'variations' => json_encode($var_store),
+                                'variations' => json_encode($varStore),
                                 'total_stock' => $product['total_stock'] + $detail['quantity'],
                             ]);
                         } else {
@@ -315,7 +311,7 @@ class OrderController extends Controller
                         }
                     }
 
-                    $this->order_detail->where(['id' => $detail['id']])->update([
+                    $this->orderDetail->where(['id' => $detail['id']])->update([
                         'is_stock_decreased' => 0
                     ]);
                 }
@@ -324,11 +320,11 @@ class OrderController extends Controller
             $this->order->where(['user_id' => $request->user()->id, 'id' => $request['order_id']])->update([
                 'order_status' => 'canceled'
             ]);
-            return response()->json(['message' => 'Order canceled'], 200);
+            return response()->json(['message' => translate('Order canceled')], 200);
         }
         return response()->json([
             'errors' => [
-                ['code' => 'order', 'message' => 'not found!']
+                ['code' => 'order', 'message' => translate('not found')]
             ]
         ], 401);
     }
@@ -337,18 +333,60 @@ class OrderController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function update_payment_method(Request $request): JsonResponse
+    public function updatePaymentMethod(Request $request): JsonResponse
     {
         if ($this->order->where(['user_id' => $request->user()->id, 'id' => $request['order_id']])->first()) {
             $this->order->where(['user_id' => $request->user()->id, 'id' => $request['order_id']])->update([
                 'payment_method' => $request['payment_method']
             ]);
-            return response()->json(['message' => 'Payment method is updated.'], 200);
+            return response()->json(['message' => translate('Payment method is updated.')], 200);
         }
         return response()->json([
             'errors' => [
-                ['code' => 'order', 'message' => 'not found!']
+                ['code' => 'order', 'message' => translate('not found')]
             ]
         ], 401);
+    }
+
+    public function getReorderProduct(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
+        }
+
+        $details = $this->orderDetail
+            ->where(['order_id' => $request['order_id']])
+            ->get();
+
+        if ($details->count() < 1) {
+            return response()->json([
+                'errors' => [['code' => 'order', 'message' => translate('Order not found!')]]], 404);
+        }
+
+        $details = Helpers::order_details_formatter($details);
+
+        $orderProductIds = $this->orderDetail
+            ->where(['order_id' => $request->order_id])
+            ->pluck('product_id')
+            ->toArray();
+
+        $products = $this->product
+            ->whereIn('id', $orderProductIds)
+            ->latest()
+            ->get();
+
+        $products = Helpers::product_data_formatting($products, true);
+
+        $data = [
+            'order_details' => $details,
+            'products' => $products
+        ];
+
+        return response()->json($data, 200);
+
     }
 }

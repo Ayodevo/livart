@@ -22,45 +22,29 @@ class SystemController extends Controller
 {
     public function __construct(
         private Branch $branch,
-        private Order $order
-    ){}
+        private Order  $order
+    )
+    {
+    }
 
     /**
      * @return Application|Factory|View
      */
     public function dashboard(): View|Factory|Application
     {
-        $data = self::order_stats_data();
+        $data = self::orderStatsData();
 
         $from = \Carbon\Carbon::now()->startOfYear()->format('Y-m-d');
         $to = Carbon::now()->endOfYear()->format('Y-m-d');
-
-        /*$earning = [];
-        $earning_data = Order::where(['order_status' => 'delivered', 'branch_id' => auth('branch')->id()])->select(
-            DB::raw('IFNULL(sum(order_amount),0) as sums'),
-            DB::raw('YEAR(created_at) year, MONTH(created_at) month')
-        )->whereBetween('created_at', [$from, $to])->groupby('year', 'month')->get()->toArray();
-
-        for ($inc = 1; $inc <= 12; $inc++) {
-            $earning[$inc] = 0;
-            foreach ($earning_data as $match) {
-                if ($match['month'] == $inc) {
-                    $earning[$inc] = $match['sums'];
-                }
-            }
-        }*/
-
-        /** earning statistics chart **/
-
         $earning = [];
-        $earning_data = $this->order->where(['order_status' => 'delivered', 'branch_id' => auth('branch')->id()])
+        $earningData = $this->order->where(['order_status' => 'delivered', 'branch_id' => auth('branch')->id()])
             ->select(
-            DB::raw('IFNULL(sum(order_amount),0) as sums'),
-            DB::raw('YEAR(created_at) year, MONTH(created_at) month')
-        )->whereBetween('created_at', [$from, $to])->groupby('year', 'month')->get()->toArray();
+                DB::raw('IFNULL(sum(order_amount),0) as sums'),
+                DB::raw('YEAR(created_at) year, MONTH(created_at) month')
+            )->whereBetween('created_at', [$from, $to])->groupby('year', 'month')->get()->toArray();
         for ($inc = 1; $inc <= 12; $inc++) {
             $earning[$inc] = 0;
-            foreach ($earning_data as $match) {
+            foreach ($earningData as $match) {
                 if ($match['month'] == $inc) {
                     $earning[$inc] = $match['sums'];
                 }
@@ -74,29 +58,29 @@ class SystemController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function order_stats(Request $request): JsonResponse
+    public function orderStats(Request $request): JsonResponse
     {
         session()->put('statistics_type', $request['statistics_type']);
-        $data = self::order_stats_data();
+        $data = self::orderStatsData();
 
         return response()->json([
-            'view' => view('admin-views.partials._dashboard-order-stats', compact('data'))->render()
+            'view' => view('branch-views.partials._dashboard-order-stats', compact('data'))->render()
         ], 200);
     }
 
     /**
      * @return array
      */
-    public function order_stats_data(): array
+    public function orderStatsData(): array
     {
         $today = session()->has('statistics_type') && session('statistics_type') == 'today' ? 1 : 0;
-        $this_month = session()->has('statistics_type') && session('statistics_type') == 'this_month' ? 1 : 0;
+        $thisMonth = session()->has('statistics_type') && session('statistics_type') == 'this_month' ? 1 : 0;
 
         $pending = $this->order->where(['order_status' => 'pending', 'branch_id' => auth('branch')->id()])
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
@@ -104,7 +88,7 @@ class SystemController extends Controller
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
@@ -112,15 +96,15 @@ class SystemController extends Controller
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
-        $out_for_delivery = $this->order->where(['order_status' => 'out_for_delivery', 'branch_id' => auth('branch')->id()])
+        $outForDelivery = $this->order->where(['order_status' => 'out_for_delivery', 'branch_id' => auth('branch')->id()])
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
@@ -129,7 +113,7 @@ class SystemController extends Controller
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
@@ -137,7 +121,7 @@ class SystemController extends Controller
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
@@ -145,7 +129,7 @@ class SystemController extends Controller
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
@@ -153,7 +137,7 @@ class SystemController extends Controller
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
@@ -161,31 +145,29 @@ class SystemController extends Controller
             ->when($today, function ($query) {
                 return $query->whereDate('created_at', Carbon::today());
             })
-            ->when($this_month, function ($query) {
+            ->when($thisMonth, function ($query) {
                 return $query->whereMonth('created_at', Carbon::now());
             })
             ->count();
 
 
-        $data = [
+        return [
             'pending' => $pending,
             'confirmed' => $confirmed,
             'processing' => $processing,
-            'out_for_delivery' => $out_for_delivery,
+            'out_for_delivery' => $outForDelivery,
             'delivered' => $delivered,
             'all' => $all,
             'returned' => $returned,
             'failed' => $failed,
             'canceled' => $canceled,
         ];
-
-        return $data;
     }
 
     /**
      * @return JsonResponse
      */
-    public function restaurant_data(): JsonResponse
+    public function restaurantData(): JsonResponse
     {
         $new_order = DB::table('orders')->where(['branch_id' => auth('branch')->id(), 'checked' => 0])->count();
         return response()->json([
@@ -206,7 +188,7 @@ class SystemController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function settings_update(Request $request): RedirectResponse
+    public function settingsUpdate(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => 'required',
@@ -215,13 +197,13 @@ class SystemController extends Controller
         $branch = $this->branch->find(auth('branch')->id());
 
         if ($request->has('image')) {
-            $image_name =Helpers::update('branch/', $branch->image, 'png', $request->file('image'));
+            $imageName = Helpers::update('branch/', $branch->image, 'png', $request->file('image'));
         } else {
-            $image_name = $branch['image'];
+            $imageName = $branch['image'];
         }
 
         $branch->name = $request->name;
-        $branch->image = $image_name;
+        $branch->image = $imageName;
         $branch->save();
         Toastr::success(\App\CentralLogics\translate('Branch updated successfully!'));
         return back();
@@ -231,7 +213,7 @@ class SystemController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function settings_password_update(Request $request): RedirectResponse
+    public function settingsPasswordUpdate(Request $request): RedirectResponse
     {
         $request->validate([
             'password' => 'required|same:confirm_password|min:8|max:255',
@@ -249,12 +231,12 @@ class SystemController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_earning_statitics(Request $request): JsonResponse
+    public function getEarningStatistics(Request $request): JsonResponse
     {
         $dateType = $request->type;
 
-        $earning_data = array();
-        if($dateType == 'yearEarn') {
+        $earningData = array();
+        if ($dateType == 'yearEarn') {
             $number = 12;
             $from = \Illuminate\Support\Carbon::now()->startOfYear()->format('Y-m-d');
             $to = \Carbon\Carbon::now()->endOfYear()->format('Y-m-d');
@@ -265,20 +247,20 @@ class SystemController extends Controller
             )->whereBetween('created_at', [$from, $to])->groupby('year', 'month')->get()->toArray();
 
             for ($inc = 1; $inc <= $number; $inc++) {
-                $earning_data[$inc] = 0;
+                $earningData[$inc] = 0;
                 foreach ($earning as $match) {
                     if ($match['month'] == $inc) {
-                        $earning_data[$inc] = $match['sums'];
+                        $earningData[$inc] = $match['sums'];
                     }
                 }
             }
-            $key_range = array("Jan","Feb","Mar","April","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+            $keyRange = array("Jan", "Feb", "Mar", "April", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 
-        }elseif($dateType == 'MonthEarn') {
+        } elseif ($dateType == 'MonthEarn') {
             $from = date('Y-m-01');
             $to = date('Y-m-t');
-            $number = date('d',strtotime($to));
-            $key_range = range(1, $number);
+            $number = date('d', strtotime($to));
+            $keyRange = range(1, $number);
 
             $earning = $this->order->where([
                 'order_status' => 'delivered', 'branch_id' => auth('branch')->id()
@@ -288,30 +270,30 @@ class SystemController extends Controller
             )->whereBetween('created_at', [$from, $to])->groupby('year', 'month', 'day')->get()->toArray();
 
             for ($inc = 1; $inc <= $number; $inc++) {
-                $earning_data[$inc] = 0;
+                $earningData[$inc] = 0;
                 foreach ($earning as $match) {
                     if ($match['day'] == $inc) {
-                        $earning_data[$inc] = $match['sums'];
+                        $earningData[$inc] = $match['sums'];
                     }
                 }
             }
 
-        }elseif($dateType == 'WeekEarn') {
+        } elseif ($dateType == 'WeekEarn') {
             Carbon::setWeekStartsAt(Carbon::SUNDAY);
             Carbon::setWeekEndsAt(Carbon::SATURDAY);
 
             $from = Carbon::now()->startOfWeek()->format('Y-m-d 00:00:00');
             $to = Carbon::now()->endOfWeek()->format('Y-m-d 23:59:59');
-            $date_range = CarbonPeriod::create($from, $to)->toArray();
-            $day_range = array();
-            foreach($date_range as $date){
-                $day_range[] =$date->format('d');
+            $dataRange = CarbonPeriod::create($from, $to)->toArray();
+            $dayRange = array();
+            foreach ($dataRange as $date) {
+                $dayRange[] = $date->format('d');
             }
-            $day_range = array_flip($day_range);
-            $day_range_keys = array_keys($day_range);
-            $day_range_values = array_values($day_range);
-            $day_range_intKeys = array_map('intval', $day_range_keys);
-            $day_range = array_combine($day_range_intKeys, $day_range_values);
+            $dayRange = array_flip($dayRange);
+            $dayRangeKeys = array_keys($dayRange);
+            $dayRangeValues = array_values($dayRange);
+            $dayRangeIntKeys = array_map('intval', $dayRangeKeys);
+            $dayRange = array_combine($dayRangeIntKeys, $dayRangeValues);
 
             $earning = $this->order->where([
                 'order_status' => 'delivered', 'branch_id' => auth('branch')->id()
@@ -320,32 +302,35 @@ class SystemController extends Controller
                 DB::raw('YEAR(created_at) year, MONTH(created_at) month, DAY(created_at) day')
             )->whereBetween('created_at', [$from, $to])->groupby('year', 'month', 'day')->orderBy('created_at', 'ASC')->pluck('sums', 'day')->toArray();
 
-            $earning_data = array();
-            foreach($day_range as $day=>$value){
-                $day_value = 0;
-                $earning_data[$day] = $day_value;
+            $earningData = array();
+            foreach ($dayRange as $day => $value) {
+                $dayValue = 0;
+                $earningData[$day] = $dayValue;
             }
 
-            foreach($earning as $order_day => $order_value){
-                if(array_key_exists($order_day, $earning_data)){
-                    $earning_data[$order_day] = $order_value;
+            foreach ($earning as $orderDay => $orderValue) {
+                if (array_key_exists($orderDay, $earningData)) {
+                    $earningData[$orderDay] = $orderValue;
                 }
             }
 
-            $key_range = array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+            $keyRange = array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
         }
 
-        $label = $key_range;
-        $earning_data_final = $earning_data;
+        $label = $keyRange;
+        $earningDataFinal = $earningData;
 
         $data = array(
             'earning_label' => $label,
-            'earning' => array_values($earning_data_final),
+            'earning' => array_values($earningDataFinal),
         );
         return response()->json($data);
     }
 
-    public function ignore_check_order()
+    /**
+     * @return RedirectResponse
+     */
+    public function ignoreCheckOrder(): RedirectResponse
     {
         $this->order->where(['checked' => 0])->update(['checked' => 1]);
         return redirect()->back();

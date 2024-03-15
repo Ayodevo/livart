@@ -3,29 +3,24 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- Title -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title')</title>
-    <!-- Favicon -->
-    @php($icon = \App\Model\BusinessSetting::where(['key' => 'fav_icon'])->first()->value)
+    @php($icon = Helpers::get_business_settings('fav_icon'))
     <link rel="icon" type="image/x-icon" href="{{ asset('storage/app/public/ecommerce/' . $icon ?? '') }}">
-    <link rel="shortcut icon" href="">
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet">
-    <!-- CSS Implementing Plugins -->
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/vendor.min.css">
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/vendor/icon-set/style.css">
-    <!-- CSS Front Template -->
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/theme.minc619.css?v=1.0">
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/style.css">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/font/open-sans.css')}}">
+
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/vendor.min.css')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/vendor/icon-set/style.css')}}">
+
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/theme.minc619.css?v=1.0')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/style.css')}}">
     @stack('css_or_js')
-    <script
-        src="{{asset('public/assets/admin')}}/vendor/hs-navbar-vertical-aside/hs-navbar-vertical-aside-mini-cache.js"></script>
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/toastr.css">
+    <script src="{{asset('public/assets/admin/vendor/hs-navbar-vertical-aside/hs-navbar-vertical-aside-mini-cache.js')}}"></script>
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/toastr.css')}}">
 </head>
 
 <body class="footer-offset">
 
-{{--loader--}}
 <div class="container">
     <div class="row">
         <div class="col-md-12">
@@ -37,25 +32,16 @@
         </div>
     </div>
 </div>
-{{--loader--}}
 
-<!-- Builder -->
 @include('layouts.branch.partials._front-settings')
-<!-- End Builder -->
 
-<!-- JS Preview mode only -->
 @include('layouts.branch.partials._header')
 @include('layouts.branch.partials._sidebar')
-<!-- END ONLY DEV -->
 
 <main id="content" role="main" class="main pointer-event">
-    <!-- Content -->
 @yield('content')
-<!-- End Content -->
 
-    <!-- Footer -->
 @include('layouts.branch.partials._footer')
-<!-- End Footer -->
 
     <div class="modal fade" id="popup-modal">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -63,14 +49,14 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-12">
-                            <center>
-                                <h2 style="color: rgba(96,96,96,0.68)">
+                            <div class="text-center">
+                                <h2>
                                     <i class="tio-shopping-cart-outlined"></i> {{translate('You have new order, Check Please.')}}
                                 </h2>
                                 <hr>
-                                <button onclick="ignore_order()" class="btn btn-warning mr-3">{{translate('Ignore for now')}}</button>
-                                <button onclick="check_order()" class="btn btn-primary">{{translate('Ok, let me check')}}</button>
-                            </center>
+                                <button class="btn btn-warning mr-3 ignore-order">{{translate('Ignore for now')}}</button>
+                                <button class="btn btn-primary check-order">{{translate('Ok, let me check')}}</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -79,19 +65,15 @@
     </div>
 
 </main>
-<!-- ========== END MAIN CONTENT ========== -->
 
-<!-- ========== END SECONDARY CONTENTS ========== -->
-<script src="{{asset('public/assets/admin')}}/js/custom.js"></script>
-<!-- JS Implementing Plugins -->
+<script src="{{asset('public/assets/admin/js/custom.js')}}"></script>
 
 @stack('script')
 
-<!-- JS Front -->
-<script src="{{asset('public/assets/admin')}}/js/vendor.min.js"></script>
-<script src="{{asset('public/assets/admin')}}/js/theme.min.js"></script>
-<script src="{{asset('public/assets/admin')}}/js/sweet_alert.js"></script>
-<script src="{{asset('public/assets/admin')}}/js/toastr.js"></script>
+<script src="{{asset('public/assets/admin/js/vendor.min.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/theme.min.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/sweet_alert.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/toastr.js')}}"></script>
 {!! Toastr::message() !!}
 
 @if ($errors->any())
@@ -104,11 +86,9 @@
         @endforeach
     </script>
 @endif
-<!-- JS Plugins Init. -->
 <script>
     $(document).on('ready', function () {
-        // ONLY DEV
-        // =======================================================
+
         if (window.localStorage.getItem('hs-builder-popover') === null) {
             $('#builderPopover').popover('show')
                 .on('shown.bs.popover', function () {
@@ -124,17 +104,12 @@
                 return false
             });
         }
-        // END ONLY DEV
-        // =======================================================
 
-        // BUILDER TOGGLE INVOKER
-        // =======================================================
         $('.js-navbar-vertical-aside-toggle-invoker').click(function () {
             $('.js-navbar-vertical-aside-toggle-invoker i').tooltip('hide');
         });
 
-        // INITIALIZATION OF MEGA MENU
-        // =======================================================
+
         var megaMenu = new HSMegaMenu($('.js-mega-menu'), {
             desktop: {
                 position: 'left'
@@ -142,13 +117,8 @@
         }).init();
 
 
-        // INITIALIZATION OF NAVBAR VERTICAL NAVIGATION
-        // =======================================================
         var sidebar = $('.js-navbar-vertical-aside').hsSideNav();
 
-
-        // INITIALIZATION OF TOOLTIP IN NAVBAR VERTICAL MENU
-        // =======================================================
         $('.js-nav-tooltip-link').tooltip({boundary: 'window'})
 
         $(".js-nav-tooltip-link").on("show.bs.tooltip", function (e) {
@@ -158,29 +128,21 @@
         });
 
 
-        // INITIALIZATION OF UNFOLD
-        // =======================================================
         $('.js-hs-unfold-invoker').each(function () {
             var unfold = new HSUnfold($(this)).init();
         });
 
 
-        // INITIALIZATION OF FORM SEARCH
-        // =======================================================
         $('.js-form-search').each(function () {
             new HSFormSearch($(this)).init()
         });
 
 
-        // INITIALIZATION OF SELECT2
-        // =======================================================
         $('.js-select2-custom').each(function () {
             var select2 = $.HSCore.components.HSSelect2.init($(this));
         });
 
 
-        // INITIALIZATION OF DATERANGEPICKER
-        // =======================================================
         $('.js-daterangepicker').daterangepicker();
 
         $('.js-daterangepicker-times').daterangepicker({
@@ -214,11 +176,20 @@
 
         cb(start, end);
 
-
-        // INITIALIZATION OF CLIPBOARD
-        // =======================================================
         $('.js-clipboard').each(function () {
             var clipboard = $.HSCore.components.HSClipboard.init(this);
+        });
+    });
+</script>
+
+<script>
+    $(document).on('ready', function () {
+        $('.js-toggle-password').each(function () {
+            new HSTogglePassword(this).init()
+        });
+
+        $('.js-validate').each(function () {
+            $.HSCore.components.HSValidation.init($(this));
         });
     });
 </script>
@@ -254,13 +225,13 @@
         });
     }, 10000);
 
-    function ignore_order() {
+    $('.ignore-order').on('click', function (){
         location.href = '{{route('branch.ignore-check-order')}}';
-    }
+    })
 
-    function check_order() {
-        location.href = '{{route('branch.order.list',['status'=>'all'])}}';
-    }
+    $('.check-order').on('click', function (){
+        location.href = '{{route('branch.orders.list',['status'=>'all'])}}';
+    })
 
     function route_alert(route, message) {
         Swal.fire({

@@ -2,16 +2,12 @@
 
 @section('title', translate('FCM Settings'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-4">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="">
-                {{\App\CentralLogics\translate('3rd_Party')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="{{ translate('3rd_Party_image') }}">
+                {{translate('3rd_Party')}}
             </h2>
         </div>
 
@@ -24,39 +20,18 @@
                 <h5 class="mb-0">{{translate('Firebase Push Notification Setup')}}</h5>
             </div>
             <div class="card-body">
-                <form action="{{route('admin.business-settings.update-fcm')}}" method="post"
-                        enctype="multipart/form-data">
+                <form action="{{route('admin.business-settings.update-fcm')}}" method="post" enctype="multipart/form-data">
                     @csrf
                     @php($key=\App\Model\BusinessSetting::where('key','push_notification_key')->first()->value)
                     <div class="form-group">
                         <label class="input-label">{{translate('server')}} {{translate('key')}}</label>
-                        <textarea name="push_notification_key" class="form-control"
-                                    required>{{env('APP_MODE')=='demo'?'':$key}}</textarea>
+                        <textarea name="push_notification_key" class="form-control" required>{{env('APP_MODE')=='demo'?'':$key}}</textarea>
                     </div>
-
-                    <div class="row" style="display: none">
-                        @php($project_id=\App\Model\BusinessSetting::where('key','fcm_project_id')->first()->value)
-                        <div class="col-md-12 col-12">
-                            <div class="form-group">
-                                <label class="input-label">FCM Project ID</label>
-                                <input type="text" value="{{$project_id}}"
-                                        name="fcm_project_id" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-
-                    @if(env('APP_MODE')=='demo')
-                        <div class="d-flex justify-content-end">
-                            <button type="button"
-                            onclick="call_demo()"
-                            class="btn btn-primary">{{translate('save')}}
+                    <div class="d-flex justify-content-end">
+                        <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
+                                class="btn btn-primary demo-form-submit">{{translate('save')}}
                         </button>
                     </div>
-                    @else
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary mb-2">{{translate('save')}}</button>
-                    </div>
-                    @endif
                 </form>
             </div>
         </div>
@@ -67,13 +42,11 @@
                 <h5 class="mb-0">{{translate('push')}} {{translate('messages')}}</h5>
             </div>
             <div class="card-body">
-                <form action="{{route('admin.business-settings.update-fcm-messages')}}" method="post"
-                        enctype="multipart/form-data">
+                <form action="{{route('admin.business-settings.update-fcm-messages')}}" method="post" enctype="multipart/form-data">
                     @csrf
-
                     <div class="row">
-                        @php($opm=\App\Model\BusinessSetting::where('key','order_pending_message')->first()->value)
-                        @php($data=json_decode($opm,true))
+                        @php($orderPendingMessage=\App\Model\BusinessSetting::where('key','order_pending_message')->first()->value)
+                        @php($data=json_decode($orderPendingMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -88,8 +61,8 @@
                             </div>
                         </div>
 
-                        @php($ocm=\App\Model\BusinessSetting::where('key','order_confirmation_msg')->first()->value)
-                        @php($data=json_decode($ocm,true))
+                        @php($orderConfirmationMessage=\App\Model\BusinessSetting::where('key','order_confirmation_msg')->first()->value)
+                        @php($data=json_decode($orderConfirmationMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -100,14 +73,12 @@
                                     </label>
                                     <label for="confirm_status" class="text-dark mb-0 cursor-pointer">{{translate('order')}} {{translate('confirmation')}} {{translate('message')}}</label>
                                 </div>
-
-                                <textarea name="confirm_message"
-                                            class="form-control">{{$data['message']}}</textarea>
+                                <textarea name="confirm_message" class="form-control">{{$data['message']}}</textarea>
                             </div>
                         </div>
 
-                        @php($oprm=\App\Model\BusinessSetting::where('key','order_processing_message')->first()->value)
-                        @php($data=json_decode($oprm,true))
+                        @php($orderProcessingMessage=\App\Model\BusinessSetting::where('key','order_processing_message')->first()->value)
+                        @php($data=json_decode($orderProcessingMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -119,13 +90,12 @@
                                     </label>
                                     <label for="processing_status" class="text-dark mb-0 cursor-pointer">{{translate('order')}} {{translate('processing')}} {{translate('message')}}</label>
                                 </div>
-
                                 <textarea name="processing_message" class="form-control">{{$data['message']}}</textarea>
                             </div>
                         </div>
 
-                        @php($ofdm=\App\Model\BusinessSetting::where('key','out_for_delivery_message')->first()->value)
-                        @php($data=json_decode($ofdm,true))
+                        @php($orderOutForDeliveryMessage=\App\Model\BusinessSetting::where('key','out_for_delivery_message')->first()->value)
+                        @php($data=json_decode($orderOutForDeliveryMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -141,8 +111,8 @@
                             </div>
                         </div>
 
-                        @php($odm=\App\Model\BusinessSetting::where('key','order_delivered_message')->first()->value)
-                        @php($data=json_decode($odm,true))
+                        @php($orderDeliveredMessage=\App\Model\BusinessSetting::where('key','order_delivered_message')->first()->value)
+                        @php($data=json_decode($orderDeliveredMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -153,12 +123,11 @@
                                     </label>
                                     <label for="delivered_status" class="text-dark mb-0 cursor-pointer">{{translate('Order_Delivered_Message')}}</label>
                                 </div>
-
                                 <textarea name="delivered_message" class="form-control">{{$data['message']}}</textarea>
                             </div>
                         </div>
 
-                        @php($data= \App\CentralLogics\Helpers::get_business_settings('customer_notify_message'))
+                        @php($data= Helpers::get_business_settings('customer_notify_message'))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -169,15 +138,15 @@
                                                 id="customer_notify" {{isset($data) && $data['status']==1?'checked':''}}>
                                         <span class="switcher_control"></span>
                                     </label>
-                                    <label for="customer_notify" class="text-dark mb-0 cursor-pointer">{{translate('Deliveryman_Assaign_Notification_for_Customer')}}</label>
+                                    <label for="customer_notify" class="text-dark mb-0 cursor-pointer">{{translate('Deliveryman_Assign_Notification_for_Customer')}}</label>
                                 </div>
 
                                 <textarea name="customer_notify_message" class="form-control">{{$data['message']??''}}</textarea>
                             </div>
                         </div>
 
-                        @php($dba=\App\Model\BusinessSetting::where('key','delivery_boy_assign_message')->first()->value)
-                        @php($data=json_decode($dba,true))
+                        @php($deliverymanAssignMessage=\App\Model\BusinessSetting::where('key','delivery_boy_assign_message')->first()->value)
+                        @php($data=json_decode($deliverymanAssignMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -195,8 +164,8 @@
                             </div>
                         </div>
 
-                        @php($dbs=\App\Model\BusinessSetting::where('key','delivery_boy_start_message')->first()->value)
-                        @php($data=json_decode($dbs,true))
+                        @php($deliveryStartMessage=\App\Model\BusinessSetting::where('key','delivery_boy_start_message')->first()->value)
+                        @php($data=json_decode($deliveryStartMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -209,13 +178,12 @@
                                     </label>
                                     <label for="delivery_boy_start_status" class="text-dark mb-0 cursor-pointer">{{translate('Deliveryman_Start_Message')}}</label>
                                 </div>
-
                                 <textarea name="delivery_boy_start_message" class="form-control">{{$data['message']}}</textarea>
                             </div>
                         </div>
 
-                        @php($dbc=\App\Model\BusinessSetting::where('key','delivery_boy_delivered_message')->first()->value)
-                        @php($data=json_decode($dbc,true))
+                        @php($deliveryDeliveredMessage=\App\Model\BusinessSetting::where('key','delivery_boy_delivered_message')->first()->value)
+                        @php($data=json_decode($deliveryDeliveredMessage,true))
                         <div class="col-md-6">
                             <div class="form-group">
                             <div class="d-flex align-items-center gap-3 mb-3">
@@ -228,12 +196,11 @@
                                 </label>
                                 <label for="delivery_boy_delivered" class="text-dark mb-0 cursor-pointer">{{translate('Deliveryman_Delivered_Message')}}</label>
                             </div>
-
                                 <textarea name="delivery_boy_delivered_message" class="form-control">{{$data['message']}}</textarea>
                             </div>
                         </div>
 
-                        @php($data=\App\CentralLogics\Helpers::get_business_settings('returned_message'))
+                        @php($data=Helpers::get_business_settings('returned_message'))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -251,7 +218,7 @@
                             </div>
                         </div>
 
-                        @php($data=\App\CentralLogics\Helpers::get_business_settings('failed_message'))
+                        @php($data=Helpers::get_business_settings('failed_message'))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -264,12 +231,11 @@
                                     </label>
                                     <label for="failed_status" class="text-dark mb-0 cursor-pointer">{{translate('Order_failed_message')}}</label>
                                 </div>
-
                                 <textarea name="failed_message" class="form-control">{{$data['message']??''}}</textarea>
                             </div>
                         </div>
 
-                        @php($data=\App\CentralLogics\Helpers::get_business_settings('canceled_message'))
+                        @php($data=Helpers::get_business_settings('canceled_message'))
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex align-items-center gap-3 mb-3">
@@ -289,30 +255,12 @@
 
                     </div>
                     <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">{{translate('save')}}</button>
+                        <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
+                                class="btn btn-primary demo-form-submit">{{translate('save')}}
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 @endsection
-
-@push('script_2')
-    <script>
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    $('#viewer').attr('src', e.target.result);
-                };
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#customFileEg1").change(function () {
-            readURL(this);
-        });
-    </script>
-@endpush

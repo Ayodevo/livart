@@ -14,8 +14,10 @@ class CouponController extends Controller
 {
     public function __construct(
         private Coupon $coupon,
-        private Order $order
-    ){}
+        private Order  $order
+    )
+    {
+    }
 
     /**
      * @return JsonResponse
@@ -41,19 +43,18 @@ class CouponController extends Controller
             'code' => 'required',
         ]);
 
-        if ($validator->errors()->count()>0) {
+        if ($validator->errors()->count() > 0) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
         try {
             $coupon = $this->coupon->active()->where(['code' => $request['code']])->first();
             if (isset($coupon)) {
-                //first order coupon type
-                if($coupon['coupon_type'] == 'first_order') {
+                if ($coupon['coupon_type'] == 'first_order') {
                     $total = $this->order->where(['user_id' => $request->user()->id])->count();
                     if ($total == 0) {
                         return response()->json($coupon, 200);
-                    }else{
+                    } else {
                         return response()->json([
                             'errors' => [
                                 ['code' => 'coupon', 'message' => \App\CentralLogics\translate('This coupon in not valid for you!')]
@@ -61,14 +62,14 @@ class CouponController extends Controller
                         ], 401);
                     }
                 }
-                //default coupon type
+
                 if ($coupon['limit'] == null) {
                     return response()->json($coupon, 200);
                 } else {
                     $total = $this->order->where(['user_id' => $request->user()->id, 'coupon_code' => $request['code']])->count();
                     if ($total < $coupon['limit']) {
                         return response()->json($coupon, 200);
-                    }else{
+                    } else {
                         return response()->json([
                             'errors' => [
                                 ['code' => 'coupon', 'message' => \App\CentralLogics\translate('coupon limit is over')]
@@ -80,7 +81,7 @@ class CouponController extends Controller
             } else {
                 return response()->json([
                     'errors' => [
-                        ['code' => 'coupon', 'message' => 'not found!']
+                        ['code' => 'coupon', 'message' => translate('not found')]
                     ]
                 ], 401);
             }

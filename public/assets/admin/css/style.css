@@ -1447,6 +1447,14 @@ dt {
 .custom_upload_input input[type=file].meta-img {
     aspect-ratio: 8/1
 }
+
+.custom_upload_input.ratio-1 input[type=file].meta-img {
+    aspect-ratio: 1/1
+}
+.custom_upload_input.ratio-2 input[type=file].meta-img {
+    aspect-ratio: 2/1
+}
+
 .img_area_with_preview {
     position: absolute;
     top: 0;
@@ -1510,4 +1518,162 @@ dt {
 .max-h200px {
     max-height: 200px;
 }
+.height-20rem{
+   height: 20rem;
+}
+.font-45px{
+    font-size: 45px
+}
+.min-height-170x{
+    min-height: 170px
+}
+.top-ordered-store-image{
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    border:2px solid #80808082;
+}
+.font-size-10px{
+    font-size: 10px
+}
+.width-7rem{
+    width: 7rem;
+}
 
+.height-60px{
+    height: 60px;
+}
+
+.h-54px{
+    height: 54px
+}
+#location_map_div #pac-input{
+    height: 40px;
+    border: 1px solid #fbc1c1;
+    outline: none;
+    box-shadow: none;
+    top: 7px !important;
+    transform: translateX(7px);
+    padding-left: 10px;
+}
+.addon-payment-gateway-active{
+    color: #8c1515;
+    padding-top: 10px
+}
+.mb-30px{
+    margin-bottom: 30px
+}
+.h-80px{
+    height: 80px
+}
+.mb-10px{
+    margin-bottom: 10px
+}
+
+.width-18rem{
+    width: 18rem;
+}
+.mb-minus-1px{
+    margin-bottom: -1px;
+}
+
+.add-to-shopping-cart{
+    width:37%;
+    height: 45px
+}
+
+.max-w-15rem{
+    max-width: 15rem;
+}
+.p-top-100px{
+    padding-top: 100px;
+}
+
+.w-200px{
+    width: 200px !important;
+}
+.width-54px{
+    width: 54px;
+}
+.height-54px{
+    height: 54px;
+}
+.view-conversation-message{
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 2px;
+}
+.height-18rem{
+    height: 18rem;
+}
+.h-200px{
+    height: 200px
+}
+.product-image {
+    margin-top: -35px;
+    border-radius: 0
+}
+.min-h-15 {
+    min-height: 15px;
+}
+
+.color-red{
+    color: red
+}
+.attribute-class {
+    border: 1px solid #80808045;
+    border-radius: 10px;
+    padding-top: 10px;
+    margin: 1px
+}
+.front-emoji {
+    font-family: emoji;
+}
+
+.btn--primary {
+    color: #fff;
+    background-color: #673ab7;
+    border-color: #673ab7
+}
+
+.btn--primary:hover {
+    color: #fff;
+    background-color: #673ab7;
+    border-color: #673ab7
+}
+
+.btn--primary.focus, .btn-primary:focus {
+    color: #fff;
+    background-color: #673ab7;
+    border-color: #673ab7;
+    box-shadow: 0 0 0 .2rem rgba(85, 145, 255, .5)
+}
+
+.btn--primary.disabled, .btn--primary:disabled {
+    color: #fff;
+    background-color: #673ab7;
+    border-color: #673ab7
+}
+
+.btn--primary:not(:disabled):not(.disabled).active, .btn--primary:not(:disabled):not(.disabled):active, .show > .btn--primary.dropdown-toggle {
+    color: #fff;
+    background-color: #673ab7;
+    border-color: #673ab7
+}
+
+.btn--primary:not(:disabled):not(.disabled).active:focus, .btn--primary:not(:disabled):not(.disabled):active:focus, .show > .btn--primary.dropdown-toggle:focus {
+    box-shadow: 0 0 0 .2rem rgba(85, 145, 255, .5)
+}
+
+.mb-30{
+    margin-bottom: 30px;
+}
+
+.mt-30{
+    margin-top: 30px;
+}
+
+.custom-class {
+    margin-top: 10px !important;
+    border-radius: 0;
+}

@@ -6,8 +6,8 @@
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/branch.png')}}" alt="">
-                {{\App\CentralLogics\translate('branch_list')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/branch.png')}}" alt="{{ translate('branch') }}">
+                {{translate('branch_list')}}
             </h2>
         </div>
 
@@ -16,7 +16,7 @@
                 <div class="row gy-2 align-items-center">
                     <div class="col-sm-4">
                         <h5 class="text-capitalize d-flex align-items-center gap-2 mb-0">
-                            {{\App\CentralLogics\translate('branch_table')}}
+                            {{translate('branch_table')}}
                             <span class="badge badge-soft-dark rounded-50 fz-12">{{ $branches->total() }}</span>
                         </h5>
                     </div>
@@ -29,7 +29,7 @@
                                         placeholder="{{translate('Search by branch Name')}}" aria-label="Search"
                                         value="" required autocomplete="off">
                                     <div class="input-group-append">
-                                        <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('search')}}
+                                        <button type="submit" class="btn btn-primary">{{translate('search')}}
                                         </button>
                                     </div>
                                 </div>
@@ -40,21 +40,18 @@
             </div>
 
             <div class="table-responsive datatable-custom">
-                <table id="columnSearchDatatable"
-                        class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table"
-                        data-hs-datatables-options='{
-                            "order": [],
-                            "orderCellsTop": true
-                        }'>
+                <table class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table">
                     <thead class="thead-light">
-                    <tr>
-                        <th>{{translate('SL')}}</th>
-                        <th>{{translate('branch_name')}}</th>
-                        <th>{{translate('branch_type')}}</th>
-                        <th>{{translate('Contact_info')}}</th>
-                        <th class="text-center">{{translate('action')}}</th>
-                    </tr>
-
+                        <tr>
+                            <th>{{translate('SL')}}</th>
+                            <th>{{translate('branch_name')}}</th>
+                            <th>{{translate('branch_type')}}</th>
+                            <th>{{translate('Contact_info')}}</th>
+                            <th>{{translate('Store')}}</th>
+                            <th>{{translate('Floor')}}</th>
+                            <th>{{translate('Arémoire')}}</th>
+                            <th class="text-center">{{translate('action')}}</th>
+                        </tr>
                     </thead>
 
                     <tbody>
@@ -65,8 +62,7 @@
                                 <div class="media gap-3 align-items-center">
                                     <div class="avatar">
                                         <img class="img-fit"
-                                            onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.jpg')}}'"
-                                            src="{{asset('storage/app/public/branch')}}/{{$branch['image']}}">
+                                            src="{{$branch['image_fullpath']}}" alt="{{ translate('branch') }}">
                                     </div>
                                     <div class="media-body">
                                         {{$branch['name']}}
@@ -83,18 +79,22 @@
                             <td>
                                 <a class="text-dark" href="mailto:{{$branch['email']}}?subject={{translate('Mail from '). \App\Model\BusinessSetting::where(['key' => 'restaurant_name'])->first()->value}}">{{$branch['email']}}</a>
                             </td>
+                            <td> <div class="media-body"> {{$branch['store']}}</div></td>
+                            <td> <div class="media-body"> {{$branch['floor']}}</div></td>
+                            <td> <div class="media-body"> {{$branch['store']}}</div></td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
                                     <a class="btn btn-outline-info square-btn"
                                         href="{{route('admin.branch.edit',[$branch['id']])}}"><i class="tio tio-edit"></i></a>
                                     @if($branch['id']!=1)
-                                        <a class="btn btn-outline-danger square-btn" href="javascript:"
-                                            onclick="form_alert('branch-{{$branch['id']}}','{{translate('Want to delete this branch ?')}}')">
+                                        <a class="btn btn-outline-danger square-btn form-alert" href="javascript:"
+                                           data-id="branch-{{$branch['id']}}"
+                                           data-message="{{translate('Want to delete this branch ?')}}">
                                             <i class="tio tio-delete"></i>
                                         </a>
                                     @endif
                                 </div>
-                                <form action="{{route('admin.branch.delete',[$branch['id']])}}"
+                                <form action="{{route('admin.branch.delete',[$branch['id']])}}" 
                                         method="post" id="branch-{{$branch['id']}}">
                                     @csrf @method('delete')
                                 </form>
@@ -105,7 +105,6 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
             <div class="table-responsive mt-4 px-3">
                 <div class="d-flex justify-content-end">
                     {!! $branches->links() !!}
@@ -113,7 +112,7 @@
             </div>
             @if(count($branches)==0)
                 <div class="text-center p-4">
-                    <img class="mb-3" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description" style="width: 7rem;">
+                    <img class="mb-3 width-7rem" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="Image Description">
                     <p class="mb-0">{{ translate('No data to show') }}</p>
                 </div>
             @endif
@@ -122,6 +121,3 @@
 
 @endsection
 
-@push('script_2')
-
-@endpush

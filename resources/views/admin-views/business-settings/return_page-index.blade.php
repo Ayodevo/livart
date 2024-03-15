@@ -2,15 +2,12 @@
 
 @section('title', translate('Return Policy'))
 
-@push('css_or_js')
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-4">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/pages.png')}}" alt="">
-                {{\App\CentralLogics\translate('pages')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/pages.png')}}" alt="{{ translate('pages') }}">
+                {{translate('pages')}}
             </h2>
         </div>
 
@@ -20,7 +17,7 @@
 
         <div class="card">
             <div class="card-body">
-                <form action="{{route('admin.business-settings.return_page_update')}}" id="tnc-form" method="post">
+                <form action="{{route('admin.business-settings.return_page_update')}}" method="post">
                     @csrf
 
                     <div class="d-flex align-items-center gap-3 mb-3">
@@ -43,8 +40,7 @@
 
                     <div class="d-flex justify-content-end">
                         <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
-                            onclick="{{env('APP_MODE')!='demo'?'':'call_demo()'}}"
-                            class="btn btn-primary">{{\App\CentralLogics\translate('submit')}}</button>
+                            class="btn btn-primary demo-form-submit">{{translate('submit')}}</button>
                     </div>
                 </form>
             </div>

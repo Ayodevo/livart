@@ -3,44 +3,46 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- Title -->
     <title>{{ translate('Invoice') }}</title>
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet">
-    <!-- CSS Implementing Plugins -->
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/vendor.min.css">
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/vendor/icon-set/style.css">
-    <!-- CSS Front Template -->
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/theme.minc619.css?v=1.0">
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/style.css">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/font/open-sans.css')}}">
+
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/vendor.min.css')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/vendor/icon-set/style.css')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/theme.minc619.css?v=1.0')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/style.css')}}">
 </head>
 
 <body class="footer-offset">
 
 <main id="content" role="main" class="main pointer-event">
+    @php($logo = Helpers::get_business_settings('logo'))
     <div class="content container-fluid">
         <div class="row">
             <div class="col-12 text-center mb-3">
                 <img width="150"
-                     src="{{asset('storage/app/public/ecommerce')}}/{{\App\Model\BusinessSetting::where(['key'=>'logo'])->first()->value}}">
+                     src="{{Helpers::onErrorImage(
+                            $logo,
+                            asset('storage/app/public/ecommerce').'/' . $logo,
+                            asset('public/assets/admin/img/160x160/img2.jpg') ,
+                            'ecommerce/')}}"
+                     alt="{{  translate('logo') }}">
                 <h3 class="mb-5 mt-2">{{ translate('Invoice') }} : #{{$order['id']}}</h3>
             </div>
             <div class="col-6 text-dark">
                 @if($order->customer)
                 <h3>{{ translate('Customer Info') }}</h3>
-
-                    <div class="">{{$order->customer['f_name'].' '.$order->customer['l_name']}}</div>
-                    <div class="">{{$order->customer['email']}}</div>
-                    <div class="">{{$order->customer['phone']}}</div>
-                    <div class="">{{$order->delivery_address?$order->delivery_address['address']:''}}</div><br>
+                    <div>{{$order->customer['f_name'].' '.$order->customer['l_name']}}</div>
+                    <div>{{$order->customer['email']}}</div>
+                    <div>{{$order->customer['phone']}}</div>
+                    <div>{{$order->delivery_address?$order->delivery_address['address']:''}}</div><br>
                 @endif
             </div>
 
             <div class="col-6 text-dark text-right">
                 <h3>{{ translate('Billing Address') }}</h3>
-                <div>{{\App\Model\BusinessSetting::where(['key'=>'phone'])->first()->value}}</div>
-                <div>{{\App\Model\BusinessSetting::where(['key'=>'email_address'])->first()->value}}</div>
-                <div>{{\App\Model\BusinessSetting::where(['key'=>'address'])->first()->value}}</div>
+                <div>{{Helpers::get_business_settings('phone')}}</div>
+                <div>{{Helpers::get_business_settings('email_address')}}</div>
+                <div>{{Helpers::get_business_settings('address')}}</div>
             </div>
         </div>
 
@@ -76,12 +78,11 @@
                                             <div class="avatar-xl">
                                                 @if($detail->product && $detail->product['image'] != null )
                                                     <img class="img-fit"
-                                                         src="{{asset('storage/app/public/product')}}/{{json_decode($detail->product['image'],true)[0]}}"
-                                                         onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.jpg')}}'"
-                                                         alt="Image Description">
+                                                         src="{{$detail->product['image_fullpath'][0]}}"
+                                                         alt="{{ translate('image') }}">
                                                 @else
                                                     <img src="{{asset('public/assets/admin/img/160x160/img2.jpg')}}"
-                                                         class="img-fit img-fluid rounded aspect-ratio-1">
+                                                         class="img-fit img-fluid rounded aspect-ratio-1" alt="{{ translate('image') }}">
                                                 @endif
                                             </div>
                                             <div class="media-body">
@@ -95,15 +96,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>@if($detail['discount_on_product']!=0)
-                                            <h5>
-                                                <strike>
-                                                    {{--                                                    {{\App\CentralLogics\Helpers::variation_price(json_decode($detail['product_details'],true),$detail['variation']) ." ".\App\CentralLogics\Helpers::currency_symbol()}}--}}
-                                                </strike>
-                                            </h5>
-                                        @endif
-                                        {{ Helpers::set_symbol($detail['price']) }}
-                                    </td>
+                                    <td>{{ Helpers::set_symbol($detail['price']) }}</td>
                                     <td>{{Helpers::set_symbol($detail['discount_on_product'])}}</td>
                                     <td>{{$detail['quantity']}}</td>
                                     <td class="text-right">
@@ -158,26 +151,24 @@
                             <dt class="col-sm-6 border-top font-weight-bold pt-2">{{ translate('Total') }}:</dt>
                             <dd class="col-sm-6 border-top font-weight-bold text-right pt-2">{{ Helpers::set_symbol($sub_total+$del_c+$total_tax-$order['coupon_discount_amount']-$order['extra_discount']) }}</dd>
                         </dl>
-                        <!-- End Row -->
                     </div>
                 </div>
-                <!-- End Row -->
             </div>
         </div>
 
         <div class="text-dark mt-10">
-            <div class="text-center mb-3">If you require any assistance or have feedback or suggestions about our site you
-                Can <br /> email us at <a href="#" class="text-primary">{{\App\Model\BusinessSetting::where(['key'=>'email_address'])->first()?->value}}</a>
+            <div class="text-center mb-3">{{ translate('If you require any assistance or have feedback or suggestions about our site you can') }}
+                <br /> {{ translate('email us at') }} <a href="#" class="text-primary">{{ Helpers::get_business_settings('email_address') }}</a>
             </div>
 
             <div class="invoice-footer-bg py-5 px-4">
                 <div class="text-center">
-                    <div>{{ translate('phone') }}: {{\App\Model\BusinessSetting::where(['key'=>'phone'])->first()?->value}}</div>
-                    <div>{{ translate('eamil') }}: {{\App\Model\BusinessSetting::where(['key'=>'email_address'])->first()?->value}}</div>
+                    <div>{{ translate('phone') }}: {{ Helpers::get_business_settings('phone') }}</div>
+                    <div>{{ translate('email') }}: {{ Helpers::get_business_settings('email_address') }}</div>
                     <div><?php echo url('/') ?></div>
                     <div>
-                        &copy; {{\App\Model\BusinessSetting::where(['key'=>'restaurant_name'])->first()?->value}}.
-                        {{\App\Model\BusinessSetting::where(['key'=>'footer_text'])->first()?->value}}
+                        &copy; {{ Helpers::get_business_settings('restaurant_name') }}.
+                        {{ Helpers::get_business_settings('footer_text') }}
                     </div>
                 </div>
             </div>
@@ -185,11 +176,9 @@
     </div>
 </main>
 
-<script src="{{asset('public/assets/admin')}}/js/demo.js"></script>
-<!-- JS Implementing Plugins -->
-<!-- JS Front -->
-<script src="{{asset('public/assets/admin')}}/js/vendor.min.js"></script>
-<script src="{{asset('public/assets/admin')}}/js/theme.min.js"></script>
+<script src="{{asset('public/assets/admin/js/demo.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/vendor.min.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/theme.min.js')}}"></script>
 <script>
     window.print();
 </script>

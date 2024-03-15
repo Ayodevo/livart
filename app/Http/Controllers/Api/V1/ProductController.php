@@ -12,20 +12,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Model\Translation;
-use App;
 
 class ProductController extends Controller
 {
     public function __construct(
         private Product $product,
-        private Review $review,
-    ){}
+        private Review  $review,
+    )
+    {
+    }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_latest_products(Request $request): JsonResponse
+    public function getLatestProduct(Request $request): JsonResponse
     {
         $products = ProductLogic::get_latest_products($request['sort_by'], $request['limit'], $request['offset']);
         $products['products'] = Helpers::product_data_formatting($products['products'], true);
@@ -36,7 +37,7 @@ class ProductController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_searched_products(Request $request): JsonResponse
+    public function getSearchedProduct(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'name' => 'nullable',
@@ -47,11 +48,11 @@ class ProductController extends Controller
         }
 
         $products = ProductLogic::search_products(
-            name:$request['name'],
-            price_low:$request['price_low'],
-            price_high:$request['price_high'],
+            name: $request['name'],
+            price_low: $request['price_low'],
+            price_high: $request['price_high'],
             rating: $request['rating'],
-            category_id:$request['category_id'],
+            category_id: $request['category_id'],
             sort_by: $request['sort_by'],
             limit: $request['limit'],
             offset: $request['offset']
@@ -61,31 +62,33 @@ class ProductController extends Controller
             $key = explode(' ', $request['name']);
             $ids = [];
 
-            $product_ids = [];
-            if (isset($rating)){
-                $product_ids = Product::active()
+            $productIds = [];
+            if (isset($rating)) {
+                $productIds = Product::active()
                     ->with('reviews')
-                    ->whereHas('reviews', function ($q) use($rating){
-                        $q->havingRaw("AVG(reviews.rating) <= $rating");
+                    ->whereHas('reviews', function ($q) use ($rating) {
+                        $q->select('product_id')
+                            ->groupBy('product_id')
+                            ->havingRaw("AVG(rating) <= ?", [$rating]);
                     })
                     ->pluck('id')
                     ->toArray();
             }
 
-            $product_ids_for_category = [];
-            if (isset($category_id)){
-                foreach (json_decode($category_id, true) as $categoryId) {
-                    $product_ids = Product::active()
+            $productIdsForCategory = [];
+            if (isset($request['category_id'])) {
+                foreach (json_decode($request['category_id'], true) as $categoryId) {
+                    $productIds = Product::active()
                         ->where(function ($query) use ($categoryId) {
                             $query->whereJsonContains('category_ids', ['id' => (string)$categoryId]);
                         })
                         ->pluck('id')
                         ->toArray();
-                    $product_ids_for_category = array_unique(array_merge($product_ids_for_category, $product_ids));
+                    $productIdsForCategory = array_unique(array_merge($productIdsForCategory, $productIds));
                 }
             }
 
-            if (!empty($key)){
+            if (!empty($key)) {
                 $ids = Translation::where(['key' => 'name'])
                     ->where(['translationable_type' => 'App\Model\Product'])
                     ->where(function ($query) use ($key) {
@@ -95,7 +98,7 @@ class ProductController extends Controller
                     })->pluck('translationable_id')->toArray();
             }
 
-            $paginator = $this->product->active()
+            $searchedProducts = $this->product->active()
                 ->with(['rating'])
                 ->whereIn('id', $ids)
                 ->withCount(['wishlist'])
@@ -106,20 +109,26 @@ class ProductController extends Controller
                     return $query->where('discount', '>', 0);
                 })
                 ->when(($request['price_low'] != null && $request['price_high'] != null), function ($query) use ($request) {
-                    return $query->whereBetween('price',[$request['price_low'], $request['price_high']]);
+                    return $query->whereBetween('price', [$request['price_low'], $request['price_high']]);
                 })
-                ->when(isset($request['category_id']), function ($query) use ($product_ids_for_category) {
-                    $query->whereIn('id', $product_ids_for_category);
+                ->when(isset($request['category_id']), function ($query) use ($productIdsForCategory) {
+                    $query->whereIn('id', $productIdsForCategory);
                 })
-                ->when(isset($request['rating']), function ($query) use ($product_ids) {
-                    $query->whereIn('id', $product_ids);
-                })
-                ->paginate($request['limit'], ['*'], 'page', $request['offset']);
+                ->when(isset($request['rating']), function ($query) use ($productIds) {
+                    $query->whereIn('id', $productIds);
+                });
+
+            $lowestPrice = $request['price_low'] ?? $searchedProducts->min('price');
+            $highestPrice = $request['price_high'] ?? $searchedProducts->max('price');
+
+            $paginator = $searchedProducts->paginate($request['limit'], ['*'], 'page', $request['offset']);
 
             $products = [
                 'total_size' => $paginator->total(),
                 'limit' => $request['limit'],
                 'offset' => $request['offset'],
+                'lowest_price' => (int)$lowestPrice ?? 0,
+                'highest_price' => (int)$highestPrice ?? 0,
                 'products' => $paginator->items()
             ];
         }
@@ -128,50 +137,49 @@ class ProductController extends Controller
     }
 
 
-    public function get_product($id)
+    public function getProduct($id): JsonResponse
     {
         try {
             $product = ProductLogic::get_product($id);
             $product = Helpers::product_data_formatting($product, false);
-           // return $product;
 
-            $category_id = $product['category_ids'];
-            foreach ($product['category_ids'] as $category_ids){
-                if ($category_ids->position == 1){
-                    $category_id = $category_ids->id;
+            $categoryId = $product['category_ids'];
+            foreach ($product['category_ids'] as $categoryIds) {
+                if ($categoryIds->position == 1) {
+                    $categoryId = $categoryIds->id;
                 }
             }
 
             $products = Product::active()->get();
-            $product_ids = [];
+            $productIds = [];
             foreach ($products as $pro) {
                 foreach (json_decode($pro['category_ids'], true) as $category) {
-                    if ($category['id'] == $category_id) {
-                        $product_ids[] = $pro['id'];
+                    if ($category['id'] == $categoryId) {
+                        $productIds[] = $pro['id'];
                     }
                 }
             }
 
-            $related_products = Product::active()
+            $relatedProducts = Product::active()
                 ->with('rating')
                 ->withCount(['wishlist'])
-                ->whereIn('id', $product_ids)
+                ->whereIn('id', $productIds)
                 ->whereNot('id', $id)
                 ->inRandomOrder()
                 ->limit(10)
                 ->get();
 
-            $related_products = Helpers::product_data_formatting($related_products, true);
+            $relatedProducts = Helpers::product_data_formatting($relatedProducts, true);
 
             $data = [
                 'product' => $product,
-                'related_products' => $related_products
+                'related_products' => $relatedProducts
             ];
-            return response()->json($data,  200);
+            return response()->json($data, 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'errors' => ['code' => 'product-001', 'message' => 'Product not found!']
+                'errors' => ['code' => 'product-001', 'message' => translate('Product not found')]
             ], 200);
         }
     }
@@ -180,7 +188,7 @@ class ProductController extends Controller
      * @param $id
      * @return JsonResponse
      */
-    public function get_related_products($id): JsonResponse
+    public function getRelatedProduct($id): JsonResponse
     {
         if ($this->product->find($id)) {
             $products = ProductLogic::get_related_products($id);
@@ -188,7 +196,7 @@ class ProductController extends Controller
             return response()->json($products, 200);
         }
         return response()->json([
-            'errors' => ['code' => 'product-001', 'message' => 'Product not found!']
+            'errors' => ['code' => 'product-001', 'message' => translate('Product not found')]
         ], 404);
     }
 
@@ -196,7 +204,7 @@ class ProductController extends Controller
      * @param $id
      * @return JsonResponse
      */
-    public function get_product_reviews($id): JsonResponse
+    public function getProductReviews($id): JsonResponse
     {
         $reviews = $this->review->with(['customer'])->where(['product_id' => $id])->get();
 
@@ -213,7 +221,7 @@ class ProductController extends Controller
      * @param $id
      * @return JsonResponse
      */
-    public function get_product_rating($id): JsonResponse
+    public function getProductRating($id): JsonResponse
     {
         try {
             $product = $this->product->find($id);
@@ -228,7 +236,7 @@ class ProductController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function submit_product_review(Request $request): JsonResponse
+    public function submitProductReview(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'product_id' => 'required',
@@ -242,9 +250,9 @@ class ProductController extends Controller
             $validator->errors()->add('product_id', 'There is no such product');
         }
 
-        $multi_review = $this->review->where(['product_id' => $request->product_id, 'user_id' => $request->user()->id])->first();
-        if (isset($multi_review)) {
-            $review = $multi_review;
+        $multiReview = $this->review->where(['product_id' => $request->product_id, 'user_id' => $request->user()->id])->first();
+        if (isset($multiReview)) {
+            $review = $multiReview;
         } else {
             $review = $this->review;
         }
@@ -253,14 +261,14 @@ class ProductController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $image_array = [];
+        $imageArray = [];
         if (!empty($request->file('attachment'))) {
             foreach ($request->file('attachment') as $image) {
                 if ($image != null) {
                     if (!Storage::disk('public')->exists('review')) {
                         Storage::disk('public')->makeDirectory('review');
                     }
-                    $image_array[] = Storage::disk('public')->put('review', $image);
+                    $imageArray[] = Storage::disk('public')->put('review', $image);
                 }
             }
         }
@@ -270,16 +278,16 @@ class ProductController extends Controller
         $review->order_id = $request->order_id;
         $review->comment = $request->comment;
         $review->rating = $request->rating;
-        $review->attachment = json_encode($image_array);
+        $review->attachment = json_encode($imageArray);
         $review->save();
 
-        return response()->json(['message' => 'successfully review submitted!'], 200);
+        return response()->json(['message' => translate('successfully review submitted')], 200);
     }
 
     /**
      * @return JsonResponse
      */
-    public function get_discounted_products(): JsonResponse
+    public function getDiscountedProduct(): JsonResponse
     {
         try {
             $products = Helpers::product_data_formatting($this->product->orderBy('id', 'desc')->active()->withCount(['wishlist'])->with(['rating'])->where('discount', '>', 0)->get(), true);
@@ -293,7 +301,7 @@ class ProductController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_new_arrival_products(Request $request): JsonResponse
+    public function getNewArrivalProducts(Request $request): JsonResponse
     {
         $products = ProductLogic::get_new_arrival_products($request['limit'], $request['offset']);
         $products['products'] = Helpers::product_data_formatting($products['products'], true);

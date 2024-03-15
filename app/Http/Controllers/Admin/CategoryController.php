@@ -10,8 +10,6 @@ use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -27,9 +25,9 @@ class CategoryController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    function index(Request $request): View|Factory|Application
+    function index(Request $request): Factory|View|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
@@ -38,11 +36,11 @@ class CategoryController extends Controller
                     $q->orWhere('name', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         } else {
             $categories = $this->category->where(['position' => 0]);
         }
-        $categories = $categories->latest()->paginate(Helpers::getPagination())->appends($query_param);
+        $categories = $categories->latest()->paginate(Helpers::getPagination())->appends($queryParam);
         return view('admin-views.category.index', compact('categories', 'search'));
     }
 
@@ -50,9 +48,9 @@ class CategoryController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    function sub_index(Request $request): View|Factory|Application
+    function subIndex(Request $request): View|Factory|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
@@ -62,53 +60,20 @@ class CategoryController extends Controller
                         $q->orWhere('name', 'like', "%{$value}%");
                     }
                 });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         } else {
             $categories = $this->category->with(['parent'])->where(['position' => 1]);
         }
-        $categories = $categories->latest()->paginate(Helpers::getPagination())->appends($query_param);
+        $categories = $categories->latest()->paginate(Helpers::getPagination())->appends($queryParam);
         return view('admin-views.category.sub-index', compact('categories', 'search'));
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function search(Request $request): JsonResponse
-    {
-        $key = explode(' ', $request['search']);
-        $categories = $this->category->where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('name', 'like', "%{$value}%");
-            }
-        })->get();
-        return response()->json([
-            'view' => view('admin-views.category.partials._table', compact('categories'))->render()
-        ]);
-    }
-
-    /**
      * @return Application|Factory|View
      */
-    function sub_sub_index(): View|Factory|Application
+    function subSubIndex(): View|Factory|Application
     {
         return view('admin-views.category.sub-sub-index');
-    }
-
-    /**
-     * @return Application|Factory|View
-     */
-    function sub_category_index(): View|Factory|Application
-    {
-        return view('admin-views.category.index');
-    }
-
-    /**
-     * @return Application|Factory|View
-     */
-    function sub_sub_category_index(): View|Factory|Application
-    {
-        return view('admin-views.category.index');
     }
 
     /**
@@ -117,21 +82,20 @@ class CategoryController extends Controller
      */
     function store(Request $request): RedirectResponse
     {
-        //dd($request->all());
         $request->validate([
             'name' => 'required',
         ]);
 
         foreach ($request->name as $name) {
             if (strlen($name) > 255) {
-                toastr::error(\App\CentralLogics\translate('Name is too long!'));
+                toastr::error(translate('Name is too long!'));
                 return back();
             }
         }
 
         $cat = $this->category->where('name', $request->name)->where('parent_id', $request->parent_id ?? 0)->first();
         if (isset($cat)) {
-            Toastr::error(\App\CentralLogics\translate(($request->parent_id == null ? 'Category' : 'Sub-category') . ' already exists!'));
+            Toastr::error(translate(($request->parent_id == null ? 'Category' : 'Sub-category') . ' already exists!'));
             return back();
         }
 
@@ -145,7 +109,6 @@ class CategoryController extends Controller
         } else {
             $banner_image_name = 'def.png';
         }
-        //dd($image_name, $banner_image_name);
 
         $category = $this->category;
         $category->name = $request->name[array_search('en', $request->lang)];
@@ -153,7 +116,6 @@ class CategoryController extends Controller
         $category->banner_image = $banner_image_name;
         $category->parent_id = $request->parent_id == null ? 0 : $request->parent_id;
         $category->position = $request->position;
-        //dd($category);
         $category->save();
 
         $data = [];
@@ -172,7 +134,7 @@ class CategoryController extends Controller
             $this->translation->insert($data);
         }
 
-        Toastr::success($request->parent_id == 0 ? \App\CentralLogics\translate('Category Added Successfully!') : \App\CentralLogics\translate('Sub Category Added Successfully!'));
+        Toastr::success($request->parent_id == 0 ? translate('Category Added Successfully!') : translate('Sub Category Added Successfully!'));
         return back();
     }
 
@@ -195,7 +157,7 @@ class CategoryController extends Controller
         $category = $this->category->find($request->id);
         $category->status = $request->status;
         $category->save();
-        Toastr::success($category->parent_id == 0 ? \App\CentralLogics\translate('Category status updated!') : \App\CentralLogics\translate('Sub Category status updated!'));
+        Toastr::success($category->parent_id == 0 ? translate('Category status updated!') : translate('Sub Category status updated!'));
         return back();
     }
 
@@ -212,7 +174,7 @@ class CategoryController extends Controller
 
         foreach ($request->name as $name) {
             if (strlen($name) > 255) {
-                toastr::error(\App\CentralLogics\translate('Name is too long!'));
+                toastr::error(translate('Name is too long!'));
                 return back();
             }
         }
@@ -234,7 +196,7 @@ class CategoryController extends Controller
                 );
             }
         }
-        Toastr::success($category->parent_id == 0 ? \App\CentralLogics\translate('Category updated successfully!') : \App\CentralLogics\translate('Sub Category updated successfully!'));
+        Toastr::success($category->parent_id == 0 ? translate('Category updated successfully!') : translate('Sub Category updated successfully!'));
         return back();
     }
 
@@ -245,14 +207,15 @@ class CategoryController extends Controller
     public function delete(Request $request): RedirectResponse
     {
         $category = $this->category->find($request->id);
-        if (Storage::disk('public')->exists('category/' . $category['image'])) {
-            Storage::disk('public')->delete('category/' . $category['image']);
-        }
+
         if ($category->childes->count() == 0) {
+            if (Storage::disk('public')->exists('category/' . $category['image'])) {
+                Storage::disk('public')->delete('category/' . $category['image']);
+            }
             $category->delete();
-            Toastr::success($category->parent_id == 0 ? \App\CentralLogics\translate('Category removed!') : \App\CentralLogics\translate('Sub Category removed!'));
+            Toastr::success($category->parent_id == 0 ? translate('Category removed!') : translate('Sub Category removed!'));
         } else {
-            Toastr::warning($category->parent_id == 0 ? \App\CentralLogics\translate('Remove subcategories first!') : \App\CentralLogics\translate('Sub Remove subcategories first!'));
+            Toastr::warning($category->parent_id == 0 ? translate('Remove subcategories first!') : translate('Sub Remove subcategories first!'));
         }
         return back();
     }
@@ -266,7 +229,7 @@ class CategoryController extends Controller
         $category = $this->category->find($request->id);
         $category->is_featured = $request->featured;
         $category->save();
-        Toastr::success(\App\CentralLogics\translate('Featured status updated!'));
+        Toastr::success(translate('Featured status updated!'));
         return back();
     }
 }

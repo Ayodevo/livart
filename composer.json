@@ -11,6 +11,7 @@
         "php": "^8.0",
         "ext-curl": "*",
         "ext-json": "*",
+        "ext-zip": "*",
         "barryvdh/laravel-dompdf": "^2.0",
         "brian2694/laravel-toastr": "^5.54",
         "ckeditor/ckeditor": "^4.16",
@@ -32,13 +33,13 @@
         "mercadopago/dx-php": "2.4.4",
         "nwidart/laravel-modules": "^9.0",
         "paypal/rest-api-sdk-php": "^1.14",
+        "picqer/php-barcode-generator": "^2.4",
         "rap2hpoutre/fast-excel": "^3.0",
-        "ext-zip": "*",
         "razorpay/razorpay": "^2.8",
         "stripe/stripe-php": "^10.10",
+        "twilio/sdk": "^6.39",
         "unicodeveloper/laravel-paystack": "^1.0",
-        "xendit/xendit-php": "^2.19",
-        "twilio/sdk": "^6.39"
+        "xendit/xendit-php": "^2.19"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.5",

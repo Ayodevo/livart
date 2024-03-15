@@ -2,26 +2,12 @@
 
 @section('title', translate('Add new branch'))
 
-@push('css_or_js')
-    <style>
-        #location_map_div #pac-input{
-            height: 40px;
-            border: 1px solid #fbc1c1;
-            outline: none;
-            box-shadow: none;
-            top: 7px !important;
-            transform: translateX(7px);
-            padding-left: 10px;
-        }
-    </style>
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/branch.png')}}" alt="">
-                {{\App\CentralLogics\translate('add_new_branch')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/branch.png')}}" alt="{{ translate('branch') }}">
+                {{translate('add_new_branch')}}
             </h2>
         </div>
 
@@ -29,12 +15,13 @@
             <div class="card-header">
                 <h4 class="mb-0 d-flex gap-2 align-items-center">
                     <i class="tio-user"></i>
-                    {{\App\CentralLogics\translate('Branch_Information')}}
+                    {{translate('Branch_Information')}}
                 </h4>
             </div>
-            <div class="card-body">
+            <div class="card-body" style="background: rgb(250, 243, 243)">
                 <form action="{{route('admin.branch.store')}}" method="post" enctype="multipart/form-data">
                     @csrf
+                   
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="form-group">
@@ -53,13 +40,13 @@
                             <div class="form-group">
                                 <div class="d-flex align-items-center justify-content-center gap-1">
                                     <label class="mb-0">{{translate('Branch_Image')}}</label>
-                                    <small class="text-danger">* ( Ratio 1:1 )</small>
+                                    <small class="text-danger">* ( {{ translate('Ratio 1:1') }} )</small>
                                 </div>
                                 <div class="d-flex justify-content-center mt-4">
                                     <div class="upload-file">
                                         <input type="file" name="image" id="customFileEg1" accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" class="upload-file__input">
                                         <div class="upload-file__img">
-                                            <img width="150" id="viewer" src="{{asset('public/assets/admin/img/icons/upload_img.png')}}" alt="">
+                                            <img width="150" id="viewer" src="{{asset('public/assets/admin/img/icons/upload_img.png')}}" alt="{{ translate('image') }}">
                                         </div>
                                     </div>
                                 </div>
@@ -92,7 +79,33 @@
                         </div>
                     </div>
 
-                    <h3 class="mt-5">{{\App\CentralLogics\translate('Branch_Location')}}</h3>
+
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="input-label">{{translate('Store')}}</label>
+                                <input type="text" name="store" class="form-control" value="{{ old('store') }}"
+                                       maxlength="255" placeholder="{{ translate('EX : Store') }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="input-label">{{translate('Floor')}}</label>
+                                <input type="text" name="floor" class="form-control" value="{{ old('floor') }}"
+                                       maxlength="255" placeholder="{{ translate('EX : number of floor') }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="input-label">{{translate('Arémoire')}}</label>
+                                <input type="text" name="tarma" class="form-control" placeholder="{{ translate('aremoire') }}" maxlength="255" value="{{ old('tarma') }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-5">{{translate('Branch_Location')}}</h3>
                     <hr>
                     <div class="row">
                         <div class="col-lg-6">
@@ -142,7 +155,7 @@
                                    data-placement="right"
                                    data-original-title="{{ translate('search_your_location_here') }}"
                                    type="text" placeholder="{{ translate('search_here') }}" />
-                            <div id="location_map_canvas" class="overflow-hidden rounded" style="height: 100%"></div>
+                            <div id="location_map_canvas" class="overflow-hidden rounded h-100"></div>
                         </div>
                     </div>
 
@@ -160,8 +173,11 @@
 
 @push('script_2')
     <script src="https://maps.googleapis.com/maps/api/js?key={{ \App\Model\BusinessSetting::where('key', 'map_api_key')->first()?->value }}&libraries=places&v=3.51"></script>
+    <script src="{{ asset('public/assets/admin/js/image-upload.js') }}"></script>
 
     <script>
+        'use strict';
+
         $( document ).ready(function() {
             function initAutocomplete() {
                 let myLatLng = {
@@ -206,29 +222,23 @@
                         }
                     });
                 });
-                // Create the search box and link it to the UI element.
                 const input = document.getElementById("pac-input");
                 const searchBox = new google.maps.places.SearchBox(input);
                 map.controls[google.maps.ControlPosition.TOP_CENTER].push(input);
-                // Bias the SearchBox results towards current map's viewport.
                 map.addListener("bounds_changed", () => {
                     searchBox.setBounds(map.getBounds());
                 });
                 let markers = [];
-                // Listen for the event fired when the user selects a prediction and retrieve
-                // more details for that place.
                 searchBox.addListener("places_changed", () => {
                     const places = searchBox.getPlaces();
 
                     if (places.length == 0) {
                         return;
                     }
-                    // Clear out the old markers.
                     markers.forEach((marker) => {
                         marker.setMap(null);
                     });
                     markers = [];
-                    // For each place, get the icon, name and location.
                     const bounds = new google.maps.LatLngBounds();
                     places.forEach((place) => {
                         if (!place.geometry || !place.geometry.location) {
@@ -248,7 +258,6 @@
                         markers.push(mrkr);
 
                         if (place.geometry.viewport) {
-                            // Only geocodes have viewport.
                             bounds.union(place.geometry.viewport);
                         } else {
                             bounds.extend(place.geometry.location);
@@ -261,50 +270,5 @@
         });
     </script>
 
-    <script>
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
 
-                reader.onload = function (e) {
-                    $('#viewer').attr('src', e.target.result);
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#customFileEg1").change(function () {
-            readURL(this);
-        });
-    </script>
-    <script>
-        $(document).on('ready', function () {
-            // INITIALIZATION OF DATATABLES
-            // =======================================================
-            var datatable = $.HSCore.components.HSDatatables.init($('#columnSearchDatatable'));
-
-            $('#column1_search').on('keyup', function () {
-                datatable
-                    .columns(1)
-                    .search(this.value)
-                    .draw();
-            });
-
-
-            $('#column3_search').on('change', function () {
-                datatable
-                    .columns(2)
-                    .search(this.value)
-                    .draw();
-            });
-
-
-            // INITIALIZATION OF SELECT2
-            // =======================================================
-            $('.js-select2-custom').each(function () {
-                var select2 = $.HSCore.components.HSSelect2.init($(this));
-            });
-        });
-    </script>
 @endpush

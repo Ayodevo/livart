@@ -8,23 +8,21 @@
 
 @section('content')
     <div class="content container-fluid">
-        <!-- Page Header -->
         <div class="d-flex justify-content-between mb-4">
             <h2 class="h1 mb-0 d-flex align-items-center gap-2">
-                <img width="30" class="avatar-img" src="{{asset('public/assets/admin/img/addon-image.png')}}" alt="">
+                <img width="30" class="avatar-img" src="{{asset('public/assets/admin/img/addon-image.png')}}" alt="{{ translate('addon') }}">
                 <span class="page-header-title">
                     {{translate('System Addon')}}
                 </span>
             </h2>
             <div class="text-primary d-flex align-items-center gap-3 font-weight-bolder" data-toggle="modal" data-target="#settingModal">
                 {{ translate('How the Setting Works') }}
-                <div class="ripple-animation" >
-                    <img src="{{asset('/public/assets/admin/img/info.svg')}}" class="svg" alt="">
+                <div class="ripple-animation">
+                    <img src="{{asset('/public/assets/admin/img/info.svg')}}" class="svg" alt="{{ translate('info') }}">
                 </div>
             </div>
         </div>
 
-        <!-- End Page Header -->
 
         <div class="card mb-5">
             <div class="card-body pl-md-10">
@@ -32,7 +30,6 @@
                 <form enctype="multipart/form-data" id="theme_form">
                     <div class="row g-3">
                         <div class="col-sm-6 col-lg-5 col-xl-4 col-xxl-3">
-                            <!-- Drag & Drop Upload -->
                             <div class="uploadDnD">
                                 <div class="form-group inputDnD mb-3">
                                     <input type="file" name="file_upload" class="form-control-file text--primary font-weight-bold"
@@ -42,8 +39,8 @@
 
                             <div class="mt-5 card px-3 py-2 d--none" id="progress-bar">
                                 <div class="d-flex flex-wrap align-items-center gap-3">
-                                    <div class="">
-                                        <img width="24" src="{{asset('/public/assets/admin/img/zip.png')}}" alt="">
+                                    <div>
+                                        <img width="24" src="{{asset('/public/assets/admin/img/zip.png')}}" alt="{{ translate('zip') }}">
                                     </div>
                                     <div class="flex-grow-1 text-start">
                                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -64,14 +61,12 @@
                                 <ul class=" d-flex flex-column gap-2 instructions-list list-unstyled">
                                     <li>
                                         1. {{ translate('please_make_sure') }}, {{ translate('your_server_php') }}
-                                        "upload_max_filesize" {{translate('value_is_grater
-                                   _or_equal_to_20MB') }}. {{ translate('current_value_is') }}
+                                        "{{ translate('upload_max_filesize') }}" {{translate('value_is_grater_or_equal_to_20MB') }}. {{ translate('current_value_is') }}
                                         - {{ini_get('upload_max_filesize')}}B
                                     </li>
                                     <li>
                                         2. {{ translate('please_make_sure')}}, {{ translate('your_server_php')}}
-                                        "post_max_size"
-                                        {{translate('value_is_grater_or_equal_to_20MB')}}
+                                        "{{ translate('post_max_size') }}" {{translate('value_is_grater_or_equal_to_20MB')}}
                                         . {{translate('current_value_is') }} - {{ini_get('post_max_size')}}B
                                     </li>
                                 </ul>
@@ -79,13 +74,9 @@
                         </div>
 
                         <div class="col-12">
-                            {{-- @if($condition_one && $condition_two) --}}
                             <div class="d-flex justify-content-end mt-3">
-                                <button type="button"
-                                        onclick="zip_upload()"
-                                        class="btn btn-primary px-4" id="upload_theme">{{translate('upload')}}</button>
+                                <button type="button" class="btn btn-primary px-4" id="upload_theme">{{translate('upload')}}</button>
                             </div>
-                            {{-- @endif --}}
                         </div>
                     </div>
                 </form>
@@ -105,7 +96,6 @@
                             <div class="d-flex gap-2 gap-sm-3 align-items-center">
                                 @if ($data['is_published'] == 0)
                                     <button class="text-danger bg-transparent p-0 border-0 mr-2" data-toggle="modal" data-target="#deleteThemeModal_{{$key}}"><img src="{{asset('public/assets/admin/img/delete.svg')}}" class="svg" alt=""></button>
-                                    <!-- Delete Theme Modal -->
                                     <div class="modal fade" id="deleteThemeModal_{{$key}}" tabindex="-1" aria-labelledby="deleteThemeModal_{{$key}}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content">
@@ -126,7 +116,11 @@
                                                     <p class="mb-5">{{ translate('once_you_delete') }}, {{ translate('you_will_lost_the_this'.' ') }} {{ $data['name'] }}</p>
                                                     <div class="d-flex justify-content-center gap-3 mb-3">
                                                         <button type="button" class="fs-16 btn btn-secondary px-sm-5" data-dismiss="modal">{{ translate('cancel') }}</button>
-                                                        <button type="submit" class="fs-16 btn btn-danger px-sm-5" data-dismiss="modal" onclick="theme_delete('{{$addon}}')">{{ translate('delete') }}</button>
+                                                        <button type="submit" class="fs-16 btn btn-danger px-sm-5" data-dismiss="modal"
+                                                                data-path="{{$addon}}"
+                                                                id="delete-theme">
+                                                            {{ translate('delete') }}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -160,7 +154,11 @@
                                                 @endif
                                                 <div class="d-flex justify-content-center gap-3 mb-3">
                                                     <button type="button" class="fs-16 btn btn-secondary px-sm-5" data-dismiss="modal">{{ translate('no') }}</button>
-                                                    <button type="button" class="fs-16 btn btn-primary px-sm-5" data-dismiss="modal" onclick="publish_addon('{{$addon}}')">{{ translate('yes') }}</button>
+                                                    <button type="button" class="fs-16 btn btn-primary px-sm-5" data-dismiss="modal"
+                                                            data-path="{{$addon}}"
+                                                            id="publish-addon">
+                                                        {{ translate('yes') }}
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -170,7 +168,7 @@
                         </div>
 
                         <div class="p-2 p-sm-3">
-                            <div class="mb-2" id="activate_{{$key}}" style="display: none!important;">
+                            <div class="mb-2 d-none" id="activate_{{$key}}">
                                 <form action="" method="post">
                                     @csrf
                                     <div class="form-group mb-2">
@@ -193,13 +191,12 @@
                             <div class="aspect-ration-3:2 border border-color-primary-light radius-10">
                                 <img class="img-fit radius-10"
                                      onerror='this.src="{{asset('public/assets/admin/img/placeholder.png')}}"'
-                                     src="{{asset($addon.'/public/addon.png')}}">
+                                     src="{{asset($addon.'/public/addon.png')}}" alt="{{ translate('addon') }}">
                             </div>
                         </div>
                     </div>
                 </div>
             @endforeach
-            <!-- Activated Theme Modal -->
             @include('admin-views.system.addon.partials.activation-modal')
         </div>
 
@@ -242,15 +239,14 @@
                 </div>
             </div>
         </div>
-
-
-
     </div>
 @endsection
 
 @push('script_2')
 
     <script>
+        "use strict"
+
         $("img.svg").each(function () {
             var $img = jQuery(this);
             var imgID = $img.attr("id");
@@ -260,22 +256,17 @@
             jQuery.get(
                 imgURL,
                 function (data) {
-                    // Get the SVG tag, ignore the rest
                     var $svg = jQuery(data).find("svg");
 
-                    // Add replaced image's ID to the new SVG
                     if (typeof imgID !== "undefined") {
                         $svg = $svg.attr("id", imgID);
                     }
-                    // Add replaced image's classes to the new SVG
                     if (typeof imgClass !== "undefined") {
                         $svg = $svg.attr("class", imgClass + " replaced-svg");
                     }
 
-                    // Remove any invalid XML tags as per http://validator.w3.org
                     $svg = $svg.removeAttr("xmlns:a");
 
-                    // Check if the viewport is set, else we gonna set it if we can.
                     if (
                         !$svg.attr("viewBox") &&
                         $svg.attr("height") &&
@@ -287,7 +278,6 @@
                         );
                     }
 
-                    // Replace image with new SVG
                     $img.replaceWith($svg);
                 },
                 "xml"
@@ -303,13 +293,15 @@
                     let imgData = e.target.result;
                     let imgName = input.files[0].name;
                     input.setAttribute("data-title", imgName);
-                    // console.log(e.target.result);
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
     </script>
     <script>
+        $("#upload_theme").on('click', function (){
+            zip_upload();
+        });
 
         function zip_upload(){
             $.ajaxSetup({
@@ -329,7 +321,6 @@
                     var xhr = new window.XMLHttpRequest();
                     $('#progress-bar').show();
 
-                    // Listen to the upload progress event
                     xhr.upload.addEventListener("progress", function(e) {
                         if (e.lengthComputable) {
                             var percentage = Math.round((e.loaded * 100) / e.total);
@@ -364,6 +355,12 @@
             });
         }
 
+        $("#publish-addon").on('click', function (){
+            let path = $(this).data('path');
+            publish_addon(path);
+        });
+
+
         function publish_addon(path) {
             $.ajaxSetup({
                 headers: {
@@ -377,7 +374,6 @@
                 },
                 success: function (data) {
                     if (data.flag === 'inactive') {
-                        // console.log(data.view)
                         $('#activatedThemeModal').modal('show');
                         $('#activateData').empty().html(data.view);
                     } else {
@@ -401,6 +397,11 @@
                 }
             });
         }
+
+        $("#delete-theme").on('click', function (){
+            let path = $(this).data('path');
+            theme_delete(path);
+        });
 
         function theme_delete(path){
             $.ajaxSetup({

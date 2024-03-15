@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Illuminate\Support\Str;
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Model\Category;
@@ -22,9 +23,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Rap2hpoutre\FastExcel\FastExcel;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Picqer\Barcode\BarcodeGeneratorHTML;
 
 class ProductController extends Controller
 {
@@ -39,17 +40,17 @@ class ProductController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function variant_combination(Request $request): JsonResponse
+    public function variantCombination(Request $request): JsonResponse
     {
         $options = [];
         $price = $request->price;
-        $product_name = $request->name;
+        $productName = $request->name;
 
         if ($request->has('choice_no')) {
             foreach ($request->choice_no as $key => $no) {
                 $name = 'choice_options_' . $no;
                 $my_str = implode('', $request[$name]);
-                array_push($options, explode(',', $my_str));
+                $options[] = explode(',', $my_str);
             }
         }
 
@@ -65,7 +66,7 @@ class ProductController extends Controller
         }
         $combinations = $result;
         return response()->json([
-            'view' => view('admin-views.product.partials._variant-combinations', compact('combinations', 'price', 'product_name'))->render(),
+            'view' => view('admin-views.product.partials._variant-combinations', compact('combinations', 'price', 'productName'))->render(),
         ]);
     }
 
@@ -73,11 +74,11 @@ class ProductController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_categories(Request $request): JsonResponse
+    public function getCategories(Request $request): JsonResponse
     {
-        $cat = $this->category->where(['parent_id' => $request->parent_id])->get();
+        $categories = $this->category->where(['parent_id' => $request->parent_id])->get();
         $res = '<option value="' . 0 . '" disabled selected>---Select subcategory---</option>';
-        foreach ($cat as $row) {
+        foreach ($categories as $row) {
             if ($row->id == $request->sub_category) {
                 $res .= '<option value="' . $row->id . '" selected >' . $row->name . '</option>';
             } else {
@@ -102,25 +103,62 @@ class ProductController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function list(Request $request): Factory|View|Application
+    public function list(Request $request): View|Factory|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
+        $searchField = $request['order'];
+
+        $query = $this->product;
+
+        // Logique de recherche en fonction du champ sélectionné
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $query = $this->product->where(function ($q) use ($key) {
+            $query = $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('id', 'like', "%{$value}%")
-                        ->orWhere('name', 'like', "%{$value}%");
+                        ->orWhere('total_stock', 'like', "%{$value}%")
+                        ->orWhere('price', 'like', "%{$value}%")
+                        ->orWhere('name', 'like', "%{$value}%")
+                        ->orWhere('codebar', 'like', "%{$value}%");
                 }
-            })->latest();
-            $query_param = ['search' => $request['search']];
-        } else {
-            $query = $this->product->latest();
+            });
+            $queryParam = ['search' => $request['search']];
         }
-        $products = $query->paginate(Helpers::pagination_limit())->appends($query_param);
+
+        // Logique de filtrage en fonction du champ sélectionné
+        if ($searchField === 'stock' && $request->has('stock')) {
+            switch ($request->stock) {
+                case 'low':
+                    $query->where('total_stock', '<', 5);
+                    break;
+                case 'medium':
+                    $query->whereBetween('total_stock', [5, 9]);
+                    break;
+                case 'full':
+                    $query->where('total_stock', '>=', 10);
+                    break;
+            }
+        } elseif ($searchField === 'id' && $request->has('search')) {
+            $query->where('id', $search);
+        } elseif ($searchField === 'name' && $request->has('search')) {
+            $query->where('name', 'like', "%{$search}%");
+        } elseif ($searchField === 'barcode' && $request->has('search')) {
+            $query->where('codebar', 'like', "%{$search}%");
+        }elseif( ($request->has('min') && $request->has('max')) ) {
+            $minPrice = $request['min'];
+            $maxPrice = $request['max'];
+            $query->whereBetween('price', [$minPrice, $maxPrice]);
+            $queryParam['min'] = $minPrice;
+            $queryParam['max'] = $maxPrice;
+        }
+
+        $query = $query->orderBy('total_stock', 'asc')->latest();
+        $products = $query->paginate(Helpers::pagination_limit())->appends($queryParam);
+
         return view('admin-views.product.list', compact('products', 'search'));
     }
+
 
     /**
      * @param Request $request
@@ -150,12 +188,12 @@ class ProductController extends Controller
         return view('admin-views.product.view', compact('product', 'reviews'));
     }
 
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
+
+
     public function store(Request $request): JsonResponse
     {
+
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:products',
             'category_id' => 'required',
@@ -168,28 +206,31 @@ class ProductController extends Controller
         ]);
 
         if ($request['discount_type'] == 'percent') {
-            $dis = ($request['price'] / 100) * $request['discount'];
+            $discount = ($request['price'] / 100) * $request['discount'];
         } else {
-            $dis = $request['discount'];
+            $discount = $request['discount'];
         }
 
-        if ($request['price'] <= $dis) {
+        if ($request['price'] <= $discount) {
             $validator->getMessageBag()->add('unit_price', 'Discount can not be more or equal to the price!');
         }
 
-        $img_names = [];
+        $imageName = [];
         if (!empty($request->file('images'))) {
             foreach ($request->images as $img) {
                 $image_data = Helpers::upload('product/', 'png', $img);
-                $img_names[] = $image_data;
+                $imageName[] = $image_data;
             }
-            $image_data = json_encode($img_names);
+            $image_data = json_encode($imageName);
         } else {
             $image_data = json_encode([]);
         }
 
-        $p = new Product;
-        $p->name = $request->name[array_search('en', $request->lang)];
+
+        $product= new Product;
+
+
+;        $product->name = $request->name[array_search('en', $request->lang)];
 
         $category = [];
         if ($request->category_id != null) {
@@ -211,10 +252,10 @@ class ProductController extends Controller
             ];
         }
 
-        $p->category_ids = json_encode($category);
-        $p->description = $request->description[array_search('en', $request->lang)];
+        $product->category_ids = json_encode($category);
+        $product->description = $request->description[array_search('en', $request->lang)];
 
-        $choice_options = [];
+        $choiceOptions = [];
         if ($request->has('choice')) {
             foreach ($request->choice_no as $key => $no) {
                 $str = 'choice_options_' . $no;
@@ -225,11 +266,11 @@ class ProductController extends Controller
                 $item['name'] = 'choice_' . $no;
                 $item['title'] = $request->choice[$key];
                 $item['options'] = explode(',', implode('|', preg_replace('/\s+/', ' ', $request[$str])));
-                $choice_options[] = $item;
+                $choiceOptions[] = $item;
             }
         }
 
-        $p->choice_options = json_encode($choice_options);
+        $product->choice_options = json_encode($choiceOptions);
         $variations = [];
         $options = [];
         if ($request->has('choice_no')) {
@@ -242,7 +283,7 @@ class ProductController extends Controller
         //Generates the combinations of customer choice options
         $combinations = Helpers::combinations($options);
 
-        $stock_count = 0;
+        $stockCount = 0;
         if (count($combinations[0]) > 0) {
             foreach ($combinations as $key => $combination) {
                 $str = '';
@@ -258,13 +299,13 @@ class ProductController extends Controller
                 $item['price'] = abs($request['price_' . str_replace('.', '_', $str)]);
                 $item['stock'] = abs($request['stock_' . str_replace('.', '_', $str)]);
                 $variations[] = $item;
-                $stock_count += $item['stock'];
+                $stockCount += $item['stock'];
             }
         } else {
-            $stock_count = (integer)$request['total_stock'];
+            $stockCount = (integer)$request['total_stock'];
         }
 
-        if ((integer)$request['total_stock'] != $stock_count) {
+        if ((integer)$request['total_stock'] != $stockCount) {
             $validator->getMessageBag()->add('total_stock', 'Stock calculation mismatch!');
         }
 
@@ -273,27 +314,33 @@ class ProductController extends Controller
         }
 
         //combinations end
-        $p->variations = json_encode($variations);
-        $p->price = $request->price;
-        $p->unit = $request->unit;
-        $p->image = $image_data;
+        $product->variations = json_encode($variations);
+        $product->price = $request->price;
+        $product->unit = $request->unit;
+        $product->image = $image_data;
 
-        $p->tax = $request->tax_type == 'amount' ? $request->tax : $request->tax;
-        $p->tax_type = $request->tax_type;
+        $product->tax = $request->tax_type == 'amount' ? $request->tax : $request->tax;
+        $product->tax_type = $request->tax_type;
 
-        $p->discount = $request->discount_type == 'amount' ? $request->discount : $request->discount;
-        $p->discount_type = $request->discount_type;
-        $p->total_stock = $request->total_stock;
+        $product->discount = $request->discount_type == 'amount' ? $request->discount : $request->discount;
+        $product->discount_type = $request->discount_type;
+        $product->total_stock = $request->total_stock;
 
-        $p->attributes = $request->has('attribute_id') ? json_encode($request->attribute_id) : json_encode([]);
-        $p->save();
+        $barcodeValue = "10001" . str_pad(mt_rand(1, 99999999), 8, '0', STR_PAD_LEFT);
+        $product->codebar = $barcodeValue;
+
+       // $product->codebar = $barcode;
+
+        $product->attributes = $request->has('attribute_id') ? json_encode($request->attribute_id) : json_encode([]);
+        $product->save();
+
 
         $data = [];
         foreach ($request->lang as $index => $key) {
             if ($request->name[$index] && $key != 'en') {
                 $data[] = array(
                     'translationable_type' => 'App\Model\Product',
-                    'translationable_id' => $p->id,
+                    'translationable_id' => $product->id,
                     'locale' => $key,
                     'key' => 'name',
                     'value' => $request->name[$index],
@@ -302,7 +349,7 @@ class ProductController extends Controller
             if ($request->description[$index] && $key != 'en') {
                 $data[] = array(
                     'translationable_type' => 'App\Model\Product',
-                    'translationable_id' => $p->id,
+                    'translationable_id' => $product->id,
                     'locale' => $key,
                     'key' => 'description',
                     'value' => $request->description[$index],
@@ -331,6 +378,15 @@ class ProductController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
+
+    public function handleUpdateStock(Request $request, $id)
+    {
+        $stock = Product::find($id);
+        $stock->total_stock = $request->total_stock;
+        $stock->update();
+        Toastr::success(translate('stock updated!'));
+        return back();
+    }
     public function status(Request $request): RedirectResponse
     {
         $product = $this->product->find($request->id);
@@ -358,17 +414,17 @@ class ProductController extends Controller
         ]);
 
         if ($request['discount_type'] == 'percent') {
-            $dis = ($request['price'] / 100) * $request['discount'];
+            $discount = ($request['price'] / 100) * $request['discount'];
         } else {
-            $dis = $request['discount'];
+            $discount = $request['discount'];
         }
 
-        if ($request['price'] <= $dis) {
+        if ($request['price'] <= $discount) {
             $validator->getMessageBag()->add('unit_price', 'Discount can not be more or equal to the price!');
         }
 
-        $p = $this->product->find($id);
-        $images = json_decode($p->image);
+        $product = $this->product->find($id);
+        $images = json_decode($product->image);
         if (!empty($request->file('images'))) {
             foreach ($request->images as $img) {
                 $image_data = Helpers::upload('product/', 'png', $img);
@@ -381,7 +437,7 @@ class ProductController extends Controller
             $validator->getMessageBag()->add('images', 'Image can not be empty!');
         }
 
-        $p->name = $request->name[array_search('en', $request->lang)];
+        $product->name = $request->name[array_search('en', $request->lang)];
 
         $category = [];
         if ($request->category_id != null) {
@@ -403,10 +459,10 @@ class ProductController extends Controller
             ];
         }
 
-        $p->category_ids = json_encode($category);
-        $p->description = $request->description[array_search('en', $request->lang)];
+        $product->category_ids = json_encode($category);
+        $product->description = $request->description[array_search('en', $request->lang)];
 
-        $choice_options = [];
+        $choiceOptions = [];
         if ($request->has('choice')) {
             foreach ($request->choice_no as $key => $no) {
                 $str = 'choice_options_' . $no;
@@ -417,12 +473,13 @@ class ProductController extends Controller
                 $item['name'] = 'choice_' . $no;
                 $item['title'] = $request->choice[$key];
                 $item['options'] = explode(',', implode('|', preg_replace('/\s+/', ' ', $request[$str])));
-                $choice_options[] = $item;
+                $choiceOptions[] = $item;
             }
         }
-        $p->choice_options = json_encode($choice_options);
+        $product->choice_options = json_encode($choiceOptions);
         $variations = [];
         $options = [];
+
         if ($request->has('choice_no')) {
             foreach ($request->choice_no as $key => $no) {
                 $name = 'choice_options_' . $no;
@@ -433,7 +490,7 @@ class ProductController extends Controller
 
         //Generates the combinations of customer choice options
         $combinations = Helpers::combinations($options);
-        $stock_count = 0;
+        $stockCount = 0;
         if (count($combinations[0]) > 0) {
             foreach ($combinations as $key => $combination) {
                 $str = '';
@@ -449,13 +506,13 @@ class ProductController extends Controller
                 $item['price'] = abs($request['price_' . str_replace('.', '_', $str)]);
                 $item['stock'] = abs($request['stock_' . str_replace('.', '_', $str)]);
                 $variations[] = $item;
-                $stock_count += $item['stock'];
+                $stockCount += $item['stock'];
             }
         } else {
-            $stock_count = (integer)$request['total_stock'];
+            $stockCount = (integer)$request['total_stock'];
         }
 
-        if ((integer)$request['total_stock'] != $stock_count) {
+        if ((integer)$request['total_stock'] != $stockCount) {
             $validator->getMessageBag()->add('total_stock', 'Stock calculation mismatch!');
         }
 
@@ -464,27 +521,27 @@ class ProductController extends Controller
         }
 
         //combinations end
-        $p->variations = json_encode($variations);
-        $p->price = $request->price;
-        $p->unit = $request->unit;
-        $p->image = json_encode($images);
+        $product->variations = json_encode($variations);
+        $product->price = $request->price;
+        $product->unit = $request->unit;
+        $product->image = json_encode($images);
 
-        $p->tax = $request->tax_type == 'amount' ? $request->tax : $request->tax;
-        $p->tax_type = $request->tax_type;
+        $product->tax = $request->tax_type == 'amount' ? $request->tax : $request->tax;
+        $product->tax_type = $request->tax_type;
 
-        $p->discount = $request->discount_type == 'amount' ? $request->discount : $request->discount;
-        $p->discount_type = $request->discount_type;
-        $p->total_stock = $request->total_stock;
+        $product->discount = $request->discount_type == 'amount' ? $request->discount : $request->discount;
+        $product->discount_type = $request->discount_type;
+        $product->total_stock = $request->total_stock;
 
-        $p->attributes = $request->has('attribute_id') ? json_encode($request->attribute_id) : json_encode([]);
-        $p->save();
+        $product->attributes = $request->has('attribute_id') ? json_encode($request->attribute_id) : json_encode([]);
+        $product->save();
 
 
         foreach ($request->lang as $index => $key) {
             if ($request->name[$index] && $key != 'en') {
                 $this->translation->updateOrInsert(
                     ['translationable_type' => 'App\Model\Product',
-                        'translationable_id' => $p->id,
+                        'translationable_id' => $product->id,
                         'locale' => $key,
                         'key' => 'name'],
                     ['value' => $request->name[$index]]
@@ -493,7 +550,7 @@ class ProductController extends Controller
             if ($request->description[$index] && $key != 'en') {
                 $this->translation->updateOrInsert(
                     ['translationable_type' => 'App\Model\Product',
-                        'translationable_id' => $p->id,
+                        'translationable_id' => $product->id,
                         'locale' => $key,
                         'key' => 'description'],
                     ['value' => $request->description[$index]]
@@ -526,18 +583,18 @@ class ProductController extends Controller
      * @param $name
      * @return RedirectResponse
      */
-    public function remove_image($id, $name): RedirectResponse
+    public function removeImage($id, $name): RedirectResponse
     {
         $product = $this->product->find($id);
-        $img_arr = [];
+        $imageArray = [];
         foreach (json_decode($product['image'], true) as $img) {
             if (strcmp($img, $name) != 0) {
-                $img_arr[] = $img;
+                $imageArray[] = $img;
             }
         }
 
-        if (count($img_arr) == 0) {
-            Toastr::success(translate('Product must have at least one image!'));
+        if (count($imageArray) == 0) {
+            Toastr::warning(translate('Product must have at least one image!'));
             return back();
         }
 
@@ -546,7 +603,7 @@ class ProductController extends Controller
         }
 
         $this->product->where(['id' => $id])->update([
-            'image' => json_encode($img_arr)
+            'image' => json_encode($imageArray)
         ]);
 
         Toastr::success(translate('Image removed successfully!'));
@@ -556,7 +613,7 @@ class ProductController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function bulk_import_index(): Factory|View|Application
+    public function bulkImportIndex(): Factory|View|Application
     {
         return view('admin-views.product.bulk-import');
     }
@@ -565,7 +622,7 @@ class ProductController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function bulk_import_data(Request $request): RedirectResponse
+    public function bulkImportProduct(Request $request): RedirectResponse
     {
         try {
             $collections = (new FastExcel)->import($request->file('products_file'));
@@ -577,8 +634,8 @@ class ProductController extends Controller
         $col_key = ['name','description','price','tax','category_id','sub_category_id','discount','discount_type','tax_type','unit','total_stock'];
         foreach ($collections as $key => $collection) {
 
-            foreach ($collection as $key => $value) {
-                if ($key!="" && !in_array($key, $col_key)) {
+            foreach ($collection as $collectionKey => $value) {
+                if ($collectionKey != "" && !in_array($key, $col_key)) {
                     Toastr::error('Please upload the correct format file.');
                     return back();
                 }
@@ -586,7 +643,6 @@ class ProductController extends Controller
         }
 
         $data = [];
-        $dis = 0;
 
         foreach ($collections as $key => $collection) {
             if ($collection['name'] === "") {
@@ -697,19 +753,19 @@ class ProductController extends Controller
      * @throws UnsupportedTypeException
      * @throws WriterNotOpenedException
      */
-    public function bulk_export_data(): StreamedResponse|string
+    public function bulkExportProduct(): StreamedResponse|string
     {
         $storage = [];
         $products = $this->product->all();
 
         foreach ($products as $item) {
-            $category_id = 0;
-            $sub_category_id = 0;
+            $categoryId = 0;
+            $subCategoryId = 0;
             foreach (json_decode($item->category_ids, true) as $category) {
                 if ($category['position'] == 1) {
-                    $category_id = $category['id'];
+                    $categoryId = $category['id'];
                 } else if ($category['position'] == 2) {
-                    $sub_category_id = $category['id'];
+                    $subCategoryId = $category['id'];
                 }
             }
 
@@ -724,8 +780,8 @@ class ProductController extends Controller
             $storage[] = [
                 'name' => $item->name,
                 'description' => $item->description,
-                'category_id' => $category_id,
-                'sub_category_id' => $sub_category_id,
+                'category_id' => $categoryId,
+                'sub_category_id' => $subCategoryId,
                 'price' => $item->price,
                 'tax' => $item->tax,
                 'status' => $item->status,

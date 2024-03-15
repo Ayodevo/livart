@@ -2,26 +2,12 @@
 
 @section('title', translate('Update Branch'))
 
-@push('css_or_js')
-    <style>
-        #location_map_div #pac-input{
-            height: 40px;
-            border: 1px solid #fbc1c1;
-            outline: none;
-            box-shadow: none;
-            top: 7px !important;
-            transform: translateX(7px);
-            padding-left: 10px;
-        }
-    </style>
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
                 <img width="20" src="{{asset('public/assets/admin/img/icons/branch.png')}}" alt="">
-                {{\App\CentralLogics\translate('update_branch')}}
+                {{translate('update_branch')}}
             </h2>
         </div>
 
@@ -31,7 +17,7 @@
             <div class="card-header">
                 <h4 class="mb-0 d-flex gap-2 align-items-center">
                     <i class="tio-user"></i>
-                    {{\App\CentralLogics\translate('Branch_Information')}}
+                    {{translate('Branch_Information')}}
                 </h4>
             </div>
             <div class="card-body">
@@ -53,14 +39,14 @@
                             <div class="form-group">
                                 <div class="d-flex align-items-center justify-content-center gap-1">
                                     <label class="mb-0">{{translate('Branch_Image')}}</label>
-                                    <small class="text-danger">* ( Ratio 1:1 )</small>
+                                    <small class="text-danger">* ( {{ translate('Ratio 1:1') }} )</small>
                                 </div>
                                 <div class="d-flex justify-content-center mt-4">
                                     <div class="upload-file">
-                                        <input type="file" name="image" accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" class="upload-file__input">
+                                        <input type="file" id="customFileEg1" name="image" accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" class="upload-file__input">
                                         <div class="upload-file__img">
-                                            <img width="150" onerror="this.src='{{asset('public/assets/admin/img/icons/upload_img.png')}}'"
-                                                 src="{{asset('storage/app/public/branch')}}/{{$branch['image']}}" alt="">
+                                            <img width="150"
+                                                 src="{{$branch['image_fullpath']}}" id="viewer" alt="{{ translate('branch') }}">
                                         </div>
                                     </div>
                                 </div>
@@ -86,13 +72,40 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="form-group">
-                                <label class="input-label" for="exampleFormControlInput1">{{translate('password')}} <span class="" style="color: red;font-size: small">* ( {{ translate('input if you want to reset.') }} )</span></label>
+                                <label class="input-label" for="exampleFormControlInput1">{{translate('password')}} <span class="text-danger font-size-sm">*( {{ translate('input if you want to reset.') }} )</span></label>
                                 <input type="text" name="password" class="form-control" placeholder="">
                             </div>
                         </div>
                     </div>
 
-                    <h3 class="mt-5">{{\App\CentralLogics\translate('Branch_Location')}}</h3>
+
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="input-label">{{translate('Store')}}</label>
+                                <input type="text" name="store" class="form-control" value="{{$branch['store']}}"
+                                       maxlength="255" placeholder="{{ translate('EX : Store') }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="input-label">{{translate('Floor')}}</label>
+                                <input type="text" name="floor" class="form-control" value="{{$branch['floor']}}"
+                                       maxlength="255" placeholder="{{ translate('EX : number of floor') }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="input-label">{{translate('Arémoire')}}</label>
+                                <input type="text" name="tarma" class="form-control" placeholder="{{ translate('aremoire') }}"
+                                 maxlength="255" value="{{$branch['tarma']}}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="mt-5">{{translate('Branch_Location')}}</h3>
                     <hr>
                     <div class="row">
                         <div class="col-lg-6">
@@ -105,7 +118,7 @@
                                     </i>
                                 </label>
                                 <input type="number" name="latitude" id="latitude" value="{{$branch['latitude']}}" class="form-control" placeholder="{{ translate('Ex : -132.44442') }}"
-                                    {{$branch_count>1?'required':''}} step="any">
+                                       {{$branch_count>1?'required':''}} step="any">
                             </div>
 
                             <div class="form-group">
@@ -117,7 +130,7 @@
                                     </i>
                                 </label>
                                 <input type="number" name="longitude" id="longitude" value="{{$branch['longitude']}}" class="form-control" placeholder="{{ translate('Ex : 94.233') }}"
-                                    {{$branch_count>1?'required':''}} step="any">
+                                       {{$branch_count>1?'required':''}} step="any">
                             </div>
 
                             <div class="form-group">
@@ -154,8 +167,27 @@
 
 @push('script_2')
     <script src="https://maps.googleapis.com/maps/api/js?key={{ \App\Model\BusinessSetting::where('key', 'map_api_key')->first()?->value }}&libraries=places&v=3.51"></script>
+{{--    <script src="{{ asset('public/assets/admin/js/image-upload.js') }}"></script>--}}
 
     <script>
+        "use strict";
+
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#viewer').attr('src', e.target.result);
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        $("#customFileEg1").change(function () {
+            readURL(this);
+        });
+
         $( document ).ready(function() {
             function initAutocomplete() {
                 var myLatLng = {
@@ -199,29 +231,23 @@
                         }
                     });
                 });
-                // Create the search box and link it to the UI element.
                 const input = document.getElementById("pac-input");
                 const searchBox = new google.maps.places.SearchBox(input);
                 map.controls[google.maps.ControlPosition.TOP_CENTER].push(input);
-                // Bias the SearchBox results towards current map's viewport.
                 map.addListener("bounds_changed", () => {
                     searchBox.setBounds(map.getBounds());
                 });
                 let markers = [];
-                // Listen for the event fired when the user selects a prediction and retrieve
-                // more details for that place.
                 searchBox.addListener("places_changed", () => {
                     const places = searchBox.getPlaces();
 
                     if (places.length == 0) {
                         return;
                     }
-                    // Clear out the old markers.
                     markers.forEach((marker) => {
                         marker.setMap(null);
                     });
                     markers = [];
-                    // For each place, get the icon, name and location.
                     const bounds = new google.maps.LatLngBounds();
                     places.forEach((place) => {
                         if (!place.geometry || !place.geometry.location) {
@@ -241,7 +267,6 @@
                         markers.push(mrkr);
 
                         if (place.geometry.viewport) {
-                            // Only geocodes have viewport.
                             bounds.union(place.geometry.viewport);
                         } else {
                             bounds.extend(place.geometry.location);
@@ -251,25 +276,6 @@
                 });
             };
             initAutocomplete();
-        });
-    </script>
-
-
-    <script>
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    $('#viewer').attr('src', e.target.result);
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#customFileEg1").change(function () {
-            readURL(this);
         });
     </script>
 

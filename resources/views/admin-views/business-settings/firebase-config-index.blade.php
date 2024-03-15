@@ -2,16 +2,12 @@
 
 @section('title', translate('Firebase Settings'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-4">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="">
-                {{\App\CentralLogics\translate('3rd_Party')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="{{ translate('3rd_Party_image') }}">
+                {{translate('3rd_Party')}}
             </h2>
         </div>
 
@@ -20,10 +16,9 @@
         </div>
 
         <div class="card">
-            @php($data=\App\CentralLogics\Helpers::get_business_settings('firebase_message_config'))
+            @php($data=Helpers::get_business_settings('firebase_message_config'))
             <div class="card-body">
-                <form action="{{env('APP_MODE')!='demo'?route('admin.business-settings.firebase_message_config'):'javascript:'}}" method="post"
-                      enctype="multipart/form-data">
+                <form action="{{env('APP_MODE')!='demo'?route('admin.business-settings.firebase_message_config'):'javascript:'}}" method="post" enctype="multipart/form-data">
                     @csrf
                     @if(isset($data))
                     <div class="row">
@@ -68,7 +63,9 @@
                         </div>
                         <div class="col-12">
                             <div class="d-flex justify-content-end">
-                                <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}" onclick="{{env('APP_MODE')!='demo'?'':'call_demo()'}}" class="btn btn-primary">{{translate('save')}}</button>
+                                <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
+                                        class="btn btn-primary demo-form-submit">{{translate('save')}}
+                                </button>
                             </div>
                             @else
                                 <div class="d-flex justify-content-end">
@@ -83,6 +80,3 @@
     </div>
 @endsection
 
-@push('script_2')
-
-@endpush

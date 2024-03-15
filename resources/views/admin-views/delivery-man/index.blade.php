@@ -2,16 +2,12 @@
 
 @section('title', translate('Add new delivery-man'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/deliveryman.png')}}" alt="">
-                {{\App\CentralLogics\translate('Add_New_Deliveryman')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/deliveryman.png')}}" alt="{{ translate('deliveryman') }}">
+                {{translate('Add_New_Deliveryman')}}
             </h2>
         </div>
 
@@ -21,38 +17,38 @@
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="tio-user"></i>
-                        {{\App\CentralLogics\translate('General_Information')}}
+                        {{translate('General_Information')}}
                     </h5>
                 </div>
                 <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="input-label">{{\App\CentralLogics\translate('first')}} {{\App\CentralLogics\translate('name')}}</label>
-                                    <input type="text" name="f_name" class="form-control" placeholder="{{\App\CentralLogics\translate('first')}} {{\App\CentralLogics\translate('name')}}"
+                                    <label class="input-label">{{translate('first')}} {{translate('name')}}</label>
+                                    <input type="text" name="f_name" class="form-control" placeholder="{{translate('first')}} {{translate('name')}}"
                                         required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="input-label">{{\App\CentralLogics\translate('last')}} {{\App\CentralLogics\translate('name')}}</label>
-                                    <input type="text" name="l_name" class="form-control" placeholder="{{\App\CentralLogics\translate('last')}} {{\App\CentralLogics\translate('name')}}"
+                                    <label class="input-label">{{translate('last')}} {{translate('name')}}</label>
+                                    <input type="text" name="l_name" class="form-control" placeholder="{{translate('last')}} {{translate('name')}}"
                                         required>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="input-label">{{\App\CentralLogics\translate('phone')}}</label>
+                                    <label class="input-label">{{translate('phone')}}</label>
                                     <input type="text" name="phone" class="form-control" placeholder="{{ translate('Ex : 017********') }}"
                                         required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="input-label">{{\App\CentralLogics\translate('branch')}}</label>
+                                    <label class="input-label">{{translate('branch')}}</label>
                                     <select name="branch_id" class="form-control">
-                                        <option value="0">{{\App\CentralLogics\translate('all')}}</option>
+                                        <option value="0">{{translate('all')}}</option>
                                         @foreach(\App\Model\Branch::all() as $branch)
                                             <option value="{{$branch['id']}}">{{$branch['name']}}</option>
                                         @endforeach
@@ -62,18 +58,18 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="input-label">{{\App\CentralLogics\translate('identity')}} {{\App\CentralLogics\translate('type')}}</label>
+                                    <label class="input-label">{{translate('identity')}} {{translate('type')}}</label>
                                     <select name="identity_type" class="form-control">
-                                        <option value="passport">{{\App\CentralLogics\translate('passport')}}</option>
-                                        <option value="driving_license">{{\App\CentralLogics\translate('driving')}} {{\App\CentralLogics\translate('license')}}</option>
-                                        <option value="nid">{{\App\CentralLogics\translate('nid')}}</option>
-                                        <option value="restaurant_id">{{\App\CentralLogics\translate('store')}} {{\App\CentralLogics\translate('id')}}</option>
+                                        <option value="passport">{{translate('passport')}}</option>
+                                        <option value="driving_license">{{translate('driving')}} {{translate('license')}}</option>
+                                        <option value="nid">{{translate('nid')}}</option>
+                                        <option value="restaurant_id">{{translate('store')}} {{translate('id')}}</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="input-label">{{\App\CentralLogics\translate('identity')}} {{\App\CentralLogics\translate('number')}}</label>
+                                    <label class="input-label">{{translate('identity')}} {{translate('number')}}</label>
                                     <input type="text" name="identity_number" class="form-control"
                                         placeholder="{{ translate('Ex : DH-23434-LS') }}"
                                         required>
@@ -83,21 +79,21 @@
                                 <div class="form-group">
                                     <div class="text-center mb-3">
                                         <img class="upload-img-view" id="viewer"
-                                            src="{{asset('public/assets/admin/img/400x400/img2.jpg')}}" alt="delivery-man image"/>
+                                            src="{{asset('public/assets/admin/img/400x400/img2.jpg')}}" alt="{{ translate('delivery-man') }}"/>
                                     </div>
 
-                                    <label>{{\App\CentralLogics\translate('deliveryman')}} {{\App\CentralLogics\translate('image')}}</label>
-                                    <small class="text-danger">* ( {{\App\CentralLogics\translate('ratio')}} 1:1 )</small>
+                                    <label>{{translate('deliveryman')}} {{translate('image')}}</label>
+                                    <small class="text-danger">* ( {{translate('ratio')}} 1:1 )</small>
                                     <div class="custom-file">
                                         <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                        <label class="custom-file-label" for="customFileEg1">{{\App\CentralLogics\translate('choose')}} {{\App\CentralLogics\translate('file')}}</label>
+                                        <label class="custom-file-label" for="customFileEg1">{{translate('choose')}} {{translate('file')}}</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label class="input-label">{{\App\CentralLogics\translate('identity')}} {{\App\CentralLogics\translate('image')}}</label>
+                                    <label class="input-label">{{translate('identity')}} {{translate('image')}}</label>
                                     <div>
                                         <div class="row" id="coba"></div>
                                     </div>
@@ -110,21 +106,21 @@
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="tio-user"></i>
-                        {{\App\CentralLogics\translate('account_Information')}}
+                        {{translate('account_Information')}}
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('email')}}</label>
+                                <label class="input-label">{{translate('email')}}</label>
                                 <input type="email" name="email" class="form-control" placeholder="{{ translate('Ex : ex@example.com') }}"
                                         required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('password')}}</label>
+                                <label class="input-label">{{translate('password')}}</label>
                                 <div class="input-group input-group-merge">
                                     <input type="password" name="password" class="js-toggle-password form-control input-field"
                                            placeholder="{{ translate('Password minimum 6 characters') }}" required
@@ -144,7 +140,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('confirm_Password')}}</label>
+                                <label class="input-label">{{translate('confirm_Password')}}</label>
                                 <div class="input-group input-group-merge">
                                     <input type="password" name="password_confirmation" class="js-toggle-password form-control input-field"
                                            placeholder="{{ translate('Password minimum 6 characters') }}" required
@@ -165,8 +161,8 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-3">
-                        <button type="reset" class="btn btn-secondary">{{\App\CentralLogics\translate('reset')}}</button>
-                        <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('submit')}}</button>
+                        <button type="reset" class="btn btn-secondary">{{translate('reset')}}</button>
+                        <button type="submit" class="btn btn-primary">{{translate('submit')}}</button>
                     </div>
                 </div>
             </div>
@@ -176,27 +172,12 @@
 @endsection
 
 @push('script_2')
-    <script>
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    $('#viewer').attr('src', e.target.result);
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#customFileEg1").change(function () {
-            readURL(this);
-        });
-    </script>
-
+    <script src="{{asset('public/assets/admin/js/deliveryman.js')}}"></script>
     <script src="{{asset('public/assets/admin/js/spartan-multi-image-picker.js')}}"></script>
 
     <script type="text/javascript">
+        "use strict"
+
         $(function () {
             $("#coba").spartanMultiImagePicker({
                 fieldName: 'identity_image[]',

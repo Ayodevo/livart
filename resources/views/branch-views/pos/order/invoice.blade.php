@@ -1,46 +1,46 @@
-<div style="width:410px;">
-    <div class="text-center pt-4 mb-3">
-        <h2 style="line-height: 1">{{\App\Model\BusinessSetting::where(['key'=>'restaurant_name'])->first()->value}}</h2>
-        <h4>{{$order->branch->name}}</h4>
-        <h5 style="font-size: 20px;font-weight: lighter;line-height: 1">
-            {{ \App\Model\Branch::find($order['branch_id'])->address }}
+<div style="width:410px;" class="mx-auto">
+
+    <div class="text-center pt-2 mb-3">
+        <h2>{{ Helpers::get_business_settings('restaurant_name') }}</h2>
+        <h4>{{$order->branch?->name}}</h4>
+        <h5>
+            {{translate('Branch Address')}} : {{ \App\Model\Branch::find($order['branch_id'])?->address }}
         </h5>
-        <h5 style="font-size: 16px;font-weight: lighter;line-height: 1">
-            {{translate('Phone')}}
-            : {{\App\Model\BusinessSetting::where(['key'=>'phone'])->first()->value}}
-        </h5>
+        <p class="text-dark">
+            {{translate('Phone')}} : {{Helpers::get_business_settings('phone')}}
+        </p>
     </div>
-    <span>---------------------------------------------------------------------------------</span>
-    <div class="row mt-3">
+
+    <div class="invoice-border"></div>
+    <div class="row pt-3 pb-2">
         <div class="col-6">
             <h5>{{translate('Order ID')}} : {{$order['id']}}</h5>
         </div>
         <div class="col-6">
-            <h5 style="font-weight: lighter">
-                {{date('d/M/Y h:i a',strtotime($order['created_at']))}}
-            </h5>
+            <div class="text-right text-dark">
+                {{date('d M Y h:i a',strtotime($order['created_at']))}}
+            </div>
         </div>
         @if($order->customer)
-            <div class="col-12">
-                <h5>{{translate('Customer Name')}} : {{$order->customer['f_name'].' '.$order->customer['l_name']}}</h5>
-                <h5>{{translate('Phone')}} : {{$order->customer['phone']}}</h5>
+            <div class="col-12 text-dark pb-2">
+                <div>{{translate('Customer Name')}} : {{$order->customer['f_name'].' '.$order->customer['l_name']}}</div>
+                <div>{{translate('Phone')}} : {{$order->customer['phone']}}</div>
                 @if($order->order_type != 'pos')
-                    <h5>
+                    <div>
                         {{translate('Address')}}
                         : {{isset($order->delivery_address)?json_decode($order->delivery_address, true)['address']:''}}
-                    </h5>
+                    </div>
                 @endif
             </div>
         @endif
     </div>
-    <h5 class="text-uppercase"></h5>
-    <span>---------------------------------------------------------------------------------</span>
-    <table class="table table-bordered mt-3" style="width: 98%">
+    <div class="invoice-border"></div>
+    <table class="table table-bordered mt-3 text-dark">
         <thead>
         <tr>
-            <th style="width: 10%">{{translate('QTY')}}</th>
-            <th class="">{{translate('DESC')}}</th>
-            <th class="">{{translate('Price')}}</th>
+            <th class="border-bottom-0">{{translate('Qty')}}</th>
+            <th class="border-bottom-0">{{translate('Desc')}}</th>
+            <th class="border-bottom-0">{{translate('Price')}}</th>
         </tr>
         </thead>
 
@@ -53,25 +53,29 @@
                 @php($product = json_decode($detail->product_details, true))
 
                 <tr>
-                    <td class="">
+                    <td>
                         {{$detail['quantity']}}
                     </td>
-                    <td class="">
-                        <span style="word-break: break-all;"> {{ Str::limit($product['name'], 200) }}</span><br>
+                    <td>
+                        <div class="mb-1"> {{ Str::limit($product['name'], 200) }}</div>
                         @if(count(json_decode($detail['variation'],true))>0)
-                            <strong><u>Variation : </u></strong>
+                            <strong><u>{{translate('Variation')}} : </u></strong>
                             @foreach(json_decode($detail['variation'],true)[0] ?? json_decode($detail['variation'],true) as $key1 =>$variation)
-                                <div class="font-size-sm text-body" style="color: black!important;">
+                                <div class="font-size-sm">
                                     <span>{{$key1}} :  </span>
-                                    <span
-                                        class="font-weight-bold">{{$variation}} {{$key1=='price'?\App\CentralLogics\Helpers::currency_symbol():''}}</span>
+                                    <strong>
+                                        {{$variation}} {{$key1=='price'?Helpers::currency_symbol():''}}
+                                    </strong>
                                 </div>
                             @endforeach
                         @endif
-                        {{translate('Discount')}}
-                        : {{ Helpers::set_symbol($detail['discount_on_product']*$detail['quantity']) }}
+
+                        <div>
+                            {{translate('Discount')}} :
+                            {{ Helpers::set_symbol($detail['discount_on_product']*$detail['quantity']) }}
+                        </div>
                     </td>
-                    <td style="width: 28%">
+                    <td>
                         @php($amount=($detail['price']-$detail['discount_on_product'])*$detail['quantity'])
                         {{ Helpers::set_symbol($amount) }}
                     </td>
@@ -82,47 +86,27 @@
         @endforeach
         </tbody>
     </table>
-    <span>---------------------------------------------------------------------------------</span>
-    <div class="row justify-content-md-end">
-        <div class="col-md-7 col-lg-7">
-            <dl class="row text-right" style="color: black!important;">
-                <dt class="col-6">{{translate('Items Price')}}:</dt>
-                <dd class="col-6">{{ Helpers::set_symbol($sub_total) }}</dd>
-                <dt class="col-6">{{translate('Tax')}} / {{translate('VAT')}}:</dt>
-                <dd class="col-6">{{ Helpers::set_symbol($total_tax) }}</dd>
+    <div class="invoice-border"></div>
+    <dl class="row text-dark mt-2">
+        <dt class="col-6">{{translate('Items Price')}}:</dt>
+        <dd class="col-6 text-right">{{ Helpers::set_symbol($sub_total) }}</dd>
 
-                <dt class="col-6">{{translate('Subtotal')}}:</dt>
-                <dd class="col-6">{{ Helpers::set_symbol($order->order_amount+$order['extra_discount']) }}</dd>
-{{--                <dt class="col-6">{{translate('Coupon Discount')}}:</dt>--}}
-{{--                <dd class="col-6">--}}
-{{--                    - {{ Helpers::set_symbol($order['coupon_discount_amount']) }}</dd>--}}
+        <dt class="col-6">{{translate('Tax')}} / {{translate('VAT')}}:</dt>
+        <dd class="col-6 text-right">{{Helpers::set_symbol($total_tax) }}</dd>
 
-                <dt class="col-6">{{translate('Extra Discount')}}:</dt>
-                <dd class="col-6">
-                    - {{ \App\CentralLogics\Helpers::set_symbol($order['extra_discount']) }}</dd>
-{{--                <dt class="col-6">{{translate('Delivery Fee')}}:</dt>--}}
-{{--                <dd class="col-6">--}}
-{{--                    @if($order['order_type']=='take_away')--}}
-{{--                        @php($del_c=0)--}}
-{{--                    @else--}}
-{{--                        @php($del_c=$order['delivery_charge'])--}}
-{{--                    @endif--}}
-{{--                    {{ Helpers::set_symbol($del_c) }}--}}
-{{--                    <hr>--}}
-{{--                </dd>--}}
+        <dt class="col-6">{{translate('Subtotal')}}:</dt>
+        <dd class="col-6 text-right">{{ Helpers::set_symbol($order->order_amount + $order['extra_discount']) }}</dd>
 
-                <dt class="col-6" style="font-size: 16px">{{translate('Total')}}:</dt>
-                <dd class="col-6"
-                    style="font-size: 16px">{{ Helpers::set_symbol($order->order_amount) }}</dd>
-            </dl>
-        </div>
-    </div>
-    <div class="d-flex flex-row justify-content-between border-top">
-        <span>{{translate('Paid_by')}}: {{$order->payment_method}}</span>
-    </div>
-    <span>---------------------------------------------------------------------------------</span>
-    <h5 class="text-center pt-3">
+        <dt class="col-6">{{translate('Extra Discount')}}:</dt>
+        <dd class="col-6 text-right">
+            - {{ Helpers::set_symbol($order['extra_discount']) }}
+        </dd>
+        <dt class="col-6 font-weight-bold">{{translate('Total')}}:</dt>
+        <dd class="col-6 text-right font-weight-bold">{{ Helpers::set_symbol($order->order_amount) }}</dd>
+    </dl>
+    <div class="invoice-border mt-5"></div>
+    <h5 class="text-center mb-0 py-3">
         """{{translate('THANK YOU')}}"""
     </h5>
-    <span>---------------------------------------------------------------------------------</span>
+    <div class="invoice-border"></div>
 </div>

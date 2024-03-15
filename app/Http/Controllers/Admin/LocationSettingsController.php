@@ -16,7 +16,7 @@ class LocationSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function location_index(): View|Factory|Application
+    public function locationIndex(): View|Factory|Application
     {
         return view('admin-views.business-settings.location-index');
     }
@@ -25,7 +25,7 @@ class LocationSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function location_setup(Request $request): RedirectResponse
+    public function locationSetup(Request $request): RedirectResponse
     {
         DB::table('branches')->updateOrInsert(['id' => 1], [
             'longitude' => $request['longitude'],

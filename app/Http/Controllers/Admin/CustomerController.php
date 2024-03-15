@@ -27,47 +27,38 @@ class CustomerController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function customer_list(Request $request): View|Factory|Application
+    public function customerList(Request $request): View|Factory|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
+        $searchBy = $request['order']; // Nouvelle variable pour stocker la sélection de recherche
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $customers = $this->user->where(function ($q) use ($key) {
+            $customers = $this->user->where(function ($q) use ($key, $searchBy) {
                 foreach ($key as $value) {
-                    $q->orWhere('f_name', 'like', "%{$value}%")
-                        ->orWhere('l_name', 'like', "%{$value}%")
-                        ->orWhere('email', 'like', "%{$value}%")
-                        ->orWhere('phone', 'like', "%{$value}%");
+                    if ($searchBy === 'name') {
+                        $q->orWhere('f_name', 'like', "%{$value}%")
+                            ->orWhere('l_name', 'like', "%{$value}%");
+                    } elseif ($searchBy === 'email') {
+                        $q->orWhere('email', 'like', "%{$value}%");
+                    } elseif ($searchBy === 'phone') {
+                        $q->orWhere('phone', 'like', "%{$value}%");
+                    } else {
+                        // Recherche par défaut sur tous les champs
+                        $q->orWhere('f_name', 'like', "%{$value}%")
+                            ->orWhere('l_name', 'like', "%{$value}%")
+                            ->orWhere('email', 'like', "%{$value}%")
+                            ->orWhere('phone', 'like', "%{$value}%");
+                    }
                 }
             });
-            $query_param = ['search' => $request['search']];
-        }else{
+            $queryParam = ['search' => $request['search'], 'order' => $request['order']];
+        } else {
             $customers = $this->user;
         }
 
-        $customers = $customers->with(['orders'])->latest()->paginate(Helpers::pagination_limit())->appends($query_param);
+        $customers = $customers->with(['orders'])->latest()->paginate(Helpers::pagination_limit())->appends($queryParam);
         return view('admin-views.customer.list', compact('customers', 'search'));
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function search(Request $request): JsonResponse
-    {
-        $key = explode(' ', $request['search']);
-        $customers=$this->user->where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('f_name', 'like', "%{$value}%")
-                    ->orWhere('l_name', 'like', "%{$value}%")
-                    ->orWhere('email', 'like', "%{$value}%")
-                    ->orWhere('phone', 'like', "%{$value}%");
-            }
-        })->get();
-        return response()->json([
-            'view'=>view('admin-views.customer.partials._table',compact('customers'))->render()
-        ]);
     }
 
 
@@ -100,9 +91,9 @@ class CustomerController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function subscribed_emails(Request $request): View|Factory|Application
+    public function subscribedEmails(Request $request): View|Factory|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
@@ -111,12 +102,12 @@ class CustomerController extends Controller
                     $q->orWhere('email', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         } else {
             $newsletters = $this->newsletter;
         }
 
-        $newsletters = $newsletters->latest()->paginate(Helpers::getPagination())->appends($query_param);
+        $newsletters = $newsletters->latest()->paginate(Helpers::getPagination())->appends($queryParam);
         return view('admin-views.customer.subscribed-list', compact('newsletters', 'search'));
     }
 }

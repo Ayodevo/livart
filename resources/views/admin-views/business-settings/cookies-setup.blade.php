@@ -2,16 +2,12 @@
 
 @section('title', translate('Cookies Setup'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/business-setup.png')}}" alt="">
-                {{\App\CentralLogics\translate('business_Setup')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/business-setup.png')}}" alt="{{ translate('settings-image') }}">
+                {{translate('business_Setup')}}
             </h2>
         </div>
 
@@ -23,7 +19,7 @@
             <div class="card-body">
                 <form action="{{route('admin.business-settings.update-cookies')}}" method="post">
                     @csrf
-                    @php($cookies=\App\CentralLogics\Helpers::get_business_settings('cookies'))
+                    @php($cookies=Helpers::get_business_settings('cookies'))
                     <div class="row">
                         <div class="col-md-12">
                             <div class="d-flex flex-wrap justify-content-between">
@@ -40,8 +36,7 @@
                             </div>
                             <div class="d-flex justify-content-end">
                                 <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
-                                        onclick="{{env('APP_MODE')!='demo'?'':'call_demo()'}}"
-                                        class="btn btn-primary">{{\App\CentralLogics\translate('update')}}
+                                        class="btn btn-primary demo-form-submit">{{translate('update')}}
                                 </button>
                             </div>
                         </div>
@@ -51,23 +46,3 @@
         </div>
     </div>
 @endsection
-
-@push('script_2')
-    <script>
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    $('#viewer').attr('src', e.target.result);
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#customFileEg1").change(function () {
-            readURL(this);
-        });
-    </script>
-@endpush

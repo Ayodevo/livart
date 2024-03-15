@@ -14,7 +14,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Facades\Storage;
 
 class BannerController extends Controller
 {
@@ -30,7 +29,7 @@ class BannerController extends Controller
     function index(Request $request): View|Factory|Application
     {
         $search = $request->input('search');
-        $query_param = ['search' => $search];
+        $queryParam = ['search' => $search];
 
         if ($search) {
             $keywords = explode(' ', $search);
@@ -43,13 +42,12 @@ class BannerController extends Controller
             $banners = $this->banner;
         }
 
-        $banners = $banners->latest()->paginate(Helpers::pagination_limit())->appends($query_param);
+        $banners = $banners->latest()->paginate(Helpers::pagination_limit())->appends($queryParam);
 
         $products = $this->product->orderBy('name')->get();
         $categories = $this->category->where(['parent_id' => 0])->orderBy('name')->get();
         return view('admin-views.banner.index', compact('products', 'categories', 'banners', 'search'));
     }
-
 
     /**
      * @param Request $request
@@ -58,7 +56,7 @@ class BannerController extends Controller
     function list(Request $request): View|Factory|Application
     {
         $search = $request->input('search');
-        $query_param = ['search' => $search];
+        $queryParam = ['search' => $search];
 
         if ($search) {
             $keywords = explode(' ', $search);
@@ -71,7 +69,7 @@ class BannerController extends Controller
             $banners = $this->banner;
         }
 
-        $banners = $banners->latest()->paginate(Helpers::pagination_limit())->appends($query_param);
+        $banners = $banners->latest()->paginate(Helpers::pagination_limit())->appends($queryParam);
         return view('admin-views.banner.list', compact('banners', 'search'));
     }
 
@@ -139,8 +137,6 @@ class BannerController extends Controller
         $request->validate([
             'title' => 'required|max:255',
             'banner_type' => 'required|in:primary,secondary',
-            //'primary_image' => 'required_if:banner_type,primary|image|max:2048',
-            //'secondary_image' => 'required_if:banner_type,secondary|image|max:2048',
         ], [
             'title.required' => 'Title is required!',
         ]);

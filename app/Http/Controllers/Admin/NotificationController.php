@@ -25,7 +25,7 @@ class NotificationController extends Controller
      */
     function index(Request $request): Factory|View|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
@@ -35,12 +35,12 @@ class NotificationController extends Controller
                         ->orWhere('description', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }else{
             $notifications = $this->notification;
         }
 
-        $notifications = $notifications->latest()->paginate(Helpers::pagination_limit())->appends($query_param);
+        $notifications = $notifications->latest()->paginate(Helpers::pagination_limit())->appends($queryParam);
         return view('admin-views.notification.index', compact('notifications', 'search'));
     }
 

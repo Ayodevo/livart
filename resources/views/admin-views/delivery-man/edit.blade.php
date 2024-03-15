@@ -2,61 +2,56 @@
 
 @section('title', translate('Update delivery-man'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
                 <img width="20" src="{{asset('public/assets/admin/img/icons/deliveryman.png')}}" alt="">
-                {{\App\CentralLogics\translate('update_Deliveryman')}}
+                {{translate('update_Deliveryman')}}
             </h2>
         </div>
 
-        <form action="{{route('admin.delivery-man.update',[$delivery_man['id']])}}" method="post" enctype="multipart/form-data">
+        <form action="{{route('admin.delivery-man.update',[$deliveryMan['id']])}}" method="post" enctype="multipart/form-data">
             @csrf
             <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="tio-user"></i>
-                        {{\App\CentralLogics\translate('general_Information')}}
+                        <i class="tio-user"></i>{{translate('general_Information')}}
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('first')}} {{\App\CentralLogics\translate('name')}}</label>
-                                <input type="text" value="{{$delivery_man['f_name']}}" name="f_name"
+                                <label class="input-label">{{translate('first')}} {{translate('name')}}</label>
+                                <input type="text" value="{{$deliveryMan['f_name']}}" name="f_name"
                                        class="form-control" placeholder="{{ translate('New delivery-man') }}"
                                        required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('last')}} {{\App\CentralLogics\translate('name')}}</label>
-                                <input type="text" value="{{$delivery_man['l_name']}}" name="l_name"
+                                <label class="input-label">{{translate('last')}} {{translate('name')}}</label>
+                                <input type="text" value="{{$deliveryMan['l_name']}}" name="l_name"
                                        class="form-control" placeholder="{{ translate('Last Name') }}"
                                        required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('phone')}}</label>
-                                <input type="text" name="phone" value="{{$delivery_man['phone']}}" class="form-control"
+                                <label class="input-label">{{translate('phone')}}</label>
+                                <input type="text" name="phone" value="{{$deliveryMan['phone']}}" class="form-control"
                                        placeholder="{{ translate('Ex : 017********') }}"
                                        required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('branch')}}</label>
+                                <label class="input-label">{{translate('branch')}}</label>
                                 <select name="branch_id" class="form-control">
-                                    <option value="0" {{$delivery_man['branch_id']==0?'selected':''}}>{{\App\CentralLogics\translate('all')}}</option>
+                                    <option value="0" {{$deliveryMan['branch_id']==0?'selected':''}}>{{translate('all')}}</option>
                                     @foreach(\App\Model\Branch::all() as $branch)
-                                        <option value="{{$branch['id']}}" {{$delivery_man['branch_id']==$branch['id']?'selected':''}}>{{$branch['name']}}</option>
+                                        <option value="{{$branch['id']}}" {{$deliveryMan['branch_id']==$branch['id']?'selected':''}}>{{$branch['name']}}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -64,29 +59,29 @@
 
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('identity')}} {{\App\CentralLogics\translate('type')}}</label>
+                                <label class="input-label">{{translate('identity')}} {{translate('type')}}</label>
                                 <select name="identity_type" class="form-control">
                                     <option
-                                        value="passport" {{$delivery_man['identity_type']=='passport'?'selected':''}}>
-                                        {{\App\CentralLogics\translate('passport')}}
+                                        value="passport" {{$deliveryMan['identity_type']=='passport'?'selected':''}}>
+                                        {{translate('passport')}}
                                     </option>
                                     <option
-                                        value="driving_license" {{$delivery_man['identity_type']=='driving_license'?'selected':''}}>
-                                        {{\App\CentralLogics\translate('driving')}} {{\App\CentralLogics\translate('license')}}
+                                        value="driving_license" {{$deliveryMan['identity_type']=='driving_license'?'selected':''}}>
+                                        {{translate('driving')}} {{translate('license')}}
                                     </option>
-                                    <option value="nid" {{$delivery_man['identity_type']=='nid'?'selected':''}}>{{\App\CentralLogics\translate('nid')}}
+                                    <option value="nid" {{$deliveryMan['identity_type']=='nid'?'selected':''}}>{{translate('nid')}}
                                     </option>
                                     <option
-                                        value="restaurant_id" {{$delivery_man['identity_type']=='restaurant_id'?'selected':''}}>
-                                        {{\App\CentralLogics\translate('store')}} {{\App\CentralLogics\translate('id')}}
+                                        value="restaurant_id" {{$deliveryMan['identity_type']=='restaurant_id'?'selected':''}}>
+                                        {{translate('store')}} {{translate('id')}}
                                     </option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('identity')}} {{\App\CentralLogics\translate('number')}}</label>
-                                <input type="text" name="identity_number" value="{{$delivery_man['identity_number']}}"
+                                <label class="input-label">{{translate('identity')}} {{translate('number')}}</label>
+                                <input type="text" name="identity_number" value="{{$deliveryMan['identity_number']}}"
                                        class="form-control"
                                        placeholder="{{ translate('Ex : DH-23434-LS') }}"
                                        required>
@@ -94,32 +89,31 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <center class="mb-3">
+                                <div class="mb-3 align-content-center">
                                     <img class="upload-img-view" id="viewer"
-                                         src="{{asset('storage/app/public/delivery-man').'/'.$delivery_man['image']}}" alt="delivery-man image"/>
-                                </center>
-                                <label>{{\App\CentralLogics\translate('deliveryman')}} {{\App\CentralLogics\translate('image')}}</label>
-                                <small class="text-danger">* ( {{\App\CentralLogics\translate('ratio')}} 1:1 )</small>
+                                         src="{{$deliveryMan['image-fullpath']}}" alt="delivery-man image"/>
+                                </div>
+                                <label>{{translate('deliveryman')}} {{translate('image')}}</label>
+                                <small class="text-danger">* ( {{translate('ratio')}} 1:1 )</small>
                                 <div class="custom-file">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                    <label class="custom-file-label" for="customFileEg1">{{\App\CentralLogics\translate('choose')}} {{\App\CentralLogics\translate('file')}}</label>
+                                    <label class="custom-file-label" for="customFileEg1">{{translate('choose')}} {{translate('file')}}</label>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('identity')}} {{\App\CentralLogics\translate('image')}}</label>
+                                <label class="input-label">{{translate('identity')}} {{translate('image')}}</label>
                                 <div>
                                     <div class="row" id="coba"></div>
                                 </div>
                             </div>
 
                             <div class="row">
-                                {{-- <label class="input-label">{{\App\CentralLogics\translate('identity')}} {{\App\CentralLogics\translate('images')}} : </label> --}}
-                                @foreach(json_decode($delivery_man['identity_image'],true) as $img)
+                                @foreach($deliveryMan['identity_image_fullpath'] as $img)
                                     <div class="col-6 col-sm-4 col-md-6">
-                                        <div><img class="mx-w100 max-h150px" src="{{asset('storage/app/public/delivery-man').'/'.$img}}"></div>
+                                        <div><img class="mx-w100 max-h150px" src="{{$img}}" alt="{{ translate('image') }}"></div>
                                     </div>
                                 @endforeach
                             </div>
@@ -131,22 +125,22 @@
                 <div class="card-header">
                     <h5 class="mb-0">
                         <i class="tio-user"></i>
-                        {{\App\CentralLogics\translate('account_Information')}}
+                        {{translate('account_Information')}}
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('email')}}</label>
-                                <input type="email" value="{{$delivery_man['email']}}" name="email" class="form-control"
+                                <label class="input-label">{{translate('email')}}</label>
+                                <input type="email" value="{{$deliveryMan['email']}}" name="email" class="form-control"
                                        placeholder="{{ translate('Ex : ex@example.com') }}"
                                        required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('password')}}</label>
+                                <label class="input-label">{{translate('password')}}</label>
                                 <div class="input-group input-group-merge">
                                     <input type="password" name="password" class="js-toggle-password form-control input-field"
                                            placeholder="{{ translate('Password minimum 6 characters') }}"
@@ -166,7 +160,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('confirm_Password')}}</label>
+                                <label class="input-label">{{translate('confirm_Password')}}</label>
                                 <div class="input-group input-group-merge">
                                     <input type="password" name="password_confirmation" class="js-toggle-password form-control input-field"
                                            placeholder="{{ translate('Password minimum 6 characters') }}"
@@ -187,8 +181,8 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-3">
-                        <button type="reset" class="btn btn-secondary">{{\App\CentralLogics\translate('reset')}}</button>
-                        <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('submit')}}</button>
+                        <button type="reset" class="btn btn-secondary">{{translate('reset')}}</button>
+                        <button type="submit" class="btn btn-primary">{{translate('submit')}}</button>
                     </div>
                 </div>
             </div>
@@ -198,26 +192,11 @@
 @endsection
 
 @push('script_2')
-    <script>
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-
-                reader.onload = function (e) {
-                    $('#viewer').attr('src', e.target.result);
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        $("#customFileEg1").change(function () {
-            readURL(this);
-        });
-    </script>
-
+    <script src="{{asset('public/assets/admin/js/deliveryman.js')}}"></script>
     <script src="{{asset('public/assets/admin/js/spartan-multi-image-picker.js')}}"></script>
     <script type="text/javascript">
+        "use strict"
+
         $(function () {
             $("#coba").spartanMultiImagePicker({
                 fieldName: 'identity_image[]',

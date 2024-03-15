@@ -8,20 +8,17 @@
 
 @section('content')
     <div class="content container-fluid">
-        <!-- Page Header -->
-        <div class="">
-            <h2 class="mb-1 text--primary">{{\App\CentralLogics\translate('welcome')}}, {{auth('admin')->user()->f_name}}.</h2>
-            <p class="text-dark fs-12">{{\App\CentralLogics\translate('welcome')}} {{\App\CentralLogics\translate('admin')}}, {{\App\CentralLogics\translate('_here_is_your_business_statistics')}}.</p>
+        <div>
+            <h2 class="mb-1 text--primary">{{translate('welcome')}}, {{optional(auth('admin'))->user()->f_name}}.</h2>
+            <p class="text-dark fs-12">{{translate('welcome')}} {{translate('admin')}}, {{translate('_here_is_your_business_statistics')}}.</p>
         </div>
-        <!-- End Page Header -->
 
-        <!-- Card -->
         <div class="card mb-3">
             <div class="card-body">
                 <div class="row justify-content-between align-items-center g-2 mb-3">
                     <div class="col-auto">
                         <h4 class="d-flex align-items-center gap-10 mb-0">
-                            <img width="20" src="{{asset('public/assets/admin/img/icons/business_analytics.png')}}" alt="Business Analytics">
+                            <img width="20" src="{{asset('public/assets/admin/img/icons/business_analytics.png')}}" alt="{{ translate('Business Analytics') }}">
                             {{translate('Business_Analytics')}}
                         </h4>
                     </div>
@@ -44,16 +41,13 @@
                 </div>
             </div>
         </div>
-        <!-- End Card -->
 
-        <!-- Card -->
         <div class="card mb-3">
-            <!-- Body -->
             <div class="card-body">
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-md-6">
                         <h4 class="d-flex align-items-center text-capitalize gap-10 mb-0">
-                            <img width="20" src="{{asset('public/assets/admin/img/icons/earning_statictics.png')}}" alt="Earning Statistics">
+                            <img width="20" src="{{asset('public/assets/admin/img/icons/earning_statictics.png')}}" alt="{{ translate('Earning Statistics') }}">
                             {{ translate('Earning_statistics') }}
                         </h4>
                     </div>
@@ -63,31 +57,29 @@
                                 <label>
                                     <input type="radio" name="statistics2" hidden checked>
                                     <span data-earn-type="yearEarn"
-                                          onclick="earningStatisticsUpdate(this)">This Year</span>
+                                          onclick="earningStatisticsUpdate(this)">{{ translate('this_year') }}</span>
                                 </label>
                             </li>
                             <li>
                                 <label>
                                     <input type="radio" name="statistics2" hidden="">
                                     <span data-earn-type="MonthEarn"
-                                    onclick="earningStatisticsUpdate(this)">This Month</span>
+                                    onclick="earningStatisticsUpdate(this)">{{ translate('this_month') }}</span>
                                 </label>
                             </li>
                             <li>
                                 <label>
                                     <input type="radio" name="statistics2" hidden="">
                                     <span data-earn-type="WeekEarn"
-                                          onclick="earningStatisticsUpdate(this)">This Week</span>
+                                          onclick="earningStatisticsUpdate(this)">{{ translate('this_week') }}</span>
                                 </label>
                             </li>
                         </ul>
                     </div>
 
                 </div>
-                <!-- End Row -->
 
-                <!-- Bar Chart -->
-                <div class="chartjs-custom" id="set-new-graph" style="height: 20rem">
+                <div class="chartjs-custom height-20rem" id="set-new-graph">
                     <canvas id="updatingData"
                             data-hs-chartjs-options='{
                     "type": "bar",
@@ -158,37 +150,25 @@
                     }
                     }'></canvas>
                 </div>
-                <!-- End Bar Chart -->
             </div>
-            <!-- End Body -->
         </div>
-        <!-- End Card -->
-
 
         <div class="row g-2">
             <div class="col-lg-6">
-                <!-- Card -->
                 <div class="card h-100">
-                    <!-- Header -->
                     <div class="card-header">
                         <h4 class="d-flex align-items-center text-capitalize gap-10 mb-0">
-                            <img width="20" src="{{asset('public/assets/admin/img/icons/business_overview.png')}}" alt="business overview">
+                            <img width="20" src="{{asset('public/assets/admin/img/icons/business_overview.png')}}" alt="{{ translate('business overview') }}">
                             {{ translate('Total Business Overview') }}
                         </h4>
                     </div>
-                    <!-- End Header -->
 
-                    <!-- Body -->
                     <div class="card-body" id="business-overview-board">
-                        <!-- Chart -->
                         <div class="chartjs-custom position-relative h-400">
                             <canvas id="business-overview"></canvas>
                         </div>
-                        <!-- End Chart -->
                     </div>
-                    <!-- End Body -->
                 </div>
-                <!-- End Card -->
             </div>
 
             <div class="col-lg-6">
@@ -213,16 +193,18 @@
 @endsection
 
 @push('script')
-    <script src="{{asset('public/assets/admin')}}/vendor/chart.js/dist/Chart.min.js"></script>
-    <script src="{{asset('public/assets/admin')}}/vendor/chart.js.extensions/chartjs-extensions.js"></script>
-    <script src="{{asset('public/assets/admin')}}/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="{{asset('public/assets/admin/vendor/chart.js/dist/Chart.min.js')}}"></script>
+    <script src="{{asset('public/assets/admin/vendor/chart.js.extensions/chartjs-extensions.js')}}"></script>
+    <script src="{{asset('public/assets/admin/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js')}}"></script>
 @endpush
 
 
 @push('script_2')
     <script>
-        var ctx = document.getElementById('business-overview');
-        var myChart = new Chart(ctx, {
+        'use strict';
+
+        let ctx = document.getElementById('business-overview');
+        let myChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: [
@@ -297,18 +279,14 @@
     </script>
 
     <script>
-        // INITIALIZATION OF CHARTJS
-        // =======================================================
         Chart.plugins.unregister(ChartDataLabels);
 
         $('.js-chart').each(function () {
             $.HSCore.components.HSChartJS.init($(this));
         });
 
-        var updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
+        let updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
 
-        // CALL WHEN TAB IS CLICKED
-        // =======================================================
         $('[data-toggle="chart-bar"]').click(function (e) {
             let keyDataset = $(e.currentTarget).attr('data-datasets')
 
@@ -348,8 +326,6 @@
         })
 
 
-        // INITIALIZATION OF BUBBLE CHARTJS WITH DATALABELS PLUGIN
-        // =======================================================
         $('.js-chart-datalabels').each(function () {
             $.HSCore.components.HSChartJS.init($(this), {
                 plugins: [ChartDataLabels],
@@ -357,19 +333,19 @@
                     plugins: {
                         datalabels: {
                             anchor: function (context) {
-                                var value = context.dataset.data[context.dataIndex];
+                                let value = context.dataset.data[context.dataIndex];
                                 return value.r < 20 ? 'end' : 'center';
                             },
                             align: function (context) {
-                                var value = context.dataset.data[context.dataIndex];
+                                let value = context.dataset.data[context.dataIndex];
                                 return value.r < 20 ? 'end' : 'center';
                             },
                             color: function (context) {
-                                var value = context.dataset.data[context.dataIndex];
+                                let value = context.dataset.data[context.dataIndex];
                                 return value.r < 20 ? context.dataset.backgroundColor : context.dataset.color;
                             },
                             font: function (context) {
-                                var value = context.dataset.data[context.dataIndex],
+                                let value = context.dataset.data[context.dataIndex],
                                     fontSize = 25;
 
                                 if (value.r > 50) {
@@ -395,8 +371,6 @@
 
     </script>
 
-    <!-- Earning Statistics Chart -->
-
     <script>
         function earningStatisticsUpdate(t) {
             let value = $(t).attr('data-earn-type');
@@ -414,7 +388,7 @@
                     let graph = document.createElement('canvas');
                     graph.setAttribute("id", "updatingData");
                     document.getElementById("set-new-graph").appendChild(graph);
-                    var ctx = document.getElementById("updatingData").getContext("2d");
+                    let ctx = document.getElementById("updatingData").getContext("2d");
 
                     let options = {
                         responsive: true,
@@ -474,7 +448,7 @@
                             intersect: true
                         }
                     };
-                    var myChart = new Chart(ctx, {
+                    let myChart = new Chart(ctx, {
                         type: 'bar',
                         data: {
                             labels: [],

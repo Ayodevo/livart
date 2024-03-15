@@ -2,63 +2,51 @@
 
 @section('title', translate('Order Report'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/order_report.png')}}" alt="">
-                {{\App\CentralLogics\translate('order_Report')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/order_report.png')}}" alt="{{ translate('order-report') }}">
+                {{translate('order_Report')}}
             </h2>
         </div>
 
-        <!-- Page Header -->
         <div class="card card-body mb-3">
             <div class="media gap-3 flex-column flex-sm-row align-items-sm-center">
-                <!-- Avatar -->
                 <div class="avatar avatar-xl avatar-4by3">
-                    <img class="avatar-img" src="{{asset('public/assets/admin')}}/svg/illustrations/order.png"
-                         alt="Image Description">
+                    <img class="avatar-img" src="{{asset('public/assets/admin/svg/illustrations/order.png')}}"
+                         alt="{{ translate('image') }}">
                 </div>
-                <!-- End Avatar -->
 
                 <div class="media-body">
                     <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
                         <div class="text-capitalize">
-                            <h2 class="page-header-title">{{\App\CentralLogics\translate('order')}} {{\App\CentralLogics\translate('report')}} {{\App\CentralLogics\translate('overview')}}</h2>
+                            <h2 class="page-header-title">{{translate('order_report_overview')}}</h2>
 
                             <div class="meida flex-column gap-3">
-                                <div class="">
-                                    <span>{{\App\CentralLogics\translate('admin')}}:</span>
+                                <div >
+                                    <span>{{translate('admin')}}:</span>
                                     <a href="#">{{auth('admin')->user()->f_name.' '.auth('admin')->user()->l_name}}</a>
                                 </div>
 
                                 <div class="media-body">
                                     <div class="d-flex align-items-center text-nowrap gap-2">
-                                        <div class="">{{\App\CentralLogics\translate('date')}}</div>
-
-                                        <!-- Flatpickr -->
+                                        <div >{{translate('date')}}</div>
                                         <div>
                                             ( {{session('from_date')}} - {{session('to_date')}} )
                                         </div>
-                                        <!-- End Flatpickr -->
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <a class="btn btn-icon btn-primary rounded-circle" href="{{route('admin.dashboard')}}">
                             <i class="tio-home-outlined"></i>
                         </a>
                     </div>
                 </div>
             </div>
-            <!-- End Media -->
         </div>
-        <!-- End Page Header -->
 
         <div class="card mb-3">
             <div class="card-body">
@@ -67,25 +55,22 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="mb-3">
-                                <label for="exampleInputEmail1" class="form-label">{{\App\CentralLogics\translate('show')}} {{\App\CentralLogics\translate('data')}} by {{\App\CentralLogics\translate('date')}}
-                                    {{\App\CentralLogics\translate('range')}}</label>
+                                <label for="exampleInputEmail1" class="form-label">{{translate('Show data by date range')}}</label>
                             </div>
                         </div>
                         <div class="col-sm-4">
                             <div class="mb-3">
-                                <input type="date" name="from" id="from_date"
-                                       class="form-control" required>
+                                <input type="date" name="from" id="from_date" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-sm-4">
                             <div class="mb-3">
-                                <input type="date" name="to" id="to_date"
-                                       class="form-control" required>
+                                <input type="date" name="to" id="to_date" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-sm-4">
                             <div class="mb-3">
-                                <button type="submit" class="btn btn-primary btn-block">{{\App\CentralLogics\translate('show')}}</button>
+                                <button type="submit" class="btn btn-primary btn-block">{{translate('show')}}</button>
                             </div>
                         </div>
                     </div>
@@ -109,22 +94,19 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col">
-                                <!-- Media -->
                                 <div class="media">
                                     <i class="tio-shopping-cart nav-icon"></i>
 
                                     <div class="media-body">
-                                        <h4 class="mb-1">{{\App\CentralLogics\translate('delivered')}}</h4>
+                                        <h4 class="mb-1">{{translate('delivered')}}</h4>
                                         <span class="font-size-sm text-success">
                                           <i class="tio-trending-up"></i> {{$delivered}}
                                         </span>
                                     </div>
                                 </div>
-                                <!-- End Media -->
                             </div>
 
                             <div class="col-auto">
-                                <!-- Circle -->
                                 <div class="js-circle"
                                      data-hs-circles-options='{
                                        "value": {{round(($delivered/$total)*100)}},
@@ -139,186 +121,160 @@
                                        "additionalText": "%",
                                        "textClass": "circle-custom-text",
                                        "textColor": "green"
-                                     }'></div>
-                                <!-- End Circle -->
+                                     }'>
+                                </div>
                             </div>
                         </div>
-                        <!-- End Row -->
                     </div>
                 </div>
-                <!-- End Card -->
             </div>
 
             <div class="col-sm-6 col-xl-3 mb-3">
                 @php
                     $returned=\App\Model\Order::where(['order_status'=>'returned'])->whereBetween('created_at', [$from, $to])->count()
                 @endphp
-                <!-- Card -->
                 <div class="card card-sm">
                     <div class="card-body">
                         <div class="row">
                             <div class="col">
-                                <!-- Media -->
                                 <div class="media">
                                     <i class="tio-shopping-cart-off nav-icon"></i>
 
                                     <div class="media-body">
-                                        <h4 class="mb-1">{{\App\CentralLogics\translate('returned')}}</h4>
+                                        <h4 class="mb-1">{{translate('returned')}}</h4>
                                         <span class="font-size-sm text-warning">
                                           <i class="tio-trending-up"></i> {{$returned}}
                                         </span>
                                     </div>
                                 </div>
-                                <!-- End Media -->
                             </div>
 
                             <div class="col-auto">
-                                <!-- Circle -->
                                 <div class="js-circle"
                                      data-hs-circles-options='{
-                           "value": {{round(($returned/$total)*100)}},
-                           "maxValue": 100,
-                           "duration": 2000,
-                           "isViewportInit": true,
-                           "colors": ["#e7eaf3", "#ec9a3c"],
-                           "radius": 25,
-                           "width": 3,
-                           "fgStrokeLinecap": "round",
-                           "textFontSize": 14,
-                           "additionalText": "%",
-                           "textClass": "circle-custom-text",
-                           "textColor": "#ec9a3c"
-                         }'></div>
-                                <!-- End Circle -->
+                                   "value": {{round(($returned/$total)*100)}},
+                                   "maxValue": 100,
+                                   "duration": 2000,
+                                   "isViewportInit": true,
+                                   "colors": ["#e7eaf3", "#ec9a3c"],
+                                   "radius": 25,
+                                   "width": 3,
+                                   "fgStrokeLinecap": "round",
+                                   "textFontSize": 14,
+                                   "additionalText": "%",
+                                   "textClass": "circle-custom-text",
+                                   "textColor": "#ec9a3c"
+                                 }'>
+                                </div>
                             </div>
                         </div>
-                        <!-- End Row -->
                     </div>
                 </div>
-                <!-- End Card -->
             </div>
 
             <div class="col-sm-6 col-xl-3 mb-3">
                 @php
                     $failed=\App\Model\Order::where(['order_status'=>'failed'])->whereBetween('created_at', [$from, $to])->count()
                 @endphp
-                <!-- Card -->
                 <div class="card card-sm">
                     <div class="card-body">
                         <div class="row">
                             <div class="col">
-                                <!-- Media -->
                                 <div class="media">
                                     <i class="tio-message-failed nav-icon"></i>
 
                                     <div class="media-body">
-                                        <h4 class="mb-1">{{\App\CentralLogics\translate('failed')}}</h4>
+                                        <h4 class="mb-1">{{translate('failed')}}</h4>
                                         <span class="font-size-sm text-danger">
                                           <i class="tio-trending-up"></i> {{$failed}}
                                         </span>
                                     </div>
                                 </div>
-                                <!-- End Media -->
                             </div>
 
                             <div class="col-auto">
-                                <!-- Circle -->
-                                <div class="js-circle"
-                                     data-hs-circles-options='{
-                           "value": {{round(($failed/$total)*100)}},
-                           "maxValue": 100,
-                           "duration": 2000,
-                           "isViewportInit": true,
-                           "colors": ["#e7eaf3", "darkred"],
-                           "radius": 25,
-                           "width": 3,
-                           "fgStrokeLinecap": "round",
-                           "textFontSize": 14,
-                           "additionalText": "%",
-                           "textClass": "circle-custom-text",
-                           "textColor": "darkred"
-                         }'></div>
-                                <!-- End Circle -->
+                                <div class="js-circle" data-hs-circles-options='{
+                                       "value": {{round(($failed/$total)*100)}},
+                                       "maxValue": 100,
+                                       "duration": 2000,
+                                       "isViewportInit": true,
+                                       "colors": ["#e7eaf3", "darkred"],
+                                       "radius": 25,
+                                       "width": 3,
+                                       "fgStrokeLinecap": "round",
+                                       "textFontSize": 14,
+                                       "additionalText": "%",
+                                       "textClass": "circle-custom-text",
+                                       "textColor": "darkred"
+                                     }'>
+                                </div>
                             </div>
                         </div>
-                        <!-- End Row -->
                     </div>
                 </div>
-                <!-- End Card -->
             </div>
 
             <div class="col-sm-6 col-xl-3 mb-3">
                 @php
                     $canceled=\App\Model\Order::where(['order_status'=>'canceled'])->whereBetween('created_at', [$from, $to])->count()
                 @endphp
-                <!-- Card -->
                 <div class="card card-sm">
                     <div class="card-body">
                         <div class="row">
                             <div class="col">
-                                <!-- Media -->
                                 <div class="media">
                                     <i class="tio-flight-cancelled nav-icon"></i>
 
                                     <div class="media-body">
-                                        <h4 class="mb-1">{{\App\CentralLogics\translate('canceled')}}</h4>
+                                        <h4 class="mb-1">{{translate('canceled')}}</h4>
                                         <span class="font-size-sm text-muted">
                                           <i class="tio-trending-up"></i> {{$canceled}}
                                         </span>
                                     </div>
                                 </div>
-                                <!-- End Media -->
                             </div>
 
                             <div class="col-auto">
-                                <!-- Circle -->
-                                <div class="js-circle"
-                                     data-hs-circles-options='{
-                           "value": {{round(($canceled/$total)*100)}},
-                           "maxValue": 100,
-                           "duration": 2000,
-                           "isViewportInit": true,
-                           "colors": ["#e7eaf3", "gray"],
-                           "radius": 25,
-                           "width": 3,
-                           "fgStrokeLinecap": "round",
-                           "textFontSize": 14,
-                           "additionalText": "%",
-                           "textClass": "circle-custom-text",
-                           "textColor": "gray"
-                         }'></div>
-                                <!-- End Circle -->
+                                <div class="js-circle" data-hs-circles-options='{
+                                   "value": {{round(($canceled/$total)*100)}},
+                                   "maxValue": 100,
+                                   "duration": 2000,
+                                   "isViewportInit": true,
+                                   "colors": ["#e7eaf3", "gray"],
+                                   "radius": 25,
+                                   "width": 3,
+                                   "fgStrokeLinecap": "round",
+                                   "textFontSize": 14,
+                                   "additionalText": "%",
+                                   "textClass": "circle-custom-text",
+                                   "textColor": "gray"
+                                 }'>
+                                </div>
                             </div>
                         </div>
-                        <!-- End Row -->
                     </div>
                 </div>
-                <!-- End Card -->
             </div>
         </div>
-        
+
         <div class="card mb-3">
-            <!-- Header -->
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                 @php
                     $x=1;
                     $y=12;
                     $total=\App\Model\Order::whereBetween('created_at', [date('Y-'.$x.'-01'), date('Y-'.$y.'-30')])->count()
                 @endphp
-                <h6 class="card-subtitle mb-0">{{\App\CentralLogics\translate('total')}} {{\App\CentralLogics\translate('orders')}} of {{date('Y')}}: <span
+                <h6 class="card-subtitle mb-0">{{translate('total orders of')}} {{date('Y')}}: <span
                         class="h3 ml-sm-2">{{round($total)}}</span>
                 </h6>
 
-                <!-- Unfold -->
                 <div class="hs-unfold">
                     <a class="js-hs-unfold-invoker btn btn-white d-flex gap-1 align-items-center"
                        href="{{route('admin.order.list',['status'=>'all'])}}">
-                        <i class="tio-shopping-cart-outlined"></i> {{\App\CentralLogics\translate('orders')}}
+                        <i class="tio-shopping-cart-outlined"></i> {{translate('orders')}}
                     </a>
                 </div>
-                <!-- End Unfold -->
             </div>
-            <!-- End Header -->
 
             @php
                 $delivered=[];
@@ -356,10 +312,8 @@
                     }
             @endphp
 
-            <!-- Body -->
             <div class="card-body">
-                <!-- Bar Chart -->
-                <div class="chartjs-custom" style="height: 18rem;">
+                <div class="chartjs-custom height-18rem">
                     <canvas class="js-chart"
                             data-hs-chartjs-options='{
                         "type": "line",
@@ -463,45 +417,34 @@
                       }'>
                     </canvas>
                 </div>
-                <!-- End Bar Chart -->
             </div>
-            <!-- End Body -->
         </div>
-        <!-- End Card -->
-        
-        <div class="card">
-            <!-- Header -->
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <h4 class="card-header-title">{{\App\CentralLogics\translate('weekly')}} {{\App\CentralLogics\translate('report')}}</h4>
 
-                <!-- Nav -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <h4 class="card-header-title">{{translate('weekly_report')}}</h4>
+
                 <ul class="nav nav-segment" id="eventsTab" role="tablist">
                     <li class="nav-item">
-                        <a class="nav-link active" id="this-week-tab" data-toggle="tab" href="#this-week"
-                            role="tab">
-                            {{\App\CentralLogics\translate('this')}} {{\App\CentralLogics\translate('week')}}
+                        <a class="nav-link active" id="this-week-tab" data-toggle="tab" href="#this-week" role="tab">
+                            {{translate('this')}} {{translate('week')}}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="last-week-tab" data-toggle="tab" href="#last-week" role="tab">
-                            {{\App\CentralLogics\translate('last')}} {{\App\CentralLogics\translate('week')}}
+                            {{translate('last')}} {{translate('week')}}
                         </a>
                     </li>
                 </ul>
-                <!-- End Nav -->
             </div>
-            <!-- End Header -->
 
-            <!-- Body -->
             <div class="card-body card-body-height">
                 @php
                     $orders= \App\Model\Order::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->get();
                 @endphp
-                <!-- Tab Content -->
                 <div class="tab-content" id="eventsTabContent">
                     <div class="tab-pane fade show active" id="this-week" role="tabpanel"
                             aria-labelledby="this-week-tab">
-                        <!-- Card -->
                         @foreach($orders as $order)
                             <a class="card card-border-left border-left-primary shadow-none rounded-0"
                                 href="{{route('admin.orders.details',['id'=>$order['id']])}}">
@@ -509,26 +452,22 @@
                                     <div class="row">
                                         <div class="col-sm mb-2 mb-sm-0">
                                             <h2 class="font-weight-normal mb-1">#{{$order['id']}} <small
-                                                    class="font-size-sm text-body text-uppercase">{{\App\CentralLogics\translate('id')}}</small>
+                                                    class="font-size-sm text-body text-uppercase">{{translate('id')}}</small>
                                             </h2>
-                                            <h5 class="text-hover-primary mb-0">{{\App\CentralLogics\translate('order')}} {{\App\CentralLogics\translate('amount')}}
+                                            <h5 class="text-hover-primary mb-0">{{translate('order')}} {{translate('amount')}}
                                                 : {{ Helpers::set_symbol($order['order_amount']) }}</h5>
                                             <small
                                                 class="text-body">{{date('d M Y',strtotime($order['created_at']))}}</small>
                                         </div>
 
                                         <div class="col-sm-auto align-self-sm-end">
-                                            <!-- Avatar Group -->
-                                            <div class="">
-                                                {{\App\CentralLogics\translate('status')}} <strong> : {{$order['order_status']}} <br></strong>
+                                            <div>
+                                                {{translate('status')}} <strong> : {{$order['order_status']}} <br></strong>
                                             </div>
-                                            <!-- End Avatar Group -->
                                         </div>
                                     </div>
-                                    <!-- End Row -->
                                 </div>
                             </a>
-                            <!-- End Card -->
                             <hr>
                         @endforeach
                     </div>
@@ -545,67 +484,50 @@
                                     <div class="row">
                                         <div class="col-sm mb-2 mb-sm-0">
                                             <h2 class="font-weight-normal mb-1">#{{$order['id']}} <small
-                                                    class="font-size-sm text-body text-uppercase">{{\App\CentralLogics\translate('id')}}</small>
+                                                    class="font-size-sm text-body text-uppercase">{{translate('id')}}</small>
                                             </h2>
-                                            <h5 class="text-hover-primary mb-0">{{\App\CentralLogics\translate('order')}} {{\App\CentralLogics\translate('amount')}}
+                                            <h5 class="text-hover-primary mb-0">{{translate('order')}} {{translate('amount')}}
                                                 : {{ Helpers::set_symbol($order['order_amount']) }} </h5>
                                             <small
                                                 class="text-body">{{date('d M Y',strtotime($order['created_at']))}}</small>
                                         </div>
 
                                         <div class="col-sm-auto align-self-sm-end">
-                                            <!-- Avatar Group -->
-                                            <div class="">
-                                                {{\App\CentralLogics\translate('status')}} <strong> : {{$order['order_status']}} <br></strong>
+                                            <div>
+                                                {{translate('status')}} <strong> : {{$order['order_status']}} <br></strong>
                                             </div>
-                                            <!-- End Avatar Group -->
                                         </div>
                                     </div>
-                                    <!-- End Row -->
                                 </div>
                             </a>
-                            <!-- End Card -->
                             <hr>
                         @endforeach
                     </div>
                 </div>
-                <!-- End Tab Content -->
             </div>
-            <!-- End Body -->
         </div>
     </div>
 @endsection
 
-@push('script')
-
-@endpush
-
 @push('script_2')
 
     <script src="{{asset('public/assets/admin')}}/vendor/chart.js/dist/Chart.min.js"></script>
-    <script
-        src="{{asset('public/assets/admin')}}/vendor/chartjs-chart-matrix/dist/chartjs-chart-matrix.min.js"></script>
+    <script src="{{asset('public/assets/admin')}}/vendor/chartjs-chart-matrix/dist/chartjs-chart-matrix.min.js"></script>
     <script src="{{asset('public/assets/admin')}}/js/hs.chartjs-matrix.js"></script>
 
     <script>
+        "use strict";
+
         $(document).on('ready', function () {
 
-            // INITIALIZATION OF FLATPICKR
-            // =======================================================
             $('.js-flatpickr').each(function () {
                 $.HSCore.components.HSFlatpickr.init($(this));
             });
 
-
-            // INITIALIZATION OF NAV SCROLLER
-            // =======================================================
             $('.js-nav-scroller').each(function () {
                 new HsNavScroller($(this)).init()
             });
 
-
-            // INITIALIZATION OF DATERANGEPICKER
-            // =======================================================
             $('.js-daterangepicker').daterangepicker();
 
             $('.js-daterangepicker-times').daterangepicker({
@@ -617,8 +539,8 @@
                 }
             });
 
-            var start = moment();
-            var end = moment();
+            let start = moment();
+            let end = moment();
 
             function cb(start, end) {
                 $('#js-daterangepicker-predefined .js-daterangepicker-predefined-preview').html(start.format('MMM D') + ' - ' + end.format('MMM D, YYYY'));
@@ -639,33 +561,25 @@
 
             cb(start, end);
 
-
-            // INITIALIZATION OF CHARTJS
-            // =======================================================
             $('.js-chart').each(function () {
                 $.HSCore.components.HSChartJS.init($(this));
             });
 
-            var updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
+            let updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
 
-            // Call when tab is clicked
             $('[data-toggle="chart"]').click(function (e) {
                 let keyDataset = $(e.currentTarget).attr('data-datasets')
 
-                // Update datasets for chart
                 updatingChart.data.datasets.forEach(function (dataset, key) {
                     dataset.data = updatingChartDatasets[keyDataset][key];
                 });
                 updatingChart.update();
             })
 
-
-            // INITIALIZATION OF MATRIX CHARTJS WITH CHARTJS MATRIX PLUGIN
-            // =======================================================
             function generateHoursData() {
-                var data = [];
-                var dt = moment().subtract(365, 'days').startOf('day');
-                var end = moment().startOf('day');
+                let data = [];
+                let dt = moment().subtract(365, 'days').startOf('day');
+                let end = moment().startOf('day');
                 while (dt <= end) {
                     data.push({
                         x: dt.format('YYYY-MM-DD'),
@@ -684,11 +598,11 @@
                         label: 'Commits',
                         data: generateHoursData(),
                         width: function (ctx) {
-                            var a = ctx.chart.chartArea;
+                            let a = ctx.chart.chartArea;
                             return (a.right - a.left) / 70;
                         },
                         height: function (ctx) {
-                            var a = ctx.chart.chartArea;
+                            let a = ctx.chart.chartArea;
                             return (a.bottom - a.top) / 10;
                         }
                     }]
@@ -700,7 +614,7 @@
                                 return '';
                             },
                             label: function (item, data) {
-                                var v = data.datasets[item.datasetIndex].data[item.index];
+                                let v = data.datasets[item.datasetIndex].data[item.index];
 
                                 if (v.v.toFixed() > 0) {
                                     return '<span class="font-weight-bold">' + v.v.toFixed() + ' hours</span> on ' + v.d;
@@ -757,37 +671,30 @@
                 }
             });
 
-
-            // INITIALIZATION OF CLIPBOARD
-            // =======================================================
             $('.js-clipboard').each(function () {
-                var clipboard = $.HSCore.components.HSClipboard.init(this);
+                let clipboard = $.HSCore.components.HSClipboard.init(this);
             });
 
-
-            // INITIALIZATION OF CIRCLES
-            // =======================================================
             $('.js-circle').each(function () {
-                var circle = $.HSCore.components.HSCircles.init($(this));
+                let circle = $.HSCore.components.HSCircles.init($(this));
             });
         });
     </script>
 
     <script>
         $('#from_date,#to_date').change(function () {
-            let fr = $('#from_date').val();
+            let from = $('#from_date').val();
             let to = $('#to_date').val();
-            if (fr != '' && to != '') {
-                if (fr > to) {
+            if (from != '' && to != '') {
+                if (from > to) {
                     $('#from_date').val('');
                     $('#to_date').val('');
-                    toastr.error('Invalid date range!', Error, {
+                    toastr.error({{ translate('Invalid date range!') }}, Error, {
                         CloseButton: true,
                         ProgressBar: true
                     });
                 }
             }
-
         })
     </script>
 @endpush

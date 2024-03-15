@@ -40,7 +40,7 @@ class SystemController extends Controller
      */
     public function fcm($id): string
     {
-        $fcm_token =  $this->admin->find(auth('admin')->id())->fcm_token;
+        $fcmToken =  $this->admin->find(auth('admin')->id())->fcm_token;
         $data = [
             'title' => 'New auto generate message arrived from admin dashboard',
             'description' => $id,
@@ -48,7 +48,7 @@ class SystemController extends Controller
             'image' => '',
             'type' => 'general',
         ];
-        Helpers::send_push_notif_to_device($fcm_token, $data);
+        Helpers::send_push_notif_to_device($fcmToken, $data);
 
         return "Notification sent to admin";
     }
@@ -58,7 +58,7 @@ class SystemController extends Controller
      */
     public function dashboard(): Factory|View|Application
     {
-        $top_sell =  $this->order_detail->with(['product'])
+        $topSell =  $this->order_detail->with(['product'])
             ->whereHas('order', function ($query){
                 $query->where('order_status', 'delivered');
             })
@@ -68,7 +68,7 @@ class SystemController extends Controller
             ->take(6)
             ->get();
 
-        $most_rated_products =  $this->product->rightJoin('reviews', 'reviews.product_id', '=', 'products.id')
+        $mostRatedProducts =  $this->product->rightJoin('reviews', 'reviews.product_id', '=', 'products.id')
             ->groupBy('product_id')
             ->select(['product_id',
                 DB::raw('AVG(reviews.rating) as ratings_average'),
@@ -78,7 +78,7 @@ class SystemController extends Controller
             ->take(6)
             ->get();
 
-        $top_customer = $this->order->with(['customer'])
+        $topCustomer = $this->order->with(['customer'])
             ->select('user_id', DB::raw('COUNT(user_id) as count'))
             ->groupBy('user_id')
             ->orderBy("count", 'desc')
@@ -93,9 +93,9 @@ class SystemController extends Controller
         $data['category'] = $this->category->where('parent_id', 0)->count();
         $data['branch'] = $this->branch->count();
 
-        $data['top_sell'] = $top_sell;
-        $data['most_rated_products'] = $most_rated_products;
-        $data['top_customer'] = $top_customer;
+        $data['top_sell'] = $topSell;
+        $data['most_rated_products'] = $mostRatedProducts;
+        $data['top_customer'] = $topCustomer;
 
         $from = \Carbon\Carbon::now()->startOfYear()->format('Y-m-d');
         $to = \Illuminate\Support\Carbon::now()->endOfYear()->format('Y-m-d');
@@ -103,7 +103,7 @@ class SystemController extends Controller
         /*earning statistics chart*/
 
         $earning = [];
-        $earning_data = $this->order->where([
+        $earningData = $this->order->where([
             'order_status' => 'delivered'
         ])->select(
             DB::raw('IFNULL(sum(order_amount),0) as sums'),
@@ -111,7 +111,7 @@ class SystemController extends Controller
         )->whereBetween('created_at', [$from, $to])->groupby('year', 'month')->get()->toArray();
         for ($inc = 1; $inc <= 12; $inc++) {
             $earning[$inc] = 0;
-            foreach ($earning_data as $match) {
+            foreach ($earningData as $match) {
                 if ($match['month'] == $inc) {
                     $earning[$inc] = $match['sums'];
                 }
@@ -124,7 +124,7 @@ class SystemController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function order_stats(Request $request): JsonResponse
+    public function orderStats(Request $request): JsonResponse
     {
         session()->put('statistics_type', $request['statistics_type']);
         $data = self::order_stats_data();
@@ -166,7 +166,7 @@ class SystemController extends Controller
                             return $query->whereMonth('created_at', Carbon::now());
                         })
                         ->count();
-        $out_for_delivery = $this->order->where(['order_status' => 'out_for_delivery'])
+        $outForDelivery = $this->order->where(['order_status' => 'out_for_delivery'])
                         ->when($today, function ($query) {
                             return $query->whereDate('created_at', Carbon::today());
                         })
@@ -215,16 +215,50 @@ class SystemController extends Controller
                         })
                         ->count();
 
+
+        $users = $this->user->when($today, function ($query) {
+                return $query->whereDate('created_at', Carbon::today());
+            })
+            ->when($this_month, function ($query) {
+                return $query->whereMonth('created_at', Carbon::now());
+            })
+            ->count();
+
+        $all_orders = $this->order->when($today, function ($query) {
+                return $query->whereDate('created_at', Carbon::today());
+            })
+            ->when($this_month, function ($query) {
+                return $query->whereMonth('created_at', Carbon::now());
+            })
+            ->count();
+
+
+        $low_stock = $this->product
+            ->where('total_stock', '<', 5)
+            ->when($today, function ($query) {
+                return $query->whereDate('created_at', Carbon::today());
+            })
+            ->when($this_month, function ($query) {
+                return $query->whereMonth('created_at', Carbon::now()->month);
+            })
+            ->count();
+
+
+
+
         $data = [
             'pending' => $pending,
             'confirmed' => $confirmed,
             'processing' => $processing,
-            'out_for_delivery' => $out_for_delivery,
+            'out_for_delivery' => $outForDelivery,
             'delivered' => $delivered,
             'all' => $all,
             'returned' => $returned,
             'failed' => $failed,
-            'canceled' => $canceled
+            'canceled' => $canceled,
+            'users' => $users,
+            'all_orders' => $all_orders,
+            'low_stock' => $low_stock,
         ];
 
         return $data;
@@ -233,12 +267,12 @@ class SystemController extends Controller
     /**
      * @return JsonResponse
      */
-    public function restaurant_data(): JsonResponse
+    public function restaurantData(): JsonResponse
     {
-        $new_order = DB::table('orders')->where(['checked' => 0])->count();
+        $newOrder = DB::table('orders')->where(['checked' => 0])->count();
         return response()->json([
             'success' => 1,
-            'data' => ['new_order' => $new_order]
+            'data' => ['new_order' => $newOrder]
         ]);
     }
 
@@ -254,7 +288,7 @@ class SystemController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function settings_update(Request $request): RedirectResponse
+    public function settingsUpdate(Request $request): RedirectResponse
     {
         $request->validate([
             'f_name' => 'required',
@@ -281,7 +315,7 @@ class SystemController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function settings_password_update(Request $request): RedirectResponse
+    public function settingsPasswordUpdate(Request $request): RedirectResponse
     {
         $request->validate([
             'password' => 'required|same:confirm_password|min:8',
@@ -299,11 +333,11 @@ class SystemController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_earning_statitics(Request $request): JsonResponse
+    public function getEarningStatitics(Request $request): JsonResponse
     {
         $dateType = $request->type;
 
-        $earning_data = array();
+        $earningData = array();
         if($dateType == 'yearEarn') {
             $number = 12;
             $from = \Illuminate\Support\Carbon::now()->startOfYear()->format('Y-m-d');
@@ -317,20 +351,20 @@ class SystemController extends Controller
             )->whereBetween('created_at', [$from, $to])->groupby('year', 'month')->get()->toArray();
 
             for ($inc = 1; $inc <= $number; $inc++) {
-                $earning_data[$inc] = 0;
+                $earningData[$inc] = 0;
                 foreach ($earning as $match) {
                     if ($match['month'] == $inc) {
-                        $earning_data[$inc] = $match['sums'];
+                        $earningData[$inc] = $match['sums'];
                     }
                 }
             }
-            $key_range = array("Jan","Feb","Mar","April","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+            $keyRange = array("Jan","Feb","Mar","April","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
 
         }elseif($dateType == 'MonthEarn') {
             $from = date('Y-m-01');
             $to = date('Y-m-t');
             $number = date('d',strtotime($to));
-            $key_range = range(1, $number);
+            $keyRange = range(1, $number);
 
             $earning = $this->order->where([
                 'order_status' => 'delivered'
@@ -340,10 +374,10 @@ class SystemController extends Controller
             )->whereBetween('created_at', [$from, $to])->groupby('year', 'month', 'day')->get()->toArray();
 
             for ($inc = 1; $inc <= $number; $inc++) {
-                $earning_data[$inc] = 0;
+                $earningData[$inc] = 0;
                 foreach ($earning as $match) {
                     if ($match['day'] == $inc) {
-                        $earning_data[$inc] = $match['sums'];
+                        $earningData[$inc] = $match['sums'];
                     }
                 }
             }
@@ -354,9 +388,9 @@ class SystemController extends Controller
 
             $from = Carbon::now()->startOfWeek()->format('Y-m-d 00:00:00');
             $to = Carbon::now()->endOfWeek()->format('Y-m-d 23:59:59');
-            $date_range = CarbonPeriod::create($from, $to)->toArray();
+            $dateRange = CarbonPeriod::create($from, $to)->toArray();
             $day_range = array();
-            foreach($date_range as $date){
+            foreach($dateRange as $date){
                 $day_range[] =$date->format('d');
             }
             $day_range = array_flip($day_range);
@@ -372,32 +406,32 @@ class SystemController extends Controller
                 DB::raw('YEAR(created_at) year, MONTH(created_at) month, DAY(created_at) day')
             )->whereBetween('created_at', [$from, $to])->groupby('year', 'month', 'day')->orderBy('created_at', 'ASC')->pluck('sums', 'day')->toArray();
 
-            $earning_data = array();
+            $earningData = array();
             foreach($day_range as $day=>$value){
                 $day_value = 0;
-                $earning_data[$day] = $day_value;
+                $earningData[$day] = $day_value;
             }
 
             foreach($earning as $order_day => $order_value){
-                if(array_key_exists($order_day, $earning_data)){
-                    $earning_data[$order_day] = $order_value;
+                if(array_key_exists($order_day, $earningData)){
+                    $earningData[$order_day] = $order_value;
                 }
             }
 
-            $key_range = array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+            $keyRange = array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
         }
 
-        $label = $key_range;
-        $earning_data_final = $earning_data;
+        $label = $keyRange;
+        $earningDataFinal = $earningData;
 
         $data = array(
             'earning_label' => $label,
-            'earning' => array_values($earning_data_final),
+            'earning' => array_values($earningDataFinal),
         );
         return response()->json($data);
     }
 
-    public function ignore_check_order()
+    public function ignoreCheckOrder()
     {
         $this->order->where(['checked' => 0])->update(['checked' => 1]);
         return redirect()->back();

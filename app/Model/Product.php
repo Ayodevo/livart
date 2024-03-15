@@ -5,6 +5,7 @@ namespace App\Model;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -20,6 +21,24 @@ class Product extends Model
         'wishlist_count' => 'integer',
         'total_stock' => 'integer',
     ];
+
+    protected $appends = ['image_fullpath'];
+
+    public function getImageFullPathAttribute()
+    {
+        $value = $this->image ?? [];
+        $imageUrlArray = is_array($value) ? $value : json_decode($value, true);
+        if (is_array($imageUrlArray)) {
+            foreach ($imageUrlArray as $key => $item) {
+                if (Storage::disk('public')->exists('product/' . $item)) {
+                    $imageUrlArray[$key] = asset('storage/app/public/product/'. $item) ;
+                } else {
+                    $imageUrlArray[$key] = asset('public/assets/admin/img/160x160/img2.jpg');
+                }
+            }
+        }
+        return $imageUrlArray;
+    }
 
     public function translations(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {

@@ -2,16 +2,12 @@
 
 @section('title', translate('Update Attribute'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/attribute.png')}}" alt="">
-                {{\App\CentralLogics\translate('attribute_update')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/attribute.png')}}" alt="{{ translate('attribute') }}">
+                {{translate('attribute_update')}}
             </h2>
         </div>
 
@@ -29,7 +25,7 @@
                         <ul class="nav nav-tabs mb-4 max-content">
                             @foreach(json_decode($language) as $lang)
                                 <li class="nav-item">
-                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -49,11 +45,11 @@
                                     ?>
                                     <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form"
                                          id="{{$lang}}-form">
-                                        <label class="input-label" for="exampleFormControlInput1">{{\App\CentralLogics\translate('name')}}({{strtoupper($lang)}})</label>
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('name')}}({{strtoupper($lang)}})</label>
                                         <input type="text" name="name[]" class="form-control"
                                                oninvalid="document.getElementById('en-link').click()" maxlength="255"
                                                value="{{$lang==$default_lang?$attribute['name']:($translate[$lang]['name']??'')}}"
-                                               placeholder="New Attribute" {{$lang == $default_lang? 'required':''}}>
+                                               placeholder="{{ translate('New Attribute') }}" {{$lang == $default_lang? 'required':''}}>
                                     </div>
                                     <input type="hidden" name="lang[]" value="{{$lang}}">
                                 @endforeach
@@ -63,8 +59,8 @@
                         <div class="row">
                             <div class="col-sm-6">
                                 <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
-                                    <label class="input-label" for="exampleFormControlInput1">{{\App\CentralLogics\translate('name')}} ({{strtoupper($lang)}})</label>
-                                    <input type="text" name="name[]" class="form-control" value="{{ $attribute['name'] }}" placeholder="New Attribute" {{$lang == $default_lang? 'required':''}}>
+                                    <label class="input-label" for="exampleFormControlInput1">{{translate('name')}} ({{strtoupper($lang)}})</label>
+                                    <input type="text" name="name[]" class="form-control" value="{{ $attribute['name'] }}" placeholder="{{ translate('New Attribute') }}" {{$lang == $default_lang? 'required':''}}>
                                 </div>
                                 <input type="hidden" name="lang[]" value="{{$lang}}">
                             </div>
@@ -72,8 +68,8 @@
                     @endif
 
                     <div class="d-flex justify-content-end gap-3">
-                        <button type="reset" class="btn btn-secondary">{{\App\CentralLogics\translate('reset')}}</button>
-                        <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('update')}}</button>
+                        <button type="reset" class="btn btn-secondary">{{translate('reset')}}</button>
+                        <button type="submit" class="btn btn-primary">{{translate('update')}}</button>
                     </div>
                 </form>
             </div>
@@ -84,6 +80,8 @@
 
 @push('script_2')
     <script>
+        'use strict'
+
         $(".lang_link").click(function(e){
             e.preventDefault();
             $(".lang_link").removeClass('active');
@@ -92,7 +90,6 @@
 
             let form_id = this.id;
             let lang = form_id.split("-")[0];
-            console.log(lang);
             $("#"+lang+"-form").removeClass('d-none');
             if(lang == '{{$default_lang}}')
             {

@@ -2,17 +2,13 @@
 
 @section('title', translate('New Joining Request'))
 
-@push('css_or_js')
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/deliveryman.png')}}" alt="">
-                {{\App\CentralLogics\translate('New Joining Request')}}
-                <span class="badge badge-soft-dark rounded-50 fs-14">{{ $delivery_men->total() }}</span>
+                <img width="20" src="{{asset('public/assets/admin/img/icons/deliveryman.png')}}" alt="{{ translate('deliveryman') }}">
+                {{translate('New Joining Request')}}
+                <span class="badge badge-soft-dark rounded-50 fs-14">{{ $deliveryman->total() }}</span>
             </h2>
             <ul class="nav nav-tabs border-0 mt-2">
                 <li class="nav-item">
@@ -33,7 +29,7 @@
                             placeholder="{{translate('Search by Name')}}" aria-label="Search"
                             value="{{ $search }}" required autocomplete="off">
                         <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('search')}}
+                            <button type="submit" class="btn btn-primary">{{translate('search')}}
                             </button>
                         </div>
                     </div>
@@ -44,27 +40,26 @@
                 <table class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table text-dark">
                     <thead class="thead-light">
                         <tr>
-                            <th>{{\App\CentralLogics\translate('SL')}}</th>
-                            <th>{{\App\CentralLogics\translate('name')}}</th>
-                            <th>{{\App\CentralLogics\translate('contact_Info')}}</th>
-                            <th>{{\App\CentralLogics\translate('branch')}}</th>
-                            <th>{{\App\CentralLogics\translate('Identity Type')}}</th>
-                            <th>{{\App\CentralLogics\translate('Identity Number')}}</th>
-                            <th class="text-center">{{\App\CentralLogics\translate('Identity Image')}}</th>
-                            <th class="text-center">{{\App\CentralLogics\translate('action')}}</th>
+                            <th>{{translate('SL')}}</th>
+                            <th>{{translate('name')}}</th>
+                            <th>{{translate('contact_Info')}}</th>
+                            <th>{{translate('branch')}}</th>
+                            <th>{{translate('Identity Type')}}</th>
+                            <th>{{translate('Identity Number')}}</th>
+                            <th class="text-center">{{translate('Identity Image')}}</th>
+                            <th class="text-center">{{translate('action')}}</th>
                         </tr>
                     </thead>
 
                     <tbody id="set-rows">
-                    @foreach($delivery_men as $key=>$dm)
+                    @foreach($deliveryman as $key=>$dm)
                         <tr>
-                            <td>{{$delivery_men->firstitem()+$key}}</td>
+                            <td>{{$deliveryman->firstitem()+$key}}</td>
                             <td>
                                 <div class="media gap-3 align-items-center">
                                     <div class="avatar rounded-circle">
                                         <img class="img-fit rounded-circle"
-                                            onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                                            src="{{asset('storage/app/public/delivery-man')}}/{{$dm['image']}}">
+                                            src="{{$dm['image-fullpath']}}" alt="{{translate('image')}}">
                                     </div>
                                     <div class="media-body">{{$dm['f_name'].' '.$dm['l_name']}}</div>
                                 </div>
@@ -84,26 +79,26 @@
                             <td>{{ $dm->identity_number }}</td>
                             <td class="text-center">
                                 <div class="d-flex gap-2" data-toggle="" data-placement="top" title="{{translate('click for bigger view')}}">
-                                    @foreach(json_decode($dm['identity_image'], true) as $identification_image)
-                                        @php($image_full_path = asset('storage/app/public/delivery-man'). '/' .$identification_image)
+                                    @foreach($dm['identity_image_fullpath'] as $identification_image)
                                         <div class="mx-h80 overflow-hidden">
-                                            <img class="cursor-pointer rounded img-fit p-2 w-100px max-h80px"
-                                                 onerror="this.src='{{asset('public/assets/admin/img/400x400/img2.jpg')}}'"
-                                                 src="{{$image_full_path}}"
-                                                 onclick="show_modal('{{$image_full_path}}')">
+                                            <img class="cursor-pointer rounded img-fit p-2 w-100px max-h80px show-identification-image"
+                                                 src="{{$identification_image}}"
+                                                 data-image="{{$identification_image}}" alt="{{translate('image')}}">
                                         </div>
                                     @endforeach
                                 </div>
                             </td>
                             <td>
                                 <div class="btn--container justify-content-center">
-                                    <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
+                                    <a class="btn btn-sm btn--primary btn-outline-primary action-btn route-alert"
                                        data-toggle="tooltip" data-placement="top" title="{{translate('Approve')}}"
-                                       onclick="request_alert('{{ route('admin.delivery-man.application', [$dm['id'], 'approved']) }}','{{ translate('you_want_to_approve_this_application') }}')"
+                                       data-route="{{ route('admin.delivery-man.application', [$dm['id'], 'approved']) }}"
+                                       data-message="{{ translate('you_want_to_deny_this_application') }}"
                                        href="javascript:"><i class="tio-done font-weight-bold"></i></a>
                                     @if ($dm->application_status != 'denied')
-                                        <a class="btn btn-sm btn--danger btn-outline-danger action-btn" data-toggle="tooltip" data-placement="top" title="{{translate('Deny')}}"
-                                           onclick="request_alert('{{ route('admin.delivery-man.application', [$dm['id'], 'denied']) }}','{{ translate('you_want_to_deny_this_application') }}')"
+                                        <a class="btn btn-sm btn--danger btn-outline-danger action-btn route-alert" data-toggle="tooltip" data-placement="top" title="{{translate('Deny')}}"
+                                           data-route="{{ route('admin.delivery-man.application', [$dm['id'], 'denied']) }}"
+                                           data-message="{{ translate('you_want_to_deny_this_application') }}"
                                            href="javascript:"><i
                                                 class="tio-clear"></i></a>
                                     @endif
@@ -116,15 +111,14 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
             <div class="table-responsive mt-4 px-3">
                 <div class="d-flex justify-content-end">
-                    {!! $delivery_men->links() !!}
+                    {!! $deliveryman->links() !!}
                 </div>
             </div>
-            @if(count($delivery_men)==0)
+            @if(count($deliveryman)==0)
                 <div class="text-center p-4">
-                    <img class="mb-3" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description" style="width: 7rem;">
+                    <img class="mb-3 width-7rem" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="Image Description">
                     <p class="mb-0">{{ translate('No data to show') }}</p>
                 </div>
             @endif
@@ -134,8 +128,8 @@
                     <div class="modal-content">
                         <div class="modal-body p-0">
                             <div data-dismiss="modal">
-                                <img onerror='this.src="{{asset('public/assets/admin/img/400x400/img2.jpg')}}"' alt=""
-                                     class="" id="identification_image_element" style="width: 100%">
+                                <img src="" alt="{{ translate('image') }}"
+                                     class="w-100" id="identification_image_element">
                             </div>
                         </div>
                     </div>
@@ -148,61 +142,6 @@
 @endsection
 
 @push('script_2')
+    <script src="{{ asset('public/assets/admin/js/deliveryman.js') }}"></script>
 
-    <script>
-        function show_modal(image_location) {
-            $('#identification_image_view_modal').modal('show');
-            if(image_location != null || image_location !== '') {
-                $('#identification_image_element').attr("src", image_location);
-            }
-        }
-    </script>
-
-    <script>
-        function request_alert(url, message) {
-            Swal.fire({
-                title: '{{ translate('are_you_sure') }}',
-                text: message,
-                type: 'warning',
-                showCancelButton: true,
-                cancelButtonColor: 'default',
-                confirmButtonColor: '#FC6A57',
-                cancelButtonText: '{{ translate('no') }}',
-                confirmButtonText: '{{ translate('yes') }}',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    location.href = url;
-                }
-            })
-        }
-    </script>
-
-    <script>
-        $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.delivery-man.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
-    </script>
 @endpush

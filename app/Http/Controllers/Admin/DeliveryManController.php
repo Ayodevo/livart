@@ -10,7 +10,6 @@ use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
@@ -38,70 +37,49 @@ class DeliveryManController extends Controller
      */
     public function list(Request $request): Factory|View|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $delivery_men = $this->delivery_man->where(function ($q) use ($key) {
+            $deliveryMan = $this->delivery_man->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('f_name', 'like', "%{$value}%")
                         ->orWhere('l_name', 'like', "%{$value}%")
                         ->orWhere('phone', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }else{
-            $delivery_men = $this->delivery_man;
+            $deliveryMan = $this->delivery_man;
         }
 
-        $delivery_men = $delivery_men->latest()->where('application_status', 'approved')->paginate(Helpers::pagination_limit())->appends($query_param);
-        return view('admin-views.delivery-man.list', compact('delivery_men', 'search'));
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function search(Request $request): JsonResponse
-    {
-        $key = explode(' ', $request['search']);
-        $delivery_men = $this->delivery_man->where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('f_name', 'like', "%{$value}%")
-                    ->orWhere('l_name', 'like', "%{$value}%")
-                    ->orWhere('email', 'like', "%{$value}%")
-                    ->orWhere('phone', 'like', "%{$value}%")
-                    ->orWhere('identity_number', 'like', "%{$value}%");
-            }
-        })->get();
-        return response()->json([
-            'view' => view('admin-views.delivery-man.partials._table', compact('delivery_men'))->render()
-        ]);
+        $deliveryMan = $deliveryMan->latest()->where('application_status', 'approved')->paginate(Helpers::pagination_limit())->appends($queryParam);
+        return view('admin-views.delivery-man.list', compact('deliveryMan', 'search'));
     }
 
     /**
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function reviews_list(Request $request): Factory|View|Application
+    public function reviewsList(Request $request): Factory|View|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $delivery_men = $this->delivery_man->where(function ($q) use ($key) {
+            $deliveryMan = $this->delivery_man->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('f_name', 'like', "%{$value}%")
                         ->orWhere('l_name', 'like', "%{$value}%");
                 }
             })->pluck('id')->toArray();
-            $reviews = $this->dm_review->whereIn('delivery_man_id', $delivery_men);
-            $query_param = ['search' => $request['search']];
+            $reviews = $this->dm_review->whereIn('delivery_man_id', $deliveryMan);
+            $queryParam = ['search' => $request['search']];
         }else{
             $reviews = $this->dm_review;
         }
 
-        $reviews = $reviews->with(['delivery_man', 'customer'])->latest()->paginate(Helpers::pagination_limit())->appends($query_param);
+        $reviews = $reviews->with(['delivery_man', 'customer'])->latest()->paginate(Helpers::pagination_limit())->appends($queryParam);
         return view('admin-views.delivery-man.reviews-list', compact('reviews', 'search'));
     }
 
@@ -111,9 +89,9 @@ class DeliveryManController extends Controller
      */
     public function preview($id): Factory|View|Application
     {
-        $dm = $this->delivery_man->with(['reviews'])->where(['id' => $id])->first();
+        $deliveryMan = $this->delivery_man->with(['reviews'])->where(['id' => $id])->first();
         $reviews = $this->dm_review->where(['delivery_man_id' => $id])->latest()->paginate(20);
-        return view('admin-views.delivery-man.view', compact('dm', 'reviews'));
+        return view('admin-views.delivery-man.view', compact('deliveryMan', 'reviews'));
     }
 
     /**
@@ -177,8 +155,8 @@ class DeliveryManController extends Controller
      */
     public function edit($id): View|Factory|Application
     {
-        $delivery_man = $this->delivery_man->find($id);
-        return view('admin-views.delivery-man.edit', compact('delivery_man'));
+        $deliveryMan = $this->delivery_man->find($id);
+        return view('admin-views.delivery-man.edit', compact('deliveryMan'));
     }
 
     /**
@@ -187,9 +165,9 @@ class DeliveryManController extends Controller
      */
     public function status(Request $request): RedirectResponse
     {
-        $delivery_man = $this->delivery_man->find($request->id);
-        $delivery_man->status = $request->status;
-        $delivery_man->save();
+        $deliveryMan = $this->delivery_man->find($request->id);
+        $deliveryMan->status = $request->status;
+        $deliveryMan->save();
         Toastr::success(translate('Delivery-man status updated!'));
         return back();
     }
@@ -209,28 +187,28 @@ class DeliveryManController extends Controller
             'f_name.required' => 'First name is required!'
         ]);
 
-        $delivery_man = $this->delivery_man->find($id);
+        $deliveryMan = $this->delivery_man->find($id);
 
-        if ($delivery_man['email'] != $request['email']) {
+        if ($deliveryMan['email'] != $request['email']) {
             $request->validate([
                 'email' => 'required|unique:delivery_men',
             ]);
         }
 
-        if ($delivery_man['phone'] != $request['phone']) {
+        if ($deliveryMan['phone'] != $request['phone']) {
             $request->validate([
                 'phone' => 'required|unique:delivery_men',
             ]);
         }
 
         if (!empty($request->file('image'))) {
-            $image_name = Helpers::update('delivery-man/', $delivery_man->image, 'png', $request->file('image'));
+            $image_name = Helpers::update('delivery-man/', $deliveryMan->image, 'png', $request->file('image'));
         } else {
-            $image_name = $delivery_man['image'];
+            $image_name = $deliveryMan['image'];
         }
 
         if (!empty($request->file('identity_image'))) {
-            foreach (json_decode($delivery_man['identity_image'], true) as $img) {
+            foreach (json_decode($deliveryMan['identity_image'], true) as $img) {
                 if (Storage::disk('public')->exists('delivery-man/' . $img)) {
                     Storage::disk('public')->delete('delivery-man/' . $img);
                 }
@@ -242,19 +220,19 @@ class DeliveryManController extends Controller
             }
             $identity_image = json_encode($img_keeper);
         } else {
-            $identity_image = $delivery_man['identity_image'];
+            $identity_image = $deliveryMan['identity_image'];
         }
-        $delivery_man->f_name = $request->f_name;
-        $delivery_man->l_name = $request->l_name;
-        $delivery_man->email = $request->email;
-        $delivery_man->phone = $request->phone;
-        $delivery_man->identity_number = $request->identity_number;
-        $delivery_man->identity_type = $request->identity_type;
-        $delivery_man->branch_id = $request->branch_id;
-        $delivery_man->identity_image = $identity_image;
-        $delivery_man->image = $image_name;
-        $delivery_man->password = strlen($request->password) > 1 ? bcrypt($request->password) : $delivery_man['password'];
-        $delivery_man->save();
+        $deliveryMan->f_name = $request->f_name;
+        $deliveryMan->l_name = $request->l_name;
+        $deliveryMan->email = $request->email;
+        $deliveryMan->phone = $request->phone;
+        $deliveryMan->identity_number = $request->identity_number;
+        $deliveryMan->identity_type = $request->identity_type;
+        $deliveryMan->branch_id = $request->branch_id;
+        $deliveryMan->identity_image = $identity_image;
+        $deliveryMan->image = $image_name;
+        $deliveryMan->password = strlen($request->password) > 1 ? bcrypt($request->password) : $deliveryMan['password'];
+        $deliveryMan->save();
         Toastr::success(translate('Delivery-man updated successfully'));
         return redirect('admin/delivery-man/list');
     }
@@ -265,18 +243,18 @@ class DeliveryManController extends Controller
      */
     public function delete(Request $request): RedirectResponse
     {
-        $delivery_man = $this->delivery_man->find($request->id);
-        if (Storage::disk('public')->exists('delivery-man/' . $delivery_man['image'])) {
-            Storage::disk('public')->delete('delivery-man/' . $delivery_man['image']);
+        $deliveryMan = $this->delivery_man->find($request->id);
+        if (Storage::disk('public')->exists('delivery-man/' . $deliveryMan['image'])) {
+            Storage::disk('public')->delete('delivery-man/' . $deliveryMan['image']);
         }
 
-        foreach (json_decode($delivery_man['identity_image'], true) as $img) {
+        foreach (json_decode($deliveryMan['identity_image'], true) as $img) {
             if (Storage::disk('public')->exists('delivery-man/' . $img)) {
                 Storage::disk('public')->delete('delivery-man/' . $img);
             }
         }
 
-        $delivery_man->delete();
+        $deliveryMan->delete();
         Toastr::success(translate('Delivery-man removed!'));
         return back();
     }
@@ -285,14 +263,14 @@ class DeliveryManController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function pending_list(Request $request): Factory|View|Application
+    public function pendingList(Request $request): Factory|View|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if($request->has('search'))
         {
             $key = explode(' ', $request['search']);
-            $delivery_men = $this->delivery_man->where(function ($q) use ($key) {
+            $deliveryman = $this->delivery_man->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('f_name', 'like', "%{$value}%")
                         ->orWhere('l_name', 'like', "%{$value}%")
@@ -300,31 +278,31 @@ class DeliveryManController extends Controller
                         ->orWhere('email', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }else{
-            $delivery_men = $this->delivery_man;
+            $deliveryman = $this->delivery_man;
         }
 
-        $delivery_men = $delivery_men->with('branch')
+        $deliveryman = $deliveryman->with('branch')
             ->where('application_status', 'pending')
             ->latest()->paginate(Helpers::getPagination())
-            ->appends($query_param);
+            ->appends($queryParam);
 
-        return view('admin-views.delivery-man.pending-list', compact('delivery_men','search'));
+        return view('admin-views.delivery-man.pending-list', compact('deliveryman','search'));
     }
 
     /**
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function denied_list(Request $request): Factory|View|Application
+    public function deniedList(Request $request): Factory|View|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if($request->has('search'))
         {
             $key = explode(' ', $request['search']);
-            $delivery_men = $this->delivery_man->where(function ($q) use ($key) {
+            $deliveryman = $this->delivery_man->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('f_name', 'like', "%{$value}%")
                         ->orWhere('l_name', 'like', "%{$value}%")
@@ -332,33 +310,33 @@ class DeliveryManController extends Controller
                         ->orWhere('email', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }else{
-            $delivery_men = $this->delivery_man;
+            $deliveryman = $this->delivery_man;
         }
-        $delivery_men = $delivery_men->with('branch')
+        $deliveryman = $deliveryman->with('branch')
             ->where('application_status', 'denied')
             ->latest()
             ->paginate(Helpers::getPagination())
-            ->appends($query_param);
+            ->appends($queryParam);
 
-        return view('admin-views.delivery-man.denied-list', compact('delivery_men','search'));
+        return view('admin-views.delivery-man.denied-list', compact('deliveryman','search'));
     }
 
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function update_application(Request $request): RedirectResponse
+    public function updateApplication(Request $request): RedirectResponse
     {
-        $delivery_man = $this->delivery_man->findOrFail($request->id);
-        $delivery_man->application_status = $request->status;
-        $delivery_man->save();
+        $deliveryMan = $this->delivery_man->findOrFail($request->id);
+        $deliveryMan->application_status = $request->status;
+        $deliveryMan->save();
 
         try{
             $emailServices = Helpers::get_business_settings('mail_config');
             if (isset($emailServices['status']) && $emailServices['status'] == 1) {
-                Mail::to($delivery_man->email)->send(new \App\Mail\DMSelfRegistration($request->status, $delivery_man->f_name.' '.$delivery_man->l_name));
+                Mail::to($deliveryMan->email)->send(new \App\Mail\DMSelfRegistration($request->status, $deliveryMan->f_name.' '.$deliveryMan->l_name));
             }
 
         }catch(\Exception $ex){

@@ -4,31 +4,26 @@
     <meta charset="utf-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- Title -->
     <title>@yield('title')</title>
-    <!-- Favicon -->
     @php($icon = \App\Model\BusinessSetting::where(['key' => 'fav_icon'])->first()->value)
     <link rel="icon" type="image/x-icon" href="{{ asset('storage/app/public/ecommerce/' . $icon ?? '') }}">
     <link rel="shortcut icon" href="">
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&amp;display=swap" rel="stylesheet">
-    <!-- CSS Implementing Plugins -->
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/vendor.min.css">
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/vendor/icon-set/style.css">
-    <!-- CSS Front Template -->
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/theme.minc619.css?v=1.0">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/font/open-sans.css')}}">
+
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/vendor.min.css')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/vendor/icon-set/style.css')}}">
+
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/theme.minc619.css?v=1.0')}}">
     <link href="{{asset('public/assets/admin/css/dropzone.min.css')}}" rel="stylesheet">
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/style.css">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/style.css')}}">
     @stack('css_or_js')
 
-    <script
-        src="{{asset('public/assets/admin')}}/vendor/hs-navbar-vertical-aside/hs-navbar-vertical-aside-mini-cache.js"></script>
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/toastr.css">
+    <script src="{{asset('public/assets/admin/vendor/hs-navbar-vertical-aside/hs-navbar-vertical-aside-mini-cache.js')}}"></script>
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/toastr.css')}}">
 </head>
 
 <body class="footer-offset">
 
-{{--loader--}}
 <div class="container">
     <div class="row">
         <div class="col-md-12">
@@ -40,25 +35,16 @@
         </div>
     </div>
 </div>
-{{--loader--}}
 
-<!-- Builder -->
 @include('layouts.admin.partials._front-settings')
-<!-- End Builder -->
 
-<!-- JS Preview mode only -->
 @include('layouts.admin.partials._header')
 @include('layouts.admin.partials._sidebar')
-<!-- END ONLY DEV -->
 
 <main id="content" role="main" class="main pointer-event">
-    <!-- Content -->
 @yield('content')
-<!-- End Content -->
 
-    <!-- Footer -->
 @include('layouts.admin.partials._footer')
-<!-- End Footer -->
 
     <div class="modal fade" id="popup-modal">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -66,14 +52,14 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-12">
-                            <center>
-                                <h2 style="color: rgba(96,96,96,0.68)">
+                            <div class="text-center">
+                                <h2>
                                     <i class="tio-shopping-cart-outlined"></i> {{translate('You have new order, Check Please.')}}
                                 </h2>
                                 <hr>
-                                <button onclick="ignore_order()" class="btn btn-warning mr-3">{{translate('Ignore for now')}}</button>
-                                <button onclick="check_order()" class="btn btn-primary">{{translate('Ok, let me check')}}</button>
-                            </center>
+                                <button class="btn btn-warning mr-3 ignore-order">{{translate('Ignore for now')}}</button>
+                                <button class="btn btn-primary check-order">{{translate('Ok, let me check')}}</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -82,19 +68,15 @@
     </div>
 
 </main>
-<!-- ========== END MAIN CONTENT ========== -->
 
-<!-- ========== END SECONDARY CONTENTS ========== -->
-<script src="{{asset('public/assets/admin')}}/js/custom.js"></script>
-<!-- JS Implementing Plugins -->
+<span id="message-send-successfully" data-text="{{ translate('Okay') }}"></span>
+<script src="{{asset('public/assets/admin/js/custom.js')}}"></script>
 
 @stack('script')
-
-<!-- JS Front -->
-<script src="{{asset('public/assets/admin')}}/js/vendor.min.js"></script>
-<script src="{{asset('public/assets/admin')}}/js/theme.min.js"></script>
-<script src="{{asset('public/assets/admin')}}/js/sweet_alert.js"></script>
-<script src="{{asset('public/assets/admin')}}/js/toastr.js"></script>
+<script src="{{asset('public/assets/admin/js/vendor.min.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/theme.min.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/sweet_alert.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/toastr.js')}}"></script>
 {!! Toastr::message() !!}
 
 @if ($errors->any())
@@ -107,11 +89,9 @@
         @endforeach
     </script>
 @endif
-<!-- JS Plugins Init. -->
 <script>
     $(document).on('ready', function () {
-        // ONLY DEV
-        // =======================================================
+
         if (window.localStorage.getItem('hs-builder-popover') === null) {
             $('#builderPopover').popover('show')
                 .on('shown.bs.popover', function () {
@@ -127,31 +107,20 @@
                 return false
             });
         }
-        // END ONLY DEV
-        // =======================================================
 
-        // BUILDER TOGGLE INVOKER
-        // =======================================================
         $('.js-navbar-vertical-aside-toggle-invoker').click(function () {
             $('.js-navbar-vertical-aside-toggle-invoker i').tooltip('hide');
         });
 
-        // INITIALIZATION OF MEGA MENU
-        // =======================================================
-        var megaMenu = new HSMegaMenu($('.js-mega-menu'), {
+
+        let megaMenu = new HSMegaMenu($('.js-mega-menu'), {
             desktop: {
                 position: 'left'
             }
         }).init();
 
+        let sidebar = $('.js-navbar-vertical-aside').hsSideNav();
 
-        // INITIALIZATION OF NAVBAR VERTICAL NAVIGATION
-        // =======================================================
-        var sidebar = $('.js-navbar-vertical-aside').hsSideNav();
-
-
-        // INITIALIZATION OF TOOLTIP IN NAVBAR VERTICAL MENU
-        // =======================================================
         $('.js-nav-tooltip-link').tooltip({boundary: 'window'})
 
         $(".js-nav-tooltip-link").on("show.bs.tooltip", function (e) {
@@ -160,30 +129,18 @@
             }
         });
 
-
-        // INITIALIZATION OF UNFOLD
-        // =======================================================
         $('.js-hs-unfold-invoker').each(function () {
             var unfold = new HSUnfold($(this)).init();
         });
 
-
-        // INITIALIZATION OF FORM SEARCH
-        // =======================================================
         $('.js-form-search').each(function () {
             new HSFormSearch($(this)).init()
         });
 
-
-        // INITIALIZATION OF SELECT2
-        // =======================================================
         $('.js-select2-custom').each(function () {
             var select2 = $.HSCore.components.HSSelect2.init($(this));
         });
 
-
-        // INITIALIZATION OF DATERANGEPICKER
-        // =======================================================
         $('.js-daterangepicker').daterangepicker();
 
         $('.js-daterangepicker-times').daterangepicker({
@@ -195,25 +152,20 @@
             }
         });
 
-        var start = moment();
-        var end = moment();
-        // INITIALIZATION OF CLIPBOARD
-        // =======================================================
+        let start = moment();
+        let end = moment();
+
         $('.js-clipboard').each(function () {
-            var clipboard = $.HSCore.components.HSClipboard.init(this);
+            let clipboard = $.HSCore.components.HSClipboard.init(this);
         });
     });
 </script>
 <script>
     $(document).on('ready', function () {
-        // INITIALIZATION OF SHOW PASSWORD
-        // =======================================================
         $('.js-toggle-password').each(function () {
             new HSTogglePassword(this).init()
         });
 
-        // INITIALIZATION OF FORM VALIDATION
-        // =======================================================
         $('.js-validate').each(function () {
             $.HSCore.components.HSValidation.init($(this));
         });
@@ -226,7 +178,7 @@
 </audio>
 
 <script>
-    var audio = document.getElementById("myAudio");
+    let audio = document.getElementById("myAudio");
 
     function playAudio() {
         audio.play();
@@ -251,13 +203,19 @@
         });
     }, 10000);
 
-    function ignore_order() {
+    $('.ignore-order').on('click', function (){
         location.href = '{{route('admin.ignore-check-order')}}';
-    }
+    })
 
-    function check_order() {
-        location.href = '{{route('admin.order.list',['status'=>'all'])}}';
-    }
+    $('.check-order').on('click', function (){
+        location.href = '{{route('admin.orders.list',['status'=>'all'])}}';
+    })
+
+    $('.route-alert').on('click', function (){
+        let route = $(this).data('route');
+        let message = $(this).data('message');
+        route_alert(route, message)
+    });
 
     function route_alert(route, message) {
         Swal.fire({
@@ -276,6 +234,12 @@
             }
         })
     }
+
+    $('.form-alert').on('click', function (){
+        let id = $(this).data('id');
+        let message = $(this).data('message');
+        form_alert(id, message)
+    });
 
     function form_alert(id, message) {
         Swal.fire({
@@ -299,10 +263,11 @@
         toastr.info('Disabled for demo version!')
     }
 
-    /*============================================
-    Reset Button Trigger Upload file
-    ==============================================*/
-    var initialImages = [];
+    $('.change-status').on('click', function (){
+        location.href = $(this).data('route');
+    });
+
+    let initialImages = [];
     $(window).on('load', function() {
         $("form").find('img').each(function (index, value) {
             initialImages.push(value.src);
@@ -315,6 +280,12 @@
                 $(value).attr('src', initialImages[index]);
             })
         });
+    });
+
+    $('.demo-form-submit').click(function() {
+        if ('{{ env('APP_MODE') }}' === 'demo') {
+            call_demo();
+        }
     });
 
 </script>

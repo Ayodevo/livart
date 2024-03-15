@@ -2,23 +2,18 @@
 
 @section('title', translate('Dashboard'))
 
-@push('css_or_js')
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="d-flex">{{translate('dashboard')}}</h2>
         </div>
 
-        <!-- Card -->
         <div class="card mb-3">
             <div class="card-body">
                 <div class="row justify-content-between align-items-center g-2 mb-3">
                     <div class="col-auto">
                         <h4 class="d-flex align-items-center gap-10 mb-0">
-                            <img width="20" src="{{asset('public/assets/admin/img/icons/business_analytics.png')}}" alt="Business Analytics">
+                            <img width="20" src="{{asset('public/assets/admin/img/icons/business_analytics.png')}}" alt="{{ translate('Business Analytics') }}">
                             {{translate('Business_Analytics')}}
                         </h4>
                     </div>
@@ -41,10 +36,8 @@
                 </div>
             </div>
         </div>
-        <!-- End Card -->
 
         <div class="card">
-            <!-- Body -->
             <div class="card-body">
                 <div class="row g-2 align-items-center mb-2">
                     <div class="col-md-6">
@@ -59,31 +52,29 @@
                                 <label>
                                     <input type="radio" name="statistics2" hidden checked>
                                     <span data-earn-type="yearEarn"
-                                          onclick="earningStatisticsUpdate(this)">This Year</span>
+                                          onclick="earningStatisticsUpdate(this)">{{ translate('This Year') }}</span>
                                 </label>
                             </li>
                             <li>
                                 <label>
                                     <input type="radio" name="statistics2" hidden="">
                                     <span data-earn-type="MonthEarn"
-                                          onclick="earningStatisticsUpdate(this)">This Month</span>
+                                          onclick="earningStatisticsUpdate(this)">{{ translate('This Month') }}</span>
                                 </label>
                             </li>
                             <li>
                                 <label>
                                     <input type="radio" name="statistics2" hidden="">
                                     <span data-earn-type="WeekEarn"
-                                          onclick="earningStatisticsUpdate(this)">This Week</span>
+                                          onclick="earningStatisticsUpdate(this)">{{ translate('This Week') }}</span>
                                 </label>
                             </li>
                         </ul>
                     </div>
 
                 </div>
-                <!-- End Row -->
 
-                <!-- Bar Chart -->
-                <div class="chartjs-custom" id="set-new-graph" style="height: 20rem">
+                <div class="chartjs-custom height-20rem" id="set-new-graph">
                     <canvas id="updatingData"
                             data-hs-chartjs-options='{
                     "type": "bar",
@@ -154,29 +145,22 @@
                     }
                     }'></canvas>
                 </div>
-                <!-- End Bar Chart -->
-                <!-- End Bar Chart -->
             </div>
-            <!-- End Body -->
         </div>
     </div>
 @endsection
 
 @push('script')
-    <script src="{{asset('public/assets/admin')}}/vendor/chart.js/dist/Chart.min.js"></script>
-    <script src="{{asset('public/assets/admin')}}/vendor/chart.js.extensions/chartjs-extensions.js"></script>
-    <script src="{{asset('public/assets/admin')}}/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="{{asset('public/assets/admin/vendor/chart.js/dist/Chart.min.js')}}"></script>
+    <script src="{{asset('public/assets/admin/vendor/chart.js.extensions/chartjs-extensions.js')}}"></script>
+    <script src="{{asset('public/assets/admin/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js')}}"></script>
 @endpush
 
 
 @push('script_2')
     <script>
-        // INITIALIZATION OF CHARTJS
-        // =======================================================
         Chart.plugins.unregister(ChartDataLabels);
-
-        var updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
-
+        let updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
     </script>
 
     <script>
@@ -226,7 +210,7 @@
                     let graph = document.createElement('canvas');
                     graph.setAttribute("id", "updatingData");
                     document.getElementById("set-new-graph").appendChild(graph);
-                    var ctx = document.getElementById("updatingData").getContext("2d");
+                    let ctx = document.getElementById("updatingData").getContext("2d");
 
                     let options = {
                         responsive: true,
@@ -286,7 +270,7 @@
                             intersect: true
                         }
                     };
-                    var myChart = new Chart(ctx, {
+                    let myChart = new Chart(ctx, {
                         type: 'bar',
                         data: {
                             labels: [],

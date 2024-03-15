@@ -7,6 +7,7 @@ use App\Model\Order;
 use App\Model\Wishlist;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
@@ -40,6 +41,19 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_phone_verified' => 'integer',
     ];
+
+    protected $appends = ['image_fullpath'];
+
+    public function getImageFullPathAttribute(): string
+    {
+        $image = $this->image ?? null;
+        $path = asset('public/assets/admin/img/160x160/img1.jpg');
+
+        if (!is_null($image) && Storage::disk('public')->exists('profile/' . $image)) {
+            $path = asset('storage/app/public/profile/' . $image);
+        }
+        return $path;
+    }
 
     public function orders(){
         return $this->hasMany(Order::class,'user_id');

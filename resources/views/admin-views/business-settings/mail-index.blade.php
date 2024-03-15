@@ -2,16 +2,12 @@
 
 @section('title', translate('Mail Settings'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-4">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="">
-                {{\App\CentralLogics\translate('3rd_Party')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/third-party.png')}}" alt="{{ translate('3rd_Party_image') }}">
+                {{translate('3rd_Party')}}
             </h2>
         </div>
 
@@ -42,7 +38,8 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
-                                    <button type="button" onclick="send_mail()" class="btn btn-primary h-100 btn-block">
+                                    <button type="button" id="send-mail"
+                                            class="btn btn-primary h-100 btn-block">
                                         <i class="tio-telegram"></i>
                                         {{translate('send_mail')}}
                                     </button>
@@ -50,7 +47,6 @@
                             </div>
                         </form>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -63,10 +59,10 @@
                 <div class="d-flex flex-wrap mb-3">
                     <label class="control-label h3 text-capitalize mr-3">{{translate('mail configuration status')}}</label>
                     <div class="custom--switch">
-                        <input type="checkbox" name="status" value="" id="switch6" switch="primary"
-                               onclick="mail_status_change('{{route('admin.business-settings.mail-config.status',[$status])}}')"
-                               class="toggle-switch-input" id="stocksCheckbox{{ 1 }}" {{ $data['status'] ==  1 ? 'checked' : '' }}>
-                        <label for="switch6" data-on-label="on" data-off-label="off"></label>
+                        <input type="checkbox" name="status" value="" id="toggle-mail-status" switch="primary"
+                               data-route="{{route('admin.business-settings.mail-config.status',[$status])}}"
+                               class="toggle-switch-input" {{ $data['status'] ==  1 ? 'checked' : '' }}>
+                        <label for="toggle-mail-status" data-on-label="on" data-off-label="off"></label>
                     </div>
                 </div>
                 <form action="{{route('admin.business-settings.mail-config')}}" method="post" enctype="multipart/form-data">
@@ -75,56 +71,56 @@
                         <div class="row">
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('mailer')}} {{\App\CentralLogics\translate('name')}}</label>
+                                    <label>{{translate('mailer')}} {{translate('name')}}</label>
                                     <input type="text" placeholder="{{ translate('ex : Alex') }}" class="form-control" name="name"
                                         value="{{env('APP_MODE')=='demo'?'':$data['name']}}" required>
                                 </div>
                             </div>
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('host')}}</label>
+                                    <label>{{translate('host')}}</label>
                                     <input type="text" class="form-control" name="host"
                                         value="{{env('APP_MODE')=='demo'?'':$data['host']}}" required>
                                 </div>
                             </div>
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('driver')}}</label>
+                                    <label>{{translate('driver')}}</label>
                                     <input type="text" class="form-control" name="driver"
                                         value="{{env('APP_MODE')=='demo'?'':$data['driver']}}" required>
                                 </div>
                             </div>
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('port')}}</label>
+                                    <label>{{translate('port')}}</label>
                                     <input type="text" class="form-control" name="port"
                                         value="{{env('APP_MODE')=='demo'?'':$data['port']}}" required>
                                 </div>
                             </div>
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('username')}}</label>
+                                    <label>{{translate('username')}}</label>
                                     <input type="text" placeholder="{{ translate('ex : ex@yahoo.com') }}" class="form-control" name="username"
                                         value="{{env('APP_MODE')=='demo'?'':$data['username']}}" required>
                                 </div>
                             </div>
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('email')}} {{\App\CentralLogics\translate('id')}}</label>
+                                    <label>{{translate('email')}} {{translate('id')}}</label>
                                     <input type="text" placeholder="{{ translate('ex : ex@yahoo.com') }}" class="form-control" name="email"
                                         value="{{env('APP_MODE')=='demo'?'':$data['email_id']}}" required>
                                 </div>
                             </div>
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('encryption')}}</label>
+                                    <label>{{translate('encryption')}}</label>
                                     <input type="text" placeholder="{{ translate('ex : tls') }}" class="form-control" name="encryption"
                                         value="{{env('APP_MODE')=='demo'?'':$data['encryption']}}" required>
                                 </div>
                             </div>
                             <div class="col-xl-4 col-sm-6">
                                 <div class="form-group">
-                                    <label>{{\App\CentralLogics\translate('password')}}</label>
+                                    <label>{{translate('password')}}</label>
                                     <input type="text" class="form-control" name="password"
                                         value="{{env('APP_MODE')=='demo'?'':$data['password']}}" required>
                                 </div>
@@ -132,18 +128,13 @@
                         </div>
 
                         <div class="d-flex justify-content-end">
-                            @if(env('APP_MODE')=='demo')
-                                <button type="button"
-                                        onclick="call_demo()"
-                                        class="btn btn-primary">{{ translate('Save Changes') }}
-                                </button>
-                            @else
-                                <button type="submit" class="btn btn-primary mb-2">{{\App\CentralLogics\translate('save')}}</button>
-                            @endif
+                            <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
+                                    class="btn btn-primary demo-form-submit">{{translate('save')}}
+                            </button>
                         </div>
                     @else
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary mb-2">{{\App\CentralLogics\translate('configure')}}</button>
+                            <button type="submit" class="btn btn-primary mb-2">{{translate('configure')}}</button>
                         </div>
                     @endif
                 </form>
@@ -154,8 +145,10 @@
 
 @push('script_2')
     <script>
-        function mail_status_change(route) {
+        "use strict"
 
+        $('#toggle-mail-status').on('click', function (){
+            let route = $(this).data('route');
             $.get({
                 url: route,
                 contentType: false,
@@ -170,7 +163,7 @@
                     $('#loading').hide();
                 },
             });
-        }
+        });
 
         function ValidateEmail(inputText) {
             var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -181,7 +174,7 @@
             }
         }
 
-        function send_mail() {
+        $('#send-mail').on('click', function (){
             if (ValidateEmail($('#test-email').val())) {
                 Swal.fire({
                     title: '{{translate('Are you sure?')}}?',
@@ -225,7 +218,7 @@
             } else {
                 toastr.error('{{translate('invalid_email_address')}} !!');
             }
-        }
+        });
 
     </script>
 @endpush

@@ -31,17 +31,15 @@
                     $discount_on_product += ($cartItem['discount'] * $cartItem['quantity']);
                     $subtotal += $product_subtotal;
 
-                    //tax calculation
                     $product = \App\Model\Product::find($cartItem['id']);
-                    $total_tax += \App\CentralLogics\Helpers::tax_calculate($product, $cartItem['price']) * $cartItem['quantity'];
+                    $total_tax += Helpers::tax_calculate($product, $cartItem['price']) * $cartItem['quantity'];
 
                     ?>
                     <tr>
                         <td class="media gap-2 align-items-center">
                             <div class="avatar-sm rounded border">
                                 <img class="img-fit rounded"
-                                    src="{{asset('storage/app/public/product')}}/{{json_decode($cartItem['image'], true)[0]}}"
-                                    onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.jpg')}}'"
+                                    src="{{$cartItem['image'][0]}}"
                                     alt="{{$cartItem['name']}} image">
                             </div>
                             <div class="media-body">
@@ -71,37 +69,34 @@
 </div>
 
 <?php
-$total = $subtotal;
+    $total = $subtotal;
 
-$session_subtotal = $subtotal;
-$session_total = $subtotal+$total_tax-$discount_on_product;
-\Session::put('subtotal', $session_subtotal);
-\Session::put('total', $session_total);
+    $session_subtotal = $subtotal;
+    $session_total = $subtotal+$total_tax-$discount_on_product;
+    \Session::put('subtotal', $session_subtotal);
+    \Session::put('total', $session_total);
 
-$discount_amount = ($discount_type == 'percent' && $discount > 0) ? (($total * $discount) / 100) : $discount;
-$discount_amount += $discount_on_product;
-$total -= $discount_amount;
+    $discount_amount = ($discount_type == 'percent' && $discount > 0) ? (($total * $discount) / 100) : $discount;
+    $discount_amount += $discount_on_product;
+    $total -= $discount_amount;
 
-$extra_discount = session()->get('cart')['extra_discount'] ?? 0;
-$extra_discount_type = session()->get('cart')['extra_discount_type'] ?? 'amount';
-if ($extra_discount_type == 'percent' && $extra_discount > 0) {
-    $extra_discount = ($subtotal * $extra_discount) / 100;
-}
-if ($extra_discount) {
-    $total -= $extra_discount;
-}
+    $extra_discount = session()->get('cart')['extra_discount'] ?? 0;
+    $extra_discount_type = session()->get('cart')['extra_discount_type'] ?? 'amount';
+    if ($extra_discount_type == 'percent' && $extra_discount > 0) {
+        $extra_discount = ($subtotal * $extra_discount) / 100;
+    }
+    if ($extra_discount) {
+        $total -= $extra_discount;
+    }
 ?>
 <div class="box p-3">
     <dl class="row">
         <dt class="col-6">{{translate('sub_total')}} :</dt>
         <dd class="col-6 text-end">{{ Helpers::set_symbol($subtotal) }}</dd>
-
-
         <dt class="col-6">{{translate('product')}} {{translate('discount')}}:
         </dt>
         <dd class="col-6 text-end">
             - {{ Helpers::set_symbol(round($discount_amount,2)) }}</dd>
-
 
         <dt class="col-6">{{translate('extra')}} {{translate('discount')}}:
         </dt>
@@ -122,33 +117,32 @@ if ($extra_discount) {
     <form action="{{route('branch.pos.order')}}" id='order_place' method="post">
         @csrf
         <div class="my-4">
-            <div class="text-dark d-flex mb-2">Paid By:</div>
+            <div class="text-dark d-flex mb-2">{{ translate('Paid By') }}:</div>
             <ul class="list-unstyled option-buttons">
                 <li>
                     <input type="radio" id="cash" value="cash" name="type" hidden="" checked="">
-                    <label for="cash" class="btn border px-4 mb-0">Cash</label>
+                    <label for="cash" class="btn border px-4 mb-0">{{ translate('Cash') }}</label>
                 </li>
                 <li>
                     <input type="radio" value="card" id="card" name="type" hidden="">
-                    <label for="card" class="btn border px-4 mb-0">Card</label>
+                    <label for="card" class="btn border px-4 mb-0">{{ translate('Card') }}</label>
                 </li>
             </ul>
         </div>
 
         <div class="row g-2">
             <div class="col-sm-6">
-                <a href="#" class="btn btn-danger btn-sm btn-block" onclick="emptyCart()"><i
-                        class="fa fa-times-circle"></i> {{\App\CentralLogics\translate('Cancel_Order')}} </a>
+                <a href="#" class="btn btn-danger btn-block pos-empty-cart">
+                    <i class="fa fa-times-circle"></i> {{translate('Cancel_Order')}} </a>
             </div>
             <div class="col-sm-6">
-                <button type="submit" class="btn  btn-primary btn-sm btn-block"><i class="fa fa-shopping-bag"></i>
-                    {{\App\CentralLogics\translate('Place_Order')}} </button>
+                <button type="submit" class="btn  btn-primary btn-block"><i class="fa fa-shopping-bag"></i>
+                    {{translate('Place_Order')}} </button>
             </div>
         </div>
     </form>
 </div>
 
-<!-- Add Discount -->
 <div class="modal fade" id="add-discount" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -169,19 +163,12 @@ if ($extra_discount) {
                     <div class="form-group col-sm-6">
                         <label for="">{{translate('type')}}</label>
                         <select name="type" class="form-control">
-                            <option
-                                value="amount" {{$extra_discount_type=='amount'?'selected':''}}>{{translate('amount')}}
-                                ({{\App\CentralLogics\Helpers::currency_symbol()}})
-                            </option>
-                            <option
-                                value="percent" {{$extra_discount_type=='percent'?'selected':''}}>{{translate('percent')}}
-                                (%)
-                            </option>
+                            <option value="amount" {{$extra_discount_type=='amount'?'selected':''}}>{{translate('amount')}}({{Helpers::currency_symbol()}})</option>
+                            <option value="percent" {{$extra_discount_type=='percent'?'selected':''}}>{{translate('percent')}}(%)</option>
                         </select>
                     </div>
                     <div class="form-group col-sm-12">
-                        <button class="btn btn-sm btn-primary"
-                                type="submit">{{translate('submit')}}</button>
+                        <button class="btn btn-sm btn-primary" type="submit">{{translate('submit')}}</button>
                     </div>
                 </form>
             </div>
@@ -189,13 +176,11 @@ if ($extra_discount) {
     </div>
 </div>
 
-
-<!-- Add Coupon Discount -->
 <div class="modal fade" id="add-coupon-discount" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">{{\App\CentralLogics\translate('Coupon_discount')}}</h4>
+                <h4 class="modal-title">{{translate('Coupon_discount')}}</h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -204,12 +189,11 @@ if ($extra_discount) {
                 <form action="{{route('admin.pos.discount')}}" method="post" class="row">
                     @csrf
                     <div class="form-group col-12">
-                        <label for="">{{\App\CentralLogics\translate('Coupon_code')}}</label>
-                        <input type="number" placeholder="{{\App\CentralLogics\translate('SULTAN200')}}" class="form-control">
+                        <label for="">{{translate('Coupon_code')}}</label>
+                        <input type="number" placeholder="{{translate('SULTAN200')}}" class="form-control">
                     </div>
                     <div class="d-flex justify-content-end col-12">
-                        <button class="btn btn-primary"
-                                type="submit">{{\App\CentralLogics\translate('submit')}}</button>
+                        <button class="btn btn-primary" type="submit">{{translate('submit')}}</button>
                     </div>
                 </form>
             </div>
@@ -218,7 +202,6 @@ if ($extra_discount) {
 </div>
 
 
-<!-- Add Tax -->
 <div class="modal fade" id="add-tax" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -237,8 +220,7 @@ if ($extra_discount) {
                     </div>
 
                     <div class="form-group col-sm-12">
-                        <button class="btn btn-sm btn-primary"
-                                type="submit">{{translate('submit')}}</button>
+                        <button class="btn btn-sm btn-primary" type="submit">{{translate('submit')}}</button>
                     </div>
                 </form>
             </div>
@@ -246,7 +228,6 @@ if ($extra_discount) {
     </div>
 </div>
 
-<!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -260,7 +241,7 @@ if ($extra_discount) {
                 <form action="{{route('branch.pos.order')}}" id='order_place' method="post" class="row">
                     @csrf
                     <div class="form-group col-12">
-                        <label class="input-label" for="">{{ translate('amount') }}({{\App\CentralLogics\Helpers::currency_symbol()}}
+                        <label class="input-label" for="">{{ translate('amount') }}({{Helpers::currency_symbol()}}
                             )</label>
                         <input type="number" class="form-control" name="amount" min="0" step="0.01"
                                value="{{round($total+$total_tax, 2)}}" disabled>
@@ -283,3 +264,8 @@ if ($extra_discount) {
 </div>
 
 
+<script>
+    $('.pos-empty-cart').on('click', function (){
+        emptyCart();
+    });
+</script>

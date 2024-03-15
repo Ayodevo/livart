@@ -13,31 +13,30 @@ use App\Model\DcConversation;
 use App\Model\DeliveryMan;
 use App\Model\Message;
 use App\Model\Order;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Intervention\Image\Facades\Image;
 
 class ConversationController extends Controller
 {
     public function __construct(
-        private Admin $admin,
-        private BusinessSetting $business_setting,
-        private Conversation $conversation,
-        private DcConversation $dc_conversation,
-        private DeliveryMan $delivery_man,
-        private Message $message,
-        private Order $order
-    ){}
+        private Admin           $admin,
+        private BusinessSetting $businessSetting,
+        private Conversation    $conversation,
+        private DcConversation  $dcConversation,
+        private DeliveryMan     $deliveryMan,
+        private Message         $message,
+        private Order           $order
+    )
+    {
+    }
 
     /**
      * @param Request $request
      * @return array
      */
-    public function get_admin_message(Request $request): array
+    public function getAdminMessage(Request $request): array
     {
         $limit = $request->has('limit') ? $request->limit : 10;
         $offset = $request->has('offset') ? $request->offset : 1;
@@ -55,22 +54,21 @@ class ConversationController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function store_admin_message(Request $request): JsonResponse
+    public function storeAdminMessage(Request $request): JsonResponse
     {
         if ($request->message == null && $request->image == null) {
-            return response()->json(['message' => 'Message can not be empty'], 403);
+            return response()->json(['message' => translate('Message can not be empty')], 403);
         }
 
         try {
-            //if image is given
-            $id_img_names = [];
+            $imageNameId = [];
             if (!empty($request->file('image'))) {
                 foreach ($request->image as $img) {
                     $image = Helpers::upload('conversation/', 'png', $img);
-                    $image_url = asset('storage/app/public/conversation') . '/' . $image;
-                    $id_img_names[] = $image_url;
+                    $imageUrl = asset('storage/app/public/conversation') . '/' . $image;
+                    $imageNameId[] = $imageUrl;
                 }
-                $images = $id_img_names;
+                $images = $imageNameId;
             } else {
                 $images = null;
             }
@@ -81,20 +79,20 @@ class ConversationController extends Controller
             $conv->attachment = isset($images) ? json_encode($images) : null;
             $conv->save();
 
-            //send notification
             $admin = $this->admin->first();
             $data = [
                 'title' => $request->user()->f_name . ' ' . $request->user()->l_name . \App\CentralLogics\translate(' send a message'),
                 'description' => $request->user()->id,
                 'order_id' => '',
-                'image' => asset('storage/app/public/restaurant') . '/' . $this->business_setting->where(['key' => 'logo'])->first()->value,
+                'image' => asset('storage/app/public/restaurant') . '/' . $this->businessSetting->where(['key' => 'logo'])->first()->value,
                 'type' => 'message',
             ];
             try {
                 Helpers::send_push_notif_to_device($admin->fcm_token, $data);
-            } catch (\Exception $exception) {}
+            } catch (\Exception $exception) {
+            }
 
-            return response()->json(['message' => 'Successfully sent!'], 200);
+            return response()->json(['message' => translate('Successfully sent')], 200);
 
         } catch (\Exception $exception) {
             return response()->json(['message' => $exception->getMessage()], 400);
@@ -106,7 +104,7 @@ class ConversationController extends Controller
      * @param Request $request
      * @return array|JsonResponse|int[]
      */
-    public function get_message_by_order(Request $request): array|JsonResponse
+    public function getMessageByOrder(Request $request): array|JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'order_id' => 'required'
@@ -118,7 +116,7 @@ class ConversationController extends Controller
         $limit = $request->has('limit') ? $request->limit : 10;
         $offset = $request->has('offset') ? $request->offset : 1;
 
-        $conversations = $this->dc_conversation->where('order_id', $request->order_id)->first();
+        $conversations = $this->dcConversation->where('order_id', $request->order_id)->first();
         if (!isset($conversations)) {
             return ['total_size' => 0, 'limit' => (int)$limit, 'offset' => (int)$offset, 'messages' => []];
         }
@@ -135,10 +133,10 @@ class ConversationController extends Controller
 
     /**
      * @param Request $request
-     * @param $sender_type
+     * @param $senderType
      * @return JsonResponse
      */
-    public function store_message_by_order(Request $request, $sender_type): JsonResponse
+    public function storeMessageByOrder(Request $request, $senderType): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'order_id' => 'required'
@@ -148,11 +146,10 @@ class ConversationController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $sender_id = null;
+        $senderId = null;
         $order = $this->order->with('delivery_man')->with('customer')->find($request->order_id);
 
-        //if sender is deliveryman
-        if ($sender_type == 'deliveryman') {
+        if ($senderType == 'deliveryman') {
             $validator = Validator::make($request->all(), [
                 'token' => 'required'
             ]);
@@ -160,64 +157,58 @@ class ConversationController extends Controller
                 return response()->json(['errors' => Helpers::error_processor($validator)], 403);
             }
 
-            $dm = $this->delivery_man->where('auth_token', $request->token)->first();
+            $dm = $this->deliveryMan->where('auth_token', $request->token)->first();
 
             if (isset($dm) && $dm->id != $order->delivery_man->id) {
                 return response()->json(['errors' => 'Unauthorized'], 401);
             }
 
-            $sender_id = $order->delivery_man->id;
+            $senderId = $order->delivery_man->id;
 
-        } //if sender is customer
-        elseif ($sender_type == 'customer') {
-            $sender_id = $order->customer->id;
+        } elseif ($senderType == 'customer') {
+            $senderId = $order->customer->id;
         }
 
-        //empty reply check
         if ($request->message == null && $request->image == null) {
-            return response()->json(['message' => 'Message can not be empty'], 400);
+            return response()->json(['message' => translate('Message can not be empty')], 400);
         }
 
-        //store image
-        $id_img_names = [];
+        $imageNameId = [];
         if (!empty($request->file('image'))) {
             foreach ($request->image as $img) {
                 $image = Helpers::upload('conversation/', 'png', $img);
-                $image_url = asset('storage/app/public/conversation') . '/' . $image;
-                $id_img_names[] = $image_url;
+                $imageUrl = asset('storage/app/public/conversation') . '/' . $image;
+                $imageNameId[] = $imageUrl;
             }
-            $images = $id_img_names;
+            $images = $imageNameId;
         } else {
             $images = null;
         }
 
-
-        //if order id is not null
         if ($request->order_id != null) {
-            DB::transaction(function () use ($request, $sender_type, $images, $sender_id) {
-                $dcConversation = $this->dc_conversation->where('order_id', $request->order_id)->first();
+            DB::transaction(function () use ($request, $senderType, $images, $senderId) {
+                $dcConversation = $this->dcConversation->where('order_id', $request->order_id)->first();
                 if (!isset($dcConversation)) {
-                    $dcConversation = $this->dc_conversation;
+                    $dcConversation = $this->dcConversation;
                     $dcConversation->order_id = $request->order_id;
                     $dcConversation->save();
                 }
 
                 $message = $this->message;
                 $message->conversation_id = $dcConversation->id;
-                $message->customer_id = ($sender_type == 'customer') ? $sender_id : null;
-                $message->deliveryman_id = ($sender_type == 'deliveryman') ? $sender_id : null;
+                $message->customer_id = ($senderType == 'customer') ? $senderId : null;
+                $message->deliveryman_id = ($senderType == 'deliveryman') ? $senderId : null;
                 $message->message = $request->message ?? null;
                 $message->attachment = json_encode($images);
                 $message->save();
             });
         }
 
-        //sender push notification
-        if ($sender_type == 'customer') {
-            $receiver_fcm_token = $order->delivery_man->fcm_token ?? null;
+        if ($senderType == 'customer') {
+            $receiverFcmToken = $order->delivery_man->fcm_token ?? null;
 
-        } elseif ($sender_type == 'deliveryman') {
-            $receiver_fcm_token = $order->customer->cm_firebase_token ?? null;
+        } elseif ($senderType == 'deliveryman') {
+            $receiverFcmToken = $order->customer->cm_firebase_token ?? null;
         }
         $data = [
             'title' => 'New message arrived',
@@ -227,13 +218,13 @@ class ConversationController extends Controller
             'type' => 'message',
         ];
         try {
-            Helpers::send_push_notif_to_device($receiver_fcm_token, $data);
+            Helpers::send_push_notif_to_device($receiverFcmToken, $data);
 
         } catch (\Exception $exception) {
-            return response()->json(['message' => 'Push notification send failed'], 200);
+            return response()->json(['message' => translate('Push notification send failed')], 200);
         }
 
-        return response()->json(['message' => 'Message successfully sent'], 200);
+        return response()->json(['message' => translate('Message successfully sent')], 200);
 
     }
 
@@ -241,7 +232,7 @@ class ConversationController extends Controller
      * @param Request $request
      * @return array|JsonResponse|int[]
      */
-    public function get_order_message_for_dm(Request $request): array|JsonResponse
+    public function getOrderMessageForDm(Request $request): array|JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required',
@@ -251,17 +242,15 @@ class ConversationController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        //authentic check
-        $deliveryMan = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $deliveryMan = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($deliveryMan)) {
             return response()->json(['errors' => 'Unauthenticated.'], 401);
         }
 
-        //fetch message
         $limit = $request->has('limit') ? $request->limit : 10;
         $offset = $request->has('offset') ? $request->offset : 1;
 
-        $conversations = $this->dc_conversation->where('order_id', $request->order_id)->first();
+        $conversations = $this->dcConversation->where('order_id', $request->order_id)->first();
         if (!isset($conversations)) {
             return ['total_size' => 0, 'limit' => (int)$limit, 'offset' => (int)$offset, 'messages' => []];
         }

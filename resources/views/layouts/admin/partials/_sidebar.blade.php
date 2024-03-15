@@ -4,75 +4,79 @@
         <div class="navbar-vertical-container text-capitalize">
             <div class="navbar-vertical-footer-offset">
                 <div class="d-flex align-items-center gap-3 py-2 px-3 justify-content-between">
-                    <!-- Logo -->
-                    @php($restaurant_logo=\App\Model\BusinessSetting::where(['key'=>'logo'])->first()->value)
+                    @php($logo = Helpers::get_business_settings('logo'))
                     <a class="navbar-brand w-75" href="{{route('admin.dashboard')}}" aria-label="Front">
                         <img class="navbar-brand-logo"
-                             onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.jpg')}}'"
-                             src="{{asset('storage/app/public/ecommerce/'.$restaurant_logo)}}"
-                             alt="Logo">
-                        <img class="navbar-brand-logo-mini"
-                             onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.jpg')}}'"
-                             src="{{asset('storage/app/public/ecommerce/'.$restaurant_logo)}}" alt="Logo">
-                    </a>
-                    <!-- End Logo -->
+                             alt="{{ translate('logo') }}"
+                             src="{{Helpers::onErrorImage(
+                            $logo,
+                            asset('storage/app/public/ecommerce').'/' . $logo,
+                            asset('public/assets/admin/img/160x160/img2.jpg') ,
+                            'ecommerce/')}}"
 
-                    <!-- Navbar Vertical Toggle -->
+                        >
+                        <img class="navbar-brand-logo-mini"
+                             alt="{{ translate('logo') }}"
+                             src="{{Helpers::onErrorImage(
+                            $logo,
+                            asset('storage/app/public/ecommerce').'/' . $logo,
+                            asset('public/assets/admin/img/160x160/img2.jpg') ,
+                            'ecommerce/')}}"
+                        >
+                    </a>
+
                     <button type="button" class="js-navbar-vertical-aside-toggle-invoker close mt-1">
                         <i class="tio-first-page navbar-vertical-aside-toggle-short-align"></i>
                         <i class="tio-last-page navbar-vertical-aside-toggle-full-align"
-                            title="Expand"></i>
+                           title="Expand"></i>
                     </button>
-                    <!-- End Navbar Vertical Toggle -->
-
                 </div>
 
-                <!-- Content -->
                 <div class="navbar-vertical-content">
                     <div class="sidebar--search-form py-3">
                         <div class="search--form-group">
                             <button type="button" class="btn"><i class="tio-search"></i></button>
-                            <input type="text" class="js-form-search form-control form--control" id="search-bar-input" placeholder="Search Menu...">
+                            <input type="text" class="js-form-search form-control form--control" id="search-bar-input"
+                                   placeholder="Search Menu...">
                         </div>
                     </div>
 
                     <ul class="navbar-nav navbar-nav-lg nav-tabs">
-                        <!-- Dashboards -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin')?'show':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.dashboard')}}" title="{{translate('Dashboards')}}">
                                 <i class="tio-home-vs-1-outlined nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('dashboard')}}
+                                    {{translate('dashboard')}}
                                 </span>
                             </a>
                         </li>
-                        <!-- End Dashboards -->
 
-                        <!-- POS Section -->
                         <li class="nav-item">
-                            <small class="nav-subtitle">{{\App\CentralLogics\translate('pos')}} {{\App\CentralLogics\translate('management')}}</small>
+                            <small class="nav-subtitle">{{translate('pos')}} {{translate('management')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/pos*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
                                 <i class="tio-shopping nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('POS')}}</span>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('POS')}}</span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
                                 style="display: {{Request::is('admin/pos*')?'block':'none'}}">
                                 <li class="nav-item {{Request::is('admin/pos')?'active':''}}">
                                     <a class="nav-link " href="{{route('admin.pos.index')}}"
-                                       title="{{\App\CentralLogics\translate('pos')}}">
+                                       title="{{translate('pos')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span
-                                            class="text-truncate">{{\App\CentralLogics\translate('pos')}}</span>
+                                            class="text-truncate">{{translate('pos')}}</span>
                                     </a>
                                 </li>
                                 <li class="nav-item {{Request::is('admin/pos/orders')?'active':''}}">
-                                    <a class="nav-link " href="{{route('admin.pos.orders')}}" title="{{\App\CentralLogics\translate('orders')}}">
+                                    <a class="nav-link " href="{{route('admin.pos.orders')}}"
+                                       title="{{translate('orders')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('orders')}}
+                                        <span class="text-truncate">{{translate('orders')}}
                                             <span class="badge badge-soft-info badge-pill ml-1">
                                                 {{\App\Model\Order::Pos()->count()}}
                                             </span>
@@ -81,20 +85,17 @@
                                 </li>
                             </ul>
                         </li>
-                        <!-- End POS -->
-
 
                         <li class="nav-item">
-                            <small class="nav-subtitle">{{\App\CentralLogics\translate('order')}} {{\App\CentralLogics\translate('management')}}</small>
+                            <small class="nav-subtitle">{{translate('order')}} {{translate('management')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/orders*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
                                 <i class="tio-shopping-cart nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('order')}}
+                                    {{translate('order')}}
                                 </span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
@@ -103,7 +104,7 @@
                                     <a class="nav-link" href="{{route('admin.orders.list',['all'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('all')}}
+                                            {{translate('all')}}
                                             <span class="badge badge-soft-info badge-pill ml-1">
                                                 {{\App\Model\Order::notPos()->count()}}
                                             </span>
@@ -114,7 +115,7 @@
                                     <a class="nav-link " href="{{route('admin.orders.list',['pending'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('pending')}}
+                                            {{translate('pending')}}
                                             <span class="badge badge-soft-info badge-pill ml-1">
                                                 {{\App\Model\Order::where(['order_status'=>'pending'])->count()}}
                                             </span>
@@ -125,7 +126,7 @@
                                     <a class="nav-link " href="{{route('admin.orders.list',['confirmed'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('confirmed')}}
+                                            {{translate('confirmed')}}
                                                 <span class="badge badge-soft-success badge-pill ml-1">
                                                 {{\App\Model\Order::where(['order_status'=>'confirmed'])->count()}}
                                             </span>
@@ -136,7 +137,7 @@
                                     <a class="nav-link " href="{{route('admin.orders.list',['processing'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('processing')}}
+                                            {{translate('processing')}}
                                                 <span class="badge badge-soft-warning badge-pill ml-1">
                                                 {{\App\Model\Order::where(['order_status'=>'processing'])->count()}}
                                             </span>
@@ -148,7 +149,7 @@
                                        title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('out_for_delivery')}}
+                                            {{translate('out_for_delivery')}}
                                                 <span class="badge badge-soft-warning badge-pill ml-1">
                                                 {{\App\Model\Order::where(['order_status'=>'out_for_delivery'])->count()}}
                                             </span>
@@ -159,7 +160,7 @@
                                     <a class="nav-link " href="{{route('admin.orders.list',['delivered'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('delivered')}}
+                                            {{translate('delivered')}}
                                                 <span class="badge badge-soft-success badge-pill ml-1">
                                                 {{\App\Model\Order::notPos()->where(['order_status'=>'delivered'])->count()}}
                                             </span>
@@ -170,7 +171,7 @@
                                     <a class="nav-link " href="{{route('admin.orders.list',['returned'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('returned')}}
+                                            {{translate('returned')}}
                                                 <span class="badge badge-soft-danger badge-pill ml-1">
                                                 {{\App\Model\Order::where(['order_status'=>'returned'])->count()}}
                                             </span>
@@ -181,7 +182,7 @@
                                     <a class="nav-link " href="{{route('admin.orders.list',['failed'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('failed')}}
+                                            {{translate('failed')}}
                                             <span class="badge badge-soft-danger badge-pill ml-1">
                                                 {{\App\Model\Order::where(['order_status'=>'failed'])->count()}}
                                             </span>
@@ -193,7 +194,7 @@
                                     <a class="nav-link " href="{{route('admin.orders.list',['canceled'])}}" title="">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span class="text-truncate">
-                                            {{\App\CentralLogics\translate('canceled')}}
+                                            {{translate('canceled')}}
                                                 <span class="badge badge-soft-dark badge-pill ml-1">
                                                 {{\App\Model\Order::where(['order_status'=>'canceled'])->count()}}
                                             </span>
@@ -202,21 +203,18 @@
                                 </li>
                             </ul>
                         </li>
-                        <!-- End Pages -->
-
 
                         <li class="nav-item">
-                            <small class="nav-subtitle">{{\App\CentralLogics\translate('product')}} {{\App\CentralLogics\translate('management')}}</small>
+                            <small class="nav-subtitle">{{translate('product')}} {{translate('management')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/category*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
                             >
                                 <i class="tio-category nav-icon"></i>
                                 <span
-                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('category')}}</span>
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('category')}}</span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
                                 style="display: {{Request::is('admin/category*')?'block':'none'}}">
@@ -224,7 +222,7 @@
                                     <a class="nav-link " href="{{route('admin.category.add')}}"
                                        title="{{translate('add new category')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('category')}}</span>
+                                        <span class="text-truncate">{{translate('category')}}</span>
                                     </a>
                                 </li>
 
@@ -232,34 +230,30 @@
                                     <a class="nav-link " href="{{route('admin.category.add-sub-category')}}"
                                        title="{{translate('add new sub category')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('sub_category')}}</span>
+                                        <span class="text-truncate">{{translate('sub_category')}}</span>
                                     </a>
                                 </li>
 
                             </ul>
                         </li>
-                        <!-- End Pages -->
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/attribute*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.attribute.add-new')}}"
                             >
                                 <i class="tio-apps nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('attribute')}}
+                                    {{translate('attribute')}}
                                 </span>
                             </a>
                         </li>
-                        <!-- End Pages -->
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/product*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
                             >
                                 <i class="tio-premium-outlined nav-icon"></i>
                                 <span
-                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('product')}}</span>
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('product')}}</span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
                                 style="display: {{Request::is('admin/product*')?'block':'none'}}">
@@ -268,105 +262,98 @@
                                        title="{{translate('add new product')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
                                         <span
-                                            class="text-truncate">{{\App\CentralLogics\translate('add')}} {{\App\CentralLogics\translate('new')}}</span>
+                                            class="text-truncate">{{translate('add')}} {{translate('new')}}</span>
                                     </a>
                                 </li>
                                 <li class="nav-item {{Request::is('admin/product/list')?'active':''}}">
-                                    <a class="nav-link " href="{{route('admin.product.list')}}" title="{{translate('product list')}}">
+                                    <a class="nav-link " href="{{route('admin.product.list')}}"
+                                       title="{{translate('product list')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('list')}}</span>
+                                        <span class="text-truncate">{{translate('list')}}</span>
                                     </a>
                                 </li>
                                 <li class="nav-item {{Request::is('admin/product/bulk-import')?'active':''}}">
-                                    <a class="nav-link " href="{{route('admin.product.bulk-import')}}" title="{{translate('bulk import')}}">
+                                    <a class="nav-link " href="{{route('admin.product.bulk-import')}}"
+                                       title="{{translate('bulk import')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('bulk_import')}}</span>
+                                        <span class="text-truncate">{{translate('bulk_import')}}</span>
                                     </a>
                                 </li>
                                 <li class="nav-item {{Request::is('admin/product/bulk-export')?'active':''}}">
-                                    <a class="nav-link " href="{{route('admin.product.bulk-export')}}" title="{{translate('bulk export')}}">
+                                    <a class="nav-link " href="{{route('admin.product.bulk-export')}}"
+                                       title="{{translate('bulk export')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('bulk_export')}}</span>
+                                        <span class="text-truncate">{{translate('bulk_export')}}</span>
                                     </a>
                                 </li>
                             </ul>
                         </li>
-                        <!-- End Pages -->
-
 
                         <li class="nav-item">
                             <small class="nav-subtitle"
-                                   title="{{translate('Promotion Management')}}">{{\App\CentralLogics\translate('Promotion Management')}}</small>
+                                   title="{{translate('Promotion Management')}}">{{translate('Promotion Management')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/banner*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.banner.add-new')}}">
                                 <i class="tio-image nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('banner')}}</span>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('banner')}}</span>
                             </a>
                         </li>
-                        <!-- End Pages -->
 
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/flash-sale*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.flash-sale.index')}}">
                                 <i class="tio-alarm-alert nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('Flash Sale')}}</span>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Flash Sale')}}</span>
                             </a>
                         </li>
-                        <!-- End Pages -->
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/coupon*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.coupon.add-new')}}"
                             >
                                 <i class="tio-gift nav-icon"></i>
                                 <span
-                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('coupon')}}</span>
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('coupon')}}</span>
                             </a>
                         </li>
-                        <!-- End Pages -->
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/notification*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.notification.add-new')}}"
                             >
                                 <i class="tio-notifications nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('send')}} {{\App\CentralLogics\translate('notification')}}
+                                    {{translate('send')}} {{translate('notification')}}
                                 </span>
                             </a>
                         </li>
-                        <!-- End Pages -->
-
 
                         <li class="nav-item">
                             <small class="nav-subtitle"
-                                   title="{{translate('Support & Help Section')}}">{{\App\CentralLogics\translate('Support & Help Section')}}</small>
+                                   title="{{translate('Support & Help Section')}}">{{translate('Support & Help Section')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/message*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.message.list')}}"
                             >
                                 <i class="tio-messages nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('messages')}}
+                                    {{translate('messages')}}
                                 </span>
                             </a>
                         </li>
-                        <!-- End Pages -->
 
                         <li class="nav-item">
                             <small class="nav-subtitle"
-                                   title="{{translate('report_and_analytics')}}">{{\App\CentralLogics\translate('report_and_analytics')}}</small>
+                                   title="{{translate('report_and_analytics')}}">{{translate('report_and_analytics')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
@@ -375,7 +362,7 @@
                                href="{{route('admin.report.earning')}}">
                                 <i class="tio-chart-pie-1 nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('earning_report')}}
+                                    {{translate('earning_report')}}
                                 </span>
                             </a>
                         </li>
@@ -385,7 +372,7 @@
                                href="{{route('admin.report.order')}}">
                                 <i class="tio-chart-bar-2 nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('order_report')}}
+                                    {{translate('order_report')}}
                                 </span>
                             </a>
                         </li>
@@ -395,7 +382,7 @@
                                href="{{route('admin.report.driver-report')}}">
                                 <i class="tio-chart-pie-2 nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('deliveryman_report')}}
+                                    {{translate('deliveryman_report')}}
                                 </span>
                             </a>
                         </li>
@@ -405,7 +392,7 @@
                                href="{{route('admin.report.product-report')}}">
                                 <i class="tio-chart-bar-1 nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('product_report')}}
+                                    {{translate('product_report')}}
                                 </span>
                             </a>
                         </li>
@@ -415,24 +402,24 @@
                                href="{{route('admin.report.sale-report')}}">
                                 <i class="tio-chart-bar-4 nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('sale_report')}}
+                                    {{translate('sale_report')}}
                                 </span>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <small class="nav-subtitle" title="{{translate('User Management')}}">{{\App\CentralLogics\translate('user_management')}}</small>
+                            <small class="nav-subtitle"
+                                   title="{{translate('User Management')}}">{{translate('user_management')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/customer/list') || Request::is('admin/customer/view*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.customer.list')}}"
                             >
                                 <i class="tio-user nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('customer')}} {{\App\CentralLogics\translate('list')}}
+                                    {{translate('customer')}} {{translate('list')}}
                                 </span>
                             </a>
                         </li>
@@ -441,29 +428,27 @@
                                href="{{route('admin.customer.subscribed_emails')}}">
                                 <i class="tio-email-outlined nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('Subscribed Emails')}}
+                                    {{translate('Subscribed Emails')}}
                                 </span>
                             </a>
                         </li>
 
-                        <!-- Pages -->
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/reviews*')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.reviews.list')}}"
                             >
                                 <i class="tio-star nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('product')}} {{\App\CentralLogics\translate('reviews')}}
+                                    {{translate('product')}} {{translate('reviews')}}
                                 </span>
                             </a>
                         </li>
-                        <!-- End Pages -->
 
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/delivery-man*') ?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
                                 <i class="tio-user-big-outlined nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('deliveryman')}}
+                                    {{translate('deliveryman')}}
                                 </span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
@@ -471,36 +456,36 @@
                                 <li class="nav-item {{Request::is('admin/delivery-man/add')?'active':''}}">
                                     <a class="nav-link " href="{{route('admin.delivery-man.add')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('register')}}</span>
+                                        <span class="text-truncate">{{translate('register')}}</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-item {{Request::is('admin/delivery-man/list')?'active':''}}">
                                     <a class="nav-link " href="{{route('admin.delivery-man.list')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('list')}}</span>
+                                        <span class="text-truncate">{{translate('list')}}</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-item  {{Request::is('admin/delivery-man/pending/list') || Request::is('admin/delivery-man/denied/list')?'active':''}}">
                                     <a class="nav-link " href="{{route('admin.delivery-man.pending')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('New Joining Request')}}</span>
+                                        <span class="text-truncate">{{translate('New Joining Request')}}</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-item  {{Request::is('admin/delivery-man/reviews/list')?'active':''}}">
                                     <a class="nav-link " href="{{route('admin.delivery-man.reviews.list')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('reviews')}}</span>
+                                        <span class="text-truncate">{{translate('reviews')}}</span>
                                     </a>
                                 </li>
                             </ul>
                         </li>
-                        <!-- End Pages -->
 
                         <li class="nav-item">
-                            <small class="nav-subtitle" title="{{translate('Business Section')}}">{{\App\CentralLogics\translate('system_settings')}}</small>
+                            <small class="nav-subtitle"
+                                   title="{{translate('Business Section')}}">{{translate('system_settings')}}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
@@ -510,7 +495,7 @@
                             >
                                 <i class="tio-settings nav-icon"></i>
                                 <span
-                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('business_Setup')}}</span>
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('business_Setup')}}</span>
                             </a>
                         </li>
 
@@ -518,7 +503,7 @@
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
                                 <i class="tio-shop nav-icon"></i>
                                 <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
-                                    {{\App\CentralLogics\translate('branch_setup')}}
+                                    {{translate('branch_setup')}}
                                 </span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
@@ -526,21 +511,20 @@
                                 <li class="nav-item {{Request::is('admin/branch/add-new')?'active':''}}">
                                     <a class="nav-link " href="{{route('admin.branch.add-new')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('add_new')}}</span>
+                                        <span class="text-truncate">{{translate('add_new')}}</span>
                                     </a>
                                 </li>
 
                                 <li class="nav-item {{Request::is('admin/branch/list')?'active':''}}">
                                     <a class="nav-link " href="{{route('admin.branch.list')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('list')}}</span>
+                                        <span class="text-truncate">{{translate('list')}}</span>
                                     </a>
                                 </li>
 
                             </ul>
                         </li>
 
-                        {{-- 3rd Party --}}
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/sms-module') || Request::is('admin/business-settings/mail-config') || Request::is('admin/business-settings/payment-method') || Request::is('admin/business-settings/recaptcha')  ||
                                 Request::is('admin/business-settings/map-api-settings') || Request::is('admin/business-settings/fcm-index') || Request::is('admin/business-settings/firebase-message-config') ||
                                 Request::is('admin/business-settings/social-media-login') ||  Request::is('admin/business-settings/social-media-chat') ?'active':''}}">
@@ -548,16 +532,17 @@
                                href="{{route('admin.business-settings.sms-module')}}"
                             >
                                 <span class="tio-settings-outlined nav-icon"></span>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('3rd_Party')}}</span>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('3rd_Party')}}</span>
                             </a>
                         </li>
 
-                        {{-- Pages & Media --}}
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/social-media') || Request::is('admin/business-settings/return-page') || Request::is('admin/business-settings/about-us') || Request::is('admin/business-settings/privacy-policy') || Request::is('admin/business-settings/terms-and-conditions') ||
                             Request::is('admin/business-settings/cancellation-page') || Request::is('admin/business-settings/refund-page') ?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:">
                                 <i class="tio-pages nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('Pages_&_Media')}}</span>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Pages_&_Media')}}</span>
                             </a>
                             <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
                                 style="display: {{Request::is('admin/business-settings/social-media') || Request::is('admin/business-settings/return-page') || Request::is('admin/business-settings/about-us') || Request::is('admin/business-settings/privacy-policy') || Request::is('admin/business-settings/terms-and-conditions') ||
@@ -566,9 +551,9 @@
                                 <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/return-page') || Request::is('admin/business-settings/about-us') || Request::is('admin/business-settings/privacy-policy') || Request::is('admin/business-settings/terms-and-conditions') ||
                                      Request::is('admin/business-settings/cancellation-page') || Request::is('admin/business-settings/refund-page')?'active':''}}">
                                     <a class="nav-link" href="{{route('admin.business-settings.about-us')}}"
-                                       title="{{\App\CentralLogics\translate('pages')}}">
+                                       title="{{translate('pages')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('pages')}}</span>
+                                        <span class="text-truncate">{{translate('pages')}}</span>
                                     </a>
                                 </li>
 
@@ -576,30 +561,34 @@
                                     <a class="nav-link "
                                        href="{{route('admin.business-settings.social-media')}}">
                                         <span class="tio-circle nav-indicator-icon"></span>
-                                        <span class="text-truncate">{{\App\CentralLogics\translate('Social Media')}}</span>
+                                        <span class="text-truncate">{{translate('Social Media')}}</span>
                                     </a>
                                 </li>
                             </ul>
                         </li>
 
-                        {{-- System Setup --}}
                         <li class="navbar-vertical-aside-has-menu {{Request::is('admin/business-settings/app-setting') || Request::is('admin/business-settings/db-index') || Request::is('admin/business-settings/location-setup')?'active':''}}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{route('admin.business-settings.app_setting')}}"
                             >
                                 <i class="tio-labels nav-icon"></i>
-                                <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{\App\CentralLogics\translate('system_setup')}}</span>
+                                <span
+                                    class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('system_setup')}}</span>
                             </a>
                         </li>
 
                         
+
                         @if(count(config('addon_admin_routes'))>0)
                             <li class="navbar-vertical-aside-has-menu {{Request::is('admin/payment/configuration/*') || Request::is('admin/sms/configuration/*')?'active':''}} mb-5">
-                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:" >
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:">
                                     <i class="tio-puzzle nav-icon"></i>
-                                    <span  class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Addon Menus')}}</span>
+                                    <span
+                                        class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">{{translate('Addon Menus')}}</span>
                                 </a>
-                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub" style="display: {{Request::is('admin/payment/configuration/*') || Request::is('admin/sms/configuration/*')?'block':'none'}}">
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/payment/configuration/*') || Request::is('admin/sms/configuration/*')?'block':'none'}}">
                                     @foreach(config('addon_admin_routes') as $routes)
                                         @foreach($routes as $route)
                                             <li class="navbar-vertical-aside-has-menu {{Request::is($route['path'])  ? 'active' :''}}">
@@ -615,16 +604,12 @@
                             </li>
                         @endif
 
-
-                        <!-- End Pages -->
-
-
-                        <li class="nav-item" style="padding-top: 100px">
+                        <li class="nav-item p-top-100px">
                             <div class="nav-divider"></div>
                         </li>
                     </ul>
                 </div>
-                <!-- End Content -->
+                >
             </div>
         </div>
     </aside>
@@ -634,36 +619,26 @@
 
 </div>
 
-
-{{--<script>
-    $(document).ready(function () {
-        $('.navbar-vertical-content').animate({
-            scrollTop: $('#scroll-here').offset().top
-        }, 'slow');
-    });
-</script>--}}
-
 @push('script_2')
     <script>
-        $(window).on('load' , function() {
-            if($(".navbar-vertical-content li.active").length) {
+        "use strict"
+
+        $(window).on('load', function () {
+            if ($(".navbar-vertical-content li.active").length) {
                 $('.navbar-vertical-content').animate({
                     scrollTop: $(".navbar-vertical-content li.active").offset().top - 150
                 }, 10);
             }
         });
 
-        //Sidebar Menu Search
         var $rows = $('.navbar-vertical-content .navbar-nav > li');
-        $('#search-bar-input').keyup(function() {
+        $('#search-bar-input').keyup(function () {
             var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
 
-            $rows.show().filter(function() {
+            $rows.show().filter(function () {
                 var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
                 return !~text.indexOf(val);
             }).hide();
         });
-
-
     </script>
 @endpush

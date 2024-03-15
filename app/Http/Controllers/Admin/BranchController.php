@@ -33,7 +33,7 @@ class BranchController extends Controller
      */
     public function list(Request $request): Factory|View|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if($request->has('search'))
         {
@@ -44,11 +44,11 @@ class BranchController extends Controller
                         ->orWhere('email', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }else{
             $branches = $this->branch;
         }
-        $branches = $branches->orderBy('id', 'desc')->paginate(Helpers::getPagination())->appends($query_param);
+        $branches = $branches->orderBy('id', 'desc')->paginate(Helpers::getPagination())->appends($queryParam);
         return view('admin-views.branch.list', compact('branches','search'));
     }
 
@@ -63,11 +63,13 @@ class BranchController extends Controller
             'email' => 'required|max:255|unique:branches',
             'password' => 'required|min:8|max:255',
             'image' => 'required|max:255',
+            'store' => 'required|max:255',
+            'floor' => 'required|max:255',
+            'tarma' => 'required|max:255',
         ], [
             'name.required' => 'Name is required!',
         ]);
 
-        //image upload
         if (!empty($request->file('image'))) {
             $image_name = Helpers::upload('branch/', 'png', $request->file('image'));
         } else {
@@ -76,6 +78,9 @@ class BranchController extends Controller
 
         $branch = $this->branch;
         $branch->name = $request->name;
+        $branch->store = $request->store;
+        $branch->floor = $request->floor;
+        $branch->tarma = $request->tarma;
         $branch->email = $request->email;
         $branch->longitude = $request->longitude;
         $branch->latitude = $request->latitude;
@@ -109,12 +114,16 @@ class BranchController extends Controller
         $request->validate([
             'email' => ['required', 'unique:branches,email,'.$id.',id'],
             'name' => ['required', 'unique:branches,name,'.$id.',id']
+
         ], [
             'name.required' => 'Name is required!',
         ]);
 
         $branch = $this->branch->find($id);
         $branch->name = $request->name;
+        $branch->store = $request->store;
+        $branch->floor = $request->floor;
+        $branch->tarma = $request->tarma;
         $branch->email = $request->email;
         $branch->longitude = $request->longitude;
         $branch->latitude = $request->latitude;

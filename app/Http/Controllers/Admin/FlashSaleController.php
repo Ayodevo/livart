@@ -8,40 +8,41 @@ use App\Model\FlashSale;
 use App\Model\FlashSaleProduct;
 use App\Model\Product;
 use Brian2694\Toastr\Facades\Toastr;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class FlashSaleController extends Controller
 {
     public function __construct(
-        private FlashSale $flash_sale,
+        private FlashSale $flashSale,
         private Product $product,
-        private FlashSaleProduct $flash_sale_product,
+        private FlashSaleProduct $flashSaleProduct,
     )
     {}
 
     public function index(Request $request)
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $flash_sale = $this->flash_sale
+            $flashSale = $this->flashSale
                 ->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->Where('title', 'like', "%{$value}%");
                     }
                 });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         } else {
-            $flash_sale = $this->flash_sale;
+            $flashSale = $this->flashSale;
         }
-        $flash_sales = $flash_sale->withCount('products')->latest()->paginate(Helpers::getPagination())->appends($query_param);
+        $flashSales = $flashSale->withCount('products')->latest()->paginate(Helpers::getPagination())->appends($queryParam);
 
-        return view('admin-views.flash-sale.index', compact('flash_sales', 'search'));
+        return view('admin-views.flash-sale.index', compact('flashSales', 'search'));
     }
 
     public function store(Request $request)
@@ -50,7 +51,6 @@ class FlashSaleController extends Controller
             'title' => 'required|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
-           // 'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ],[
             'title.required'=>translate('Title is required'),
         ]);
@@ -61,31 +61,31 @@ class FlashSaleController extends Controller
             $image_name = 'def.png';
         }
 
-        $flash_sale = $this->flash_sale;
-        $flash_sale->title = $request->title;
-        $flash_sale->start_date = $request->start_date;
-        $flash_sale->end_date = $request->end_date;
-        $flash_sale->status = 0;
-        $flash_sale->image = $image_name;
-        $flash_sale->save();
+        $flashSale = $this->flashSale;
+        $flashSale->title = $request->title;
+        $flashSale->start_date = $request->start_date;
+        $flashSale->end_date = $request->end_date;
+        $flashSale->status = 0;
+        $flashSale->image = $image_name;
+        $flashSale->save();
         Toastr::success(translate('Added successfully!'));
         return back();
     }
 
     public function status(Request $request)
     {
-        $this->flash_sale->where(['status' => 1])->update(['status' => 0]);
-        $flash_sale = $this->flash_sale->find($request->id);
-        $flash_sale->status = $request->status;
-        $flash_sale->save();
+        $this->flashSale->where(['status' => 1])->update(['status' => 0]);
+        $flashSale = $this->flashSale->find($request->id);
+        $flashSale->status = $request->status;
+        $flashSale->save();
         Toastr::success(translate('Status updated!'));
         return back();
     }
 
     public function edit($id)
     {
-        $flash_sale = $this->flash_sale->find($id);
-        return view('admin-views.flash-sale.edit', compact('flash_sale'));
+        $flashSale = $this->flashSale->find($id);
+        return view('admin-views.flash-sale.edit', compact('flashSale'));
     }
 
     public function update(Request $request, $id)
@@ -98,92 +98,103 @@ class FlashSaleController extends Controller
             'title.required'=>translate('Title is required'),
         ]);
 
-        $flash_sale = $this->flash_sale->find($id);
-        $flash_sale->title = $request->title;
-        $flash_sale->start_date = $request->start_date;
-        $flash_sale->end_date = $request->end_date;
-        $flash_sale->image = $request->has('image') ? Helpers::update('flash-sale/', $flash_sale->image, 'png', $request->file('image')) : $flash_sale->image;
-        $flash_sale->save();
+        $flashSale = $this->flashSale->find($id);
+        $flashSale->title = $request->title;
+        $flashSale->start_date = $request->start_date;
+        $flashSale->end_date = $request->end_date;
+        $flashSale->image = $request->has('image') ? Helpers::update('flash-sale/', $flashSale->image, 'png', $request->file('image')) : $flashSale->image;
+        $flashSale->save();
         Toastr::success(translate('Updated successfully!'));
         return redirect()->route('admin.flash-sale.index');
     }
 
     public function delete(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $flash_sale = $this->flash_sale->find($request->id);
-        if (Storage::disk('public')->exists('flash-sale/' . $flash_sale['image'])) {
-            Storage::disk('public')->delete('flash-sale/' . $flash_sale['image']);
+        $flashSale = $this->flashSale->find($request->id);
+        if (Storage::disk('public')->exists('flash-sale/' . $flashSale['image'])) {
+            Storage::disk('public')->delete('flash-sale/' . $flashSale['image']);
         }
-        $flash_sale_ids = $this->flash_sale_product->where(['flash_sale_id' => $request->id])->pluck('flash_sale_id');
-        $flash_sale->delete();
-        $this->flash_sale_product->whereIn('flash_sale_id', $flash_sale_ids)->delete();
+        $flash_sale_ids = $this->flashSaleProduct->where(['flash_sale_id' => $request->id])->pluck('flash_sale_id');
+        $flashSale->delete();
+        $this->flashSaleProduct->whereIn('flash_sale_id', $flash_sale_ids)->delete();
 
         Toastr::success(translate('Flash sale deleted!'));
         return back();
     }
 
-    public function add_product(Request $request, $flash_sale_id)
+    /**
+     * @param Request $request
+     * @param $flash_sale_id
+     * @return Application|Factory|View
+     */
+    public function addProduct(Request $request, $flash_sale_id): View|Factory|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
 
-        $flash_sale = $this->flash_sale->where('id', $flash_sale_id)->first();
-        $flash_sale_product_ids = $this->flash_sale_product->where('flash_sale_id', $flash_sale_id)->pluck('product_id');
+        $flashSale = $this->flashSale->where('id', $flash_sale_id)->first();
+        $flashSaleProductIds = $this->flashSaleProduct->where('flash_sale_id', $flash_sale_id)->pluck('product_id');
 
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $flash_sale_products = $this->product
-                ->whereIn('id', $flash_sale_product_ids)
+            $flashSaleProducts = $this->product
+                ->whereIn('id', $flashSaleProductIds)
                 ->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->Where('name', 'like', "%{$value}%");
                     }
                 });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         } else {
-            $flash_sale_products = $this->product
-                ->whereIn('id', $flash_sale_product_ids);
+            $flashSaleProducts = $this->product
+                ->whereIn('id', $flashSaleProductIds);
         }
 
-        $flash_sale_products = $flash_sale_products->paginate(Helpers::getPagination())->appends($query_param);
+        $flashSaleProducts = $flashSaleProducts->paginate(Helpers::getPagination())->appends($queryParam);
 
         $products = $this->product->active()
-            ->whereNotIn('id', $flash_sale_product_ids)
+            ->whereNotIn('id', $flashSaleProductIds)
             ->orderBy('id', 'DESC')->get();
 
-        return view('admin-views.flash-sale.add-product', compact('products', 'flash_sale_products','flash_sale_id', 'search'));
+        return view('admin-views.flash-sale.add-product', compact('products', 'flashSaleProducts','flash_sale_id', 'search'));
     }
 
-    public function add_product_to_session(Request $request, $flash_sale_id, $product_id)
+    /**
+     * @param Request $request
+     * @param $flash_sale_id
+     * @param $product_id
+     * @return RedirectResponse
+     */
+    public function addProductToSession(Request $request, $flash_sale_id, $product_id): RedirectResponse
     {
         $product = $this->product->find($product_id);
 
-        $flash_sale_product = $this->flash_sale_product
+        $flashSaleProduct = $this->flashSaleProduct
             ->where(['product_id' => $product_id, 'flash_sale_id' => $flash_sale_id])
             ->first();
 
-        if (isset($flash_sale_product)){
+        if (isset($flashSaleProduct)){
             Toastr::info($product['name']. ' is already exist in this flash sale!');
             return back();
         }
 
-        $selected_product = [
+        $selectedProduct = [
             'flash_sale_id' => $flash_sale_id,
             'product_id' => $product->id,
             'name' => $product->name,
-            'image' => json_decode($product['image'], true)[0],
+            'image' => $product['image_fullpath'][0],
             'price' => $product->price,
             'total_stock' => $product->total_stock,
         ];
 
-        $request->session()->put('selected_product', $selected_product);
+        $request->session()->put('selected_product', $selectedProduct);
 
         // Retrieve the existing selected products from the session or an empty array if it doesn't exist
         $selectedProducts = $request->session()->get('selected_products', []);
 
         $productExists = false;
         foreach ($selectedProducts as $key => $existingProduct) {
-            if ($existingProduct['product_id'] == $selected_product['product_id'] && $existingProduct['flash_sale_id'] == $selected_product['flash_sale_id']) {
+            if ($existingProduct['product_id'] == $selectedProduct['product_id'] && $existingProduct['flash_sale_id'] == $selectedProduct['flash_sale_id']) {
                 $productExists = true;
                 Toastr::info($existingProduct['name']. ' is already selected!');
                 break;
@@ -191,7 +202,7 @@ class FlashSaleController extends Controller
         }
 
         if (!$productExists) {
-            $selectedProducts[] = $selected_product;
+            $selectedProducts[] = $selectedProduct;
         }
 
         $request->session()->put('selected_products', $selectedProducts);
@@ -200,7 +211,13 @@ class FlashSaleController extends Controller
         return redirect()->back();
     }
 
-    public function delete_product_from_session(Request $request, $flash_sale_id, $product_id)
+    /**
+     * @param Request $request
+     * @param $flash_sale_id
+     * @param $product_id
+     * @return RedirectResponse
+     */
+    public function deleteProductFromSession(Request $request, $flash_sale_id, $product_id): RedirectResponse
     {
         $selectedProducts = $request->session()->get('selected_products', []);
 
@@ -218,7 +235,12 @@ class FlashSaleController extends Controller
         return redirect()->back();
     }
 
-    public function delete_all_products_from_session(Request $request, $flash_sale_id)
+    /**
+     * @param Request $request
+     * @param $flash_sale_id
+     * @return RedirectResponse
+     */
+    public function deleteAllProductsFromSession(Request $request, $flash_sale_id): RedirectResponse
     {
         $selectedProducts = $request->session()->get('selected_products', []);
 
@@ -237,13 +259,18 @@ class FlashSaleController extends Controller
         return redirect()->back();
     }
 
-    public function flash_sale_product_store(Request $request, $flash_sale_id)
+    /**
+     * @param Request $request
+     * @param $flash_sale_id
+     * @return RedirectResponse
+     */
+    public function flashSaleProductStore(Request $request, $flash_sale_id): RedirectResponse
     {
         $selectedProducts = $request->session()->get('selected_products', []);
 
         foreach ($selectedProducts as $key => $selectedProduct) {
             if ($selectedProduct['flash_sale_id'] == $flash_sale_id) {
-                $existingProduct = $this->flash_sale_product
+                $existingProduct = $this->flashSaleProduct
                     ->where(['product_id' => $selectedProduct['product_id'], 'flash_sale_id' => $flash_sale_id])
                     ->first();
 
@@ -265,9 +292,15 @@ class FlashSaleController extends Controller
     }
 
 
-    public function delete_flash_product(Request $request, $flash_sale_id, $product_id)
+    /**
+     * @param Request $request
+     * @param $flash_sale_id
+     * @param $product_id
+     * @return RedirectResponse
+     */
+    public function deleteFlashProduct(Request $request, $flash_sale_id, $product_id): RedirectResponse
     {
-        $this->flash_sale_product->where(['product_id' => $product_id, 'flash_sale_id' => $flash_sale_id])->delete();
+        $this->flashSaleProduct->where(['product_id' => $product_id, 'flash_sale_id' => $flash_sale_id])->delete();
 
         Toastr::success('Product deleted successfully!');
         return back();

@@ -28,7 +28,7 @@ class UpdateController extends Controller
         Helpers::setEnvironmentValue('BUYER_USERNAME',$request['username']);
         Helpers::setEnvironmentValue('PURCHASE_CODE',$request['purchase_key']);
         Helpers::setEnvironmentValue('APP_MODE','live');
-        Helpers::setEnvironmentValue('SOFTWARE_VERSION','7.1');
+        Helpers::setEnvironmentValue('SOFTWARE_VERSION','7.2');
         Helpers::setEnvironmentValue('APP_NAME','Hexacom');
 
         if ($this->actch()) {

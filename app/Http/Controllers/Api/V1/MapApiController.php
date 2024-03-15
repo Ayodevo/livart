@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
-use App\Model\BusinessSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +15,7 @@ class MapApiController extends Controller
      * @param Request $request
      * @return array|JsonResponse|mixed
      */
-    public function place_api_autocomplete(Request $request): mixed
+    public function placeApiAutocomplete(Request $request): mixed
     {
         $validator = Validator::make($request->all(), [
             'search_text' => 'required',
@@ -24,8 +23,8 @@ class MapApiController extends Controller
         if ($validator->errors()->count() > 0) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $api_key = Helpers::get_business_settings('map_api_server_key');
-        $response = Http::get('https://maps.googleapis.com/maps/api/place/autocomplete/json?input=' . $request['search_text'] . '&key=' . $api_key);
+        $apiKey = Helpers::get_business_settings('map_api_server_key');
+        $response = Http::get('https://maps.googleapis.com/maps/api/place/autocomplete/json?input=' . $request['search_text'] . '&key=' . $apiKey);
         return $response->json();
     }
 
@@ -33,7 +32,7 @@ class MapApiController extends Controller
      * @param Request $request
      * @return array|JsonResponse|mixed
      */
-    public function distance_api(Request $request): mixed
+    public function distanceApi(Request $request): mixed
     {
         $validator = Validator::make($request->all(), [
             'origin_lat' => 'required',
@@ -44,8 +43,8 @@ class MapApiController extends Controller
         if ($validator->errors()->count() > 0) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $api_key = Helpers::get_business_settings('map_api_server_key');
-        $response = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json?origins=' . $request['origin_lat'] . ',' . $request['origin_lng'] . '&destinations=' . $request['destination_lat'] . ',' . $request['destination_lng'] . '&key=' . $api_key);
+        $apiKey = Helpers::get_business_settings('map_api_server_key');
+        $response = Http::get('https://maps.googleapis.com/maps/api/distancematrix/json?origins=' . $request['origin_lat'] . ',' . $request['origin_lng'] . '&destinations=' . $request['destination_lat'] . ',' . $request['destination_lng'] . '&key=' . $apiKey);
         return $response->json();
     }
 
@@ -53,7 +52,7 @@ class MapApiController extends Controller
      * @param Request $request
      * @return array|JsonResponse|mixed
      */
-    public function place_api_details(Request $request): mixed
+    public function placeApiDetails(Request $request): mixed
     {
         $validator = Validator::make($request->all(), [
             'placeid' => 'required',
@@ -61,8 +60,8 @@ class MapApiController extends Controller
         if ($validator->errors()->count() > 0) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $api_key = Helpers::get_business_settings('map_api_server_key');
-        $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json?placeid=' . $request['placeid'] . '&key=' . $api_key);
+        $apiKey = Helpers::get_business_settings('map_api_server_key');
+        $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json?placeid=' . $request['placeid'] . '&key=' . $apiKey);
         return $response->json();
     }
 
@@ -70,7 +69,7 @@ class MapApiController extends Controller
      * @param Request $request
      * @return array|JsonResponse|mixed
      */
-    public function geocode_api(Request $request): mixed
+    public function geoCodeApi(Request $request): mixed
     {
         $validator = Validator::make($request->all(), [
             'lat' => 'required',
@@ -79,8 +78,8 @@ class MapApiController extends Controller
         if ($validator->errors()->count() > 0) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $api_key = Helpers::get_business_settings('map_api_server_key');
-        $response = Http::get('https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $request->lat . ',' . $request->lng . '&key=' . $api_key);
+        $apiKey = Helpers::get_business_settings('map_api_server_key');
+        $response = Http::get('https://maps.googleapis.com/maps/api/geocode/json?latlng=' . $request->lat . ',' . $request->lng . '&key=' . $apiKey);
         return $response->json();
     }
 }

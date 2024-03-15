@@ -9,6 +9,7 @@ use App\Model\Category;
 use App\Model\Order;
 use App\Model\OrderDetail;
 use App\Model\Product;
+use App\Model\BusinessSetting;
 use App\User;
 use Box\Spout\Common\Exception\InvalidArgumentException;
 use Box\Spout\Common\Exception\IOException;
@@ -35,7 +36,7 @@ class POSController extends Controller
         private Branch $branch,
         private Category $category,
         private Order $order,
-        private OrderDetail $order_detail,
+        private OrderDetail $orderDetail,
         private Product $product,
         private User $user
     ){}
@@ -46,20 +47,29 @@ class POSController extends Controller
      */
     public function index(Request $request): Factory|View|Application
     {
+
+
+
         $category = $request->query('category_id', 0);
         $categories = $this->category->where(['position' => 0])->active()->get();
         $keyword = $request->keyword;
         $key = explode(' ', $keyword);
 
-        $products = $this->product->where('total_stock', '>' , 0)->when($request->has('category_id') && $request['category_id'] != 0, function ($query) use ($request) {
-            $query->whereJsonContains('category_ids', [['id' => (string)$request['category_id']]]);
-        })->when($keyword, function ($query) use ($key) {
-            return $query->where(function ($q) use ($key) {
-                foreach ($key as $value) {
-                    $q->orWhere('name', 'like', "%{$value}%");
-                }
-            });
-        })->active()->latest()->paginate(Helpers::getPagination());
+        $products = $this->product->where('total_stock', '>' , 0)
+            ->when($request->has('category_id') && $request['category_id'] != 0, function ($query) use ($request) {
+                $query->whereJsonContains('category_ids', [['id' => (string)$request['category_id']]]);
+            })
+            ->when($keyword, function ($query) use ($key) {
+                return $query->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('name', 'like', "%{$value}%")
+                            ->orWhere('price', '=', $value);
+                    }
+                });
+            })
+            ->active()
+            ->latest()
+            ->paginate(Helpers::getPagination());
 
         $branches = $this->branch->all();
         $users = $this->user->all();
@@ -67,25 +77,10 @@ class POSController extends Controller
     }
 
     /**
-     * @param $id
-     * @return Application|Factory|View|RedirectResponse
-     */
-    public function details($id): View|Factory|RedirectResponse|Application
-    {
-        $order = $this->order->with('details')->where(['id' => $id])->first();
-        if (isset($order)) {
-            return view('admin-views.order.order-view', compact('order'));
-        } else {
-            Toastr::info(translate('No more orders!'));
-            return back();
-        }
-    }
-
-    /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function quick_view(Request $request): JsonResponse
+    public function quickView(Request $request): JsonResponse
     {
         $product = $this->product->findOrFail($request->product_id);
 
@@ -99,7 +94,7 @@ class POSController extends Controller
      * @param Request $request
      * @return float[]|int[]
      */
-    public function variant_price(Request $request): array
+    public function variantPrice(Request $request): array
     {
         $product = $this->product->find($request->id);
         $str = '';
@@ -135,7 +130,7 @@ class POSController extends Controller
      * @return JsonResponse
      */
 
-    public function get_customers(Request $request): \Illuminate\Http\JsonResponse
+    public function getCustomers(Request $request): \Illuminate\Http\JsonResponse
     {
         $key = explode(' ', $request['q']);
         $data = DB::table('users')
@@ -160,7 +155,7 @@ class POSController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function update_tax(Request $request): RedirectResponse
+    public function updateTax(Request $request): RedirectResponse
     {
         if ($request->tax < 0) {
             Toastr::error(translate('Tax_can_not_be_less_than_0_percent'));
@@ -180,9 +175,9 @@ class POSController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function update_discount(Request $request): RedirectResponse
+    public function updateDiscount(Request $request): RedirectResponse
     {
-        $subtotal = session()->get('subtotal');
+        $subTotal = session()->get('subtotal');
         $total = session()->get('total');
 
         if ($request->type == 'percent' && $request->discount < 0) {
@@ -201,13 +196,12 @@ class POSController extends Controller
             Toastr::error(translate('cart_is_empty'));
             return back();
         }elseif ($request->type == 'percent' && $request->discount > 0) {
-            $extra_discount = ($subtotal * $request->discount) / 100;
-            if($extra_discount >= $total){
+            $extraDiscount = ($subTotal * $request->discount) / 100;
+            if($extraDiscount >= $total){
                 Toastr::error(translate('Extra_discount_can_not_be_more_or_equal_than_total_price'));
                 return back();
             }
         }
-
 
         $cart = $request->session()->get('cart', collect([]));
         $cart['extra_discount'] = $request->discount;
@@ -217,7 +211,6 @@ class POSController extends Controller
         Toastr::success(translate('Discount_applied'));
         return back();
     }
-
     /**
      * @param Request $request
      * @return JsonResponse
@@ -239,6 +232,7 @@ class POSController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
+
     public function addToCart(Request $request): JsonResponse
     {
         $product = $this->product->find($request->id);
@@ -289,7 +283,7 @@ class POSController extends Controller
         $data['price'] = $price;
         $data['name'] = $product->name;
         $data['discount'] = Helpers::discount_calculate($product, $price);
-        $data['image'] = $product->image;
+        $data['image'] = $product->image_fullpath;
 
         if ($request->session()->has('cart')) {
             $cart = $request->session()->get('cart', collect([]));
@@ -307,7 +301,7 @@ class POSController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function cart_items(): Factory|View|Application
+    public function cartItems(): Factory|View|Application
     {
         return view('admin-views.pos._cart');
     }
@@ -344,71 +338,121 @@ class POSController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function order_list(Request $request): Factory|View|Application
+    public function orderList(Request $request): Factory|View|Application
     {
-        $query_param = [];
-        $search = $request['search'];
-        $branch_id = $request['branch_id'];
-        $start_date = $request['start_date'];
-        $end_date = $request['end_date'];
+        $queryParam = [];
+        $search    = $request['search'];
+        $branchId  = $request['branch_id'];
+        $startDate = $request['start_date'];
+        $endDate   = $request['end_date'];
+        $orderPos  = $request['order_pos']; // Get the selected search field
+        $minPrice = $request['min']; // Get the minimum price
+        $maxPrice = $request['max']; // Get the maximum price
+        $paymentStatus = $request['payment_status']; // Get the payment status
 
         $this->order->where(['checked' => 0])->update(['checked' => 1]);
 
         $query = $this->order->pos()->with(['customer', 'branch'])
-            ->when((!is_null($branch_id) && $branch_id != 'all'), function ($query) use ($branch_id) {
-                return $query->where('branch_id', $branch_id);
+            ->when((!is_null($branchId) && $branchId != 'all'), function ($query) use ($branchId) {
+                return $query->whereHas('branch', function($query) use ($branchId) {
+                    $query->where('name', 'like', "%$branchId%"); // Adjust as needed, for example: searching with like or exact match
+                });
             })
-            ->when((!is_null($start_date) && !is_null($end_date)), function ($query) use ($start_date, $end_date) {
-                return $query->whereDate('created_at', '>=', $start_date)
-                    ->whereDate('created_at', '<=', $end_date);
-            });
-        $query_param = ['branch_id' => $branch_id, 'start_date' => $start_date,'end_date' => $end_date ];
+            ->when((!is_null($startDate) && !is_null($endDate)), function ($query) use ($startDate, $endDate) {
+                return $query->whereDate('created_at', '>=', $startDate)
+                    ->whereDate('created_at', '<=', $endDate);
+            })
 
-        if ($request->has('search')) {
-            $key = explode(' ', $request['search']);
-            $query = $query->where(function ($q) use ($key) {
-                foreach ($key as $value) {
-                    $q->orWhere('id', 'like', "%{$value}%")
-                        ->orWhere('order_status', 'like', "%{$value}%")
-                        ->orWhere('transaction_reference', 'like', "%{$value}%");
-                }
+            // Apply conditions based on minimum and maximum prices if provided
+            ->when((!is_null($minPrice) && !is_null($maxPrice)), function ($query) use ($minPrice, $maxPrice) {
+                return $query->whereBetween('order_amount', [$minPrice, $maxPrice]);
             });
-            $query_param = ['search' => $request['search']];
+
+        // Apply condition based on payment status if provided
+        if (!is_null($paymentStatus) && in_array($paymentStatus, ['paid', 'unpaid'])) {
+            $query->where('payment_status', $paymentStatus);
         }
 
-        $orders = $query->orderBy('id', 'desc')->paginate(Helpers::getPagination())->appends($query_param);
+        // Adjust the query logic if "All fields" option is selected
+        if ($orderPos !== 'all') {
+            if ($request->has('search')) {
+                if ($orderPos === 'branch_id') { // If searching by branch name
+                    $query = $query->whereHas('branch', function($query) use ($search) {
+                        $query->where('name', 'like', "%$search%");
+                    });
+                } else { // Search in other columns
+                    $key = explode(' ', $search);
+                    $query = $query->where(function ($q) use ($key) {
+                        foreach ($key as $value) {
+                            $q->orWhere('id','like', "%{$value}%")
+                                ->orWhere('order_status', 'like', "%{$value}%")
+                                ->orWhere('order_amount', 'like', "%{$value}%")
+                                ->orWhere('transaction_reference', 'like', "%{$value}%");
+                        }
+                    });
+                }
+                $queryParam = ['search' => $search, 'order_pos' => $orderPos]; // Include order_pos in query params
+            }
+        }
 
-        return view('admin-views.pos.order.list', compact('orders','search', 'branch_id', 'start_date', 'end_date'));
+        $orders = $query->orderBy('id', 'desc')->paginate(Helpers::getPagination())->appends($queryParam);
+
+        return view('admin-views.pos.order.list', compact('orders', 'search', 'branchId', 'startDate', 'endDate', 'orderPos'));
     }
+
 
     /**
      * @param $id
      * @return Application|Factory|View|RedirectResponse
      */
-    public function order_details($id): View|Factory|RedirectResponse|Application
+    public function orderDetails($id): View|Factory|RedirectResponse|Application
     {
         $order = $this->order->with('details')->where(['id' => $id])->first();
-
-        $delivery_man = $this->delivery_man
-            ->where(function($query) use ($order) {
-                $query->where('branch_id', $order->branch_id)
-                    ->orWhere('branch_id', 0);
-            })
-            ->get();
-
         if (isset($order)) {
-            return view('admin-views.pos.order.order-view', compact('order', 'delivery_man'));
+            return view('admin-views.order.order-view', compact('order'));
         } else {
             Toastr::info(translate('No more orders!'));
             return back();
         }
     }
 
+
+    public function handleLinkOrder($id): View|Factory|RedirectResponse|Application
+    {
+        $settings = BusinessSetting::where(function ($query) {
+            $query->where('key', 'stripe')
+                ->orWhere('key', 'paypal')
+                ->orWhere('key', 'razor_pay');
+        })
+            ->where(DB::raw("JSON_EXTRACT(value, '$.status')"), 1)
+            ->get();
+        $order = $this->order->with('details')->where(['id' => $id])->first();
+        if (isset($order)) {
+            return view('admin-views.order.link-order-view', compact('order','settings'));
+        } else {
+            Toastr::info(translate('No more orders!'));
+            return back();
+        }
+    }
+
+    public function handleDeletePOSOrder($id)
+    {
+        $order = Order::find($id);
+        if ($order) {
+            $order->details()->delete();
+            $order->delete();
+            Toastr::success(translate('Order and associated details deleted successfully.'));
+        } else {
+            Toastr::error(translate('Order not found.'));
+        }
+        return back();
+    }
+
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function place_order(Request $request): RedirectResponse
+    public function placeOrder(Request $request): RedirectResponse
     {
 
         if ($request->session()->has('cart')) {
@@ -422,22 +466,29 @@ class POSController extends Controller
         }
 
         $cart = $request->session()->get('cart');
-        $total_tax_amount = 0;
-        $product_price = 0;
+        $totalTaxAmount = 0;
+        $productPrice = 0;
         $order_details = [];
 
-        $order_id = 100000 + $this->order->all()->count() + 1;
-        if ($this->order->find($order_id)) {
-            $order_id = $this->order->orderBy('id', 'DESC')->first()->id + 1;
+        $orderId = 100000 + $this->order->all()->count() + 1;
+        if ($this->order->find($orderId)) {
+            $orderId = $this->order->orderBy('id', 'DESC')->first()->id + 1;
         }
 
         $order = $this->order;
-        $order->id = $order_id;
+        $order->id = $orderId;
 
         $order->user_id = session()->has('customer_id') ? session('customer_id') : null;
         $order->coupon_discount_title = $request->coupon_discount_title == 0 ? null : 'coupon_discount_title';
-        $order->payment_status = 'paid';
-        $order->order_status = 'delivered';
+
+        if($request->type == 'link'){
+            $order->payment_status = 'unpaid';
+            $order->order_status = 'pending';
+        }else{
+            $order->payment_status = 'paid';
+            $order->order_status = 'delivered';
+        }
+
         $order->order_type = 'pos';
         $order->coupon_code = $request->coupon_code ?? null;
         $order->payment_method = $request->type;
@@ -449,7 +500,8 @@ class POSController extends Controller
         $order->created_at = now();
         $order->updated_at = now();
 
-        $total_product_main_price = 0;
+        $totalProductMainPrice = 0;
+
         foreach ($cart as $c) {
             if (is_array($c)) {
                 $product = $this->product->find($c['id']);
@@ -471,9 +523,9 @@ class POSController extends Controller
                     }
                 }
 
-                $discount_on_product = 0;
-                $product_subtotal = ($c['price']) * $c['quantity'];
-                $discount_on_product += ($c['discount'] * $c['quantity']);
+                $discountOnProduct = 0;
+                $productSubtotal = ($c['price']) * $c['quantity'];
+                $discountOnProduct += ($c['discount'] * $c['quantity']);
 
                 if ($product) {
                     $price = $c['price'];
@@ -492,9 +544,9 @@ class POSController extends Controller
                         'created_at' => now(),
                         'updated_at' => now()
                     ];
-                    $total_tax_amount += $or_d['tax_amount'] * $c['quantity'];
-                    $product_price += $product_subtotal - $discount_on_product;
-                    $total_product_main_price += $product_subtotal;
+                    $totalTaxAmount += $or_d['tax_amount'] * $c['quantity'];
+                    $productPrice += $productSubtotal - $discountOnProduct;
+                    $totalProductMainPrice += $productSubtotal;
                     $order_details[] = $or_d;
                 }
 
@@ -516,17 +568,20 @@ class POSController extends Controller
             }
         }
 
-        $total_price = $product_price;
+        $totalPrice = $productPrice;
+
         if (isset($cart['extra_discount'])) {
-            $extra_discount = $cart['extra_discount_type'] == 'percent' && $cart['extra_discount'] > 0 ? (($total_product_main_price * $cart['extra_discount']) / 100) : $cart['extra_discount'];
-            $total_price -= $extra_discount;
+            $extra_discount = $cart['extra_discount_type'] == 'percent' && $cart['extra_discount'] > 0 ? (($totalProductMainPrice * $cart['extra_discount']) / 100) : $cart['extra_discount'];
+            $totalPrice -= $extra_discount;
         }
+
         $tax = isset($cart['tax']) ? $cart['tax'] : 0;
-        $total_tax_amount = ($tax > 0) ? (($total_price * $tax) / 100) : $total_tax_amount;
+        $totalTaxAmount = ($tax > 0) ? (($totalPrice * $tax) / 100) : $totalTaxAmount;
+
         try {
             $order->extra_discount = $extra_discount ?? 0;
-            $order->total_tax_amount = $total_tax_amount;
-            $order->order_amount = $total_price + $total_tax_amount + $order->delivery_charge;
+            $order->total_tax_amount = $totalTaxAmount;
+            $order->order_amount = $totalPrice + $totalTaxAmount + $order->delivery_charge;
 
             $order->coupon_discount_amount = 0.00;
             $order->branch_id = session()->has('branch_id') ? session('branch_id') : 1;
@@ -534,15 +589,14 @@ class POSController extends Controller
             foreach ($order_details as $key => $item) {
                 $order_details[$key]['order_id'] = $order->id;
             }
-            $this->order_detail->insert($order_details);
+            $this->orderDetail->insert($order_details);
 
-            // notification and email
             if ($order->user_id != null){
                 $user = User::find($order->user_id);
-                $fcm_token = $user?->cm_firebase_token;
+                $userFcmToken = $user?->cm_firebase_token;
                 $value = Helpers::order_status_update_message('delivered');
                 try {
-                    if ($value && $fcm_token != null) {
+                    if ($value && $userFcmToken != null) {
                         $data = [
                             'title' => 'Order',
                             'description' => $value,
@@ -550,7 +604,7 @@ class POSController extends Controller
                             'image' => '',
                             'type' => 'general',
                         ];
-                        Helpers::send_push_notif_to_device($fcm_token, $data);
+                        Helpers::send_push_notif_to_device($userFcmToken, $data);
                     }
 
                     $emailServices = Helpers::get_business_settings('mail_config');
@@ -577,9 +631,10 @@ class POSController extends Controller
      * @param $id
      * @return JsonResponse
      */
-    public function generate_invoice($id): JsonResponse
+    public function generateInvoice($id): JsonResponse
     {
         $order = $this->order->where('id', $id)->first();
+        // Iterate over order details and access product property
 
         return response()->json([
             'success' => 1,
@@ -587,35 +642,44 @@ class POSController extends Controller
         ]);
     }
 
+
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function store_keys(Request $request): JsonResponse
+    public function storeKeys(Request $request): JsonResponse
     {
         session()->put($request['key'], $request['value']);
         return response()->json('', 200);
     }
 
-    public function customer_store(Request $request): RedirectResponse
+    public function customerStore(Request $request): RedirectResponse
     {
         $request->validate([
             'f_name' => 'required',
             'l_name' => 'required',
             'phone' => 'required',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:users',
+
         ]);
 
-        $user_phone = $this->user->where('phone', $request->phone)->first();
-        if (isset($user_phone)){
+        $userPhone = $this->user->where('phone', $request->phone)->first();
+        if (isset($userPhone)){
             Toastr::error(translate('The phone is already taken'));
             return back();
         }
 
-        $user_email = $this->user->where('email', $request->email)->first();
-        if (isset($user_email)){
+        $userEmail = $this->user->where('email', $request->email)->first();
+        if (isset($userEmail)){
             Toastr::error(translate('The email is already taken'));
             return back();
+        }
+
+        $password = uniqid();
+
+        $emailServices = Helpers::get_business_settings('mail_config');
+        if (isset($emailServices['status']) && $emailServices['status'] == 1) {
+            Mail::to($request->email)->send(new \App\Mail\PasswordMail($password));
         }
 
         $this->user->create([
@@ -623,11 +687,52 @@ class POSController extends Controller
             'l_name' => $request->l_name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'password' => bcrypt('password'),
+            'password' => bcrypt($password),
         ]);
 
         Toastr::success(translate('customer added successfully'));
         return back();
+    }
+
+
+    public function customerUpdate(Request $request): RedirectResponse
+    {
+        try {
+            $request->validate([
+                'f_name' => 'required',
+                'l_name' => 'required',
+                'phone' => 'required',
+                'email' => 'required|email',
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->validator->errors());
+        }
+
+
+        // Retrieve the user record to be updated
+        $user = $this->user->find($request->user_id);
+
+        // Update the user attributes
+        $user->f_name = $request->f_name;
+        $user->l_name = $request->l_name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+
+        // Save the updated user record
+        $user->save();
+
+        Toastr::success(translate('Customer updated successfully'));
+        return redirect()->back();
+    }
+
+
+
+    public  function handleDeleteUser($id)
+    {
+        $user = User::find($id)->delete();
+        Toastr::success(translate('customer deleted successfully'));
+        return back();
+
     }
 
     /**
@@ -638,23 +743,23 @@ class POSController extends Controller
      * @throws UnsupportedTypeException
      * @throws WriterNotOpenedException
      */
-    public function export_orders(Request $request): StreamedResponse|string
+    public function exportOrders(Request $request): StreamedResponse|string
     {
-        $query_param = [];
-        $search = $request['search'];
-        $branch_id = $request['branch_id'];
-        $start_date = $request['start_date'];
-        $end_date = $request['end_date'];
+        $queryParam = [];
+        $search    = $request['search'];
+        $branchId  = $request['branch_id'];
+        $startDate = $request['start_date'];
+        $endDate   = $request['end_date'];
 
         $query = $this->order->pos()->with(['customer', 'branch'])
-            ->when((!is_null($branch_id) && $branch_id != 'all'), function ($query) use ($branch_id) {
-                return $query->where('branch_id', $branch_id);
+            ->when((!is_null($branchId) && $branchId != 'all'), function ($query) use ($branchId) {
+                return $query->where('branch_id', $branchId);
             })
-            ->when((!is_null($start_date) && !is_null($end_date)), function ($query) use ($start_date, $end_date) {
-                return $query->whereDate('created_at', '>=', $start_date)
-                    ->whereDate('created_at', '<=', $end_date);
+            ->when((!is_null($startDate) && !is_null($endDate)), function ($query) use ($startDate, $endDate) {
+                return $query->whereDate('created_at', '>=', $startDate)
+                    ->whereDate('created_at', '<=', $endDate);
             });
-        $query_param = ['branch_id' => $branch_id, 'start_date' => $start_date,'end_date' => $end_date ];
+        $queryParam = ['branch_id' => $branchId, 'start_date' => $startDate,'end_date' => $endDate ];
 
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
@@ -665,7 +770,7 @@ class POSController extends Controller
                         ->orWhere('transaction_reference', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }
 
         $orders = $query->orderBy('id', 'desc')->get();

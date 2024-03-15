@@ -1,13 +1,10 @@
-<!-- Header -->
 <div class="card-header">
     <h4 class="d-flex align-items-center text-capitalize gap-10 mb-0">
-        <img width="20" src="{{asset('public/assets/admin/img/icons/top-selling-product.png')}}" alt="">
-        {{\App\CentralLogics\translate('top_selling_products')}}
+        <img width="20" src="{{asset('public/assets/admin/img/icons/top-selling-product.png')}}" alt="{{ translate('image') }}">
+        {{translate('top_selling_products')}}
     </h4>
 </div>
-<!-- End Header -->
 
-<!-- Body -->
 <div class="card-body">
     <div class="d-flex flex-column gap-3">
         @foreach($top_sell as $key=>$item)
@@ -16,11 +13,10 @@
                     <div class="media align-items-center gap-3">
                         <div class="avatar-lg">
                             <img class="rounded border img-fit"
-                            src="{{ asset('storage/app/public/product/')}}/{{json_decode($item->product->image)[0]}}"
-                            onerror="this.src='{{asset('public/assets/admin/img/400x400/img2.jpg')}}'"
-                            alt="{{$item->product->name}} image">
+                            src="{{$item->product->image_fullpath[0]}}"
+                            alt="{{$item->product->name}}-image">
                         </div>
-                        
+
                         <div class="media-body">
                             <span class="text-dark">{{substr($item->product['name'],0,20)}} {{strlen($item->product['name'])>20?'...':''}}</span>
                         </div>
@@ -31,4 +27,3 @@
         @endforeach
     </div>
 </div>
-<!-- End Body -->

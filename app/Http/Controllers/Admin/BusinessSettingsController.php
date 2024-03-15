@@ -20,6 +20,7 @@ use App\Http\Controllers\Controller;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,14 +28,16 @@ class BusinessSettingsController extends Controller
 {
     public function __construct(
         private BusinessSetting $business_setting,
-        private Currency $currency,
-        private SocialMedia $social_media
-    ){}
+        private Currency        $currency,
+        private SocialMedia     $social_media
+    )
+    {
+    }
 
     /**
      * @return Application|Factory|View
      */
-    public function restaurant_index(): View|Factory|Application
+    public function BusinessSetup(): View|Factory|Application
     {
         if (!$this->business_setting->where(['key' => 'minimum_order_value'])->first()) {
             DB::table('business_settings')->updateOrInsert(['key' => 'minimum_order_value'], [
@@ -48,31 +51,40 @@ class BusinessSettingsController extends Controller
             ]);
         }
 
-        return view('admin-views.business-settings.restaurant-index');
+        $logo = Helpers::get_business_settings('logo');
+        $logo = Helpers::onErrorImage($logo, asset('storage/app/public/ecommerce') . '/' . $logo, asset('public/assets/admin/img/160x160/img2.jpg'), 'ecommerce/');
+
+        $app_logo = Helpers::get_business_settings('app_logo');
+        $app_logo = Helpers::onErrorImage($app_logo, asset('storage/app/public/ecommerce') . '/' . $app_logo, asset('public/assets/admin/img/160x160/img2.jpg'), 'ecommerce/');
+
+        $fav_icon = Helpers::get_business_settings('fav_icon');
+        $fav_icon = Helpers::onErrorImage($fav_icon, asset('storage/app/public/ecommerce') . '/' . $fav_icon, asset('public/assets/admin/img/160x160/img2.jpg'), 'ecommerce/');
+
+        return view('admin-views.business-settings.restaurant-index', compact('logo', 'app_logo', 'fav_icon'));
     }
 
     /**
      * @param $side
      * @return JsonResponse
      */
-    public function currency_symbol_position($side): JsonResponse
+    public function currencySymbolPosition($side): JsonResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'currency_symbol_position'], [
             'value' => $side
         ]);
-        return response()->json(['message' => translate("Symbol position is "). $side]);
+        return response()->json(['message' => translate("Symbol position is ") . $side]);
     }
 
     /**
      * @return JsonResponse
      */
-    public function maintenance_mode(): JsonResponse
+    public function maintenanceMode(): JsonResponse
     {
         $mode = Helpers::get_business_settings('maintenance_mode');
         DB::table('business_settings')->updateOrInsert(['key' => 'maintenance_mode'], [
             'value' => isset($mode) ? !$mode : 1
         ]);
-        if (!$mode){
+        if (!$mode) {
             return response()->json(['message' => translate("Maintenance Mode is On.")]);
         }
         return response()->json(['message' => translate("Maintenance Mode is Off.")]);
@@ -82,7 +94,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function restaurant_setup(Request $request): RedirectResponse
+    public function BusinessSetupUpdate(Request $request): RedirectResponse
     {
         if ($request['email_verification'] == 1) {
             $request['phone_verification'] = 0;
@@ -184,7 +196,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function mail_index(): View|Factory|Application
+    public function mailIndex(): View|Factory|Application
     {
         return view('admin-views.business-settings.mail-index');
     }
@@ -193,7 +205,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function mail_send(Request $request): JsonResponse
+    public function mailSend(Request $request): JsonResponse
     {
         $response_flag = 0;
         try {
@@ -214,7 +226,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function mail_config(Request $request): RedirectResponse
+    public function mailConfig(Request $request): RedirectResponse
     {
         $this->business_setting->where(['key' => 'mail_config'])->update([
             'value' => json_encode([
@@ -237,7 +249,7 @@ class BusinessSettingsController extends Controller
      * @param $status
      * @return JsonResponse
      */
-    public function mail_config_status($status): JsonResponse
+    public function mailConfigStatus($status): JsonResponse
     {
         $data = Helpers::get_business_settings('mail_config');
         $data['status'] = $status == '1' ? 1 : 0;
@@ -251,7 +263,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function payment_index(): View|Factory|Application
+    public function paymentIndex(): View|Factory|Application
     {
         $published_status = 0; // Set a default value
         $payment_published_status = config('get_payment_publish_status');
@@ -273,13 +285,18 @@ class BusinessSettingsController extends Controller
         }
 
         $data_values = Setting::whereIn('settings_type', ['payment_config'])
-            ->whereIn('key_name', ['ssl_commerz','paypal','stripe','razor_pay','senang_pay','paystack','paymob_accept','flutterwave','bkash','mercadopago'])
+            ->whereIn('key_name', ['ssl_commerz', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paystack', 'paymob_accept', 'flutterwave', 'bkash', 'mercadopago'])
             ->get();
 
         return view('admin-views.business-settings.payment-index', compact('published_status', 'payment_url', 'data_values'));
     }
 
-    public function payment_config_update(Request $request)
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     * @throws ValidationException
+     */
+    public function paymentConfigUpdate(Request $request): RedirectResponse
     {
         $validation = [
             'gateway' => 'required|in:ssl_commerz,paypal,stripe,razor_pay,senang_pay,paystack,paymob_accept,flutterwave,bkash,mercadopago',
@@ -321,7 +338,7 @@ class BusinessSettingsController extends Controller
                 'secret_key' => 'required_if:status,1',
                 'merchant_id' => 'required_if:status,1'
             ];
-        }elseif ($request['gateway'] == 'paystack') {
+        } elseif ($request['gateway'] == 'paystack') {
             $additional_data = [
                 'status' => 'required|in:1,0',
                 'public_key' => 'required_if:status,1',
@@ -350,7 +367,7 @@ class BusinessSettingsController extends Controller
                 'public_key' => 'required_if:status,1',
                 'hash' => 'required_if:status,1'
             ];
-        }  elseif ($request['gateway'] == 'bkash') {
+        } elseif ($request['gateway'] == 'bkash') {
             $additional_data = [
                 'status' => 'required|in:1,0',
                 'app_key' => 'required_if:status,1',
@@ -372,7 +389,7 @@ class BusinessSettingsController extends Controller
             $gateway_image = $additional_data_image != null ? $additional_data_image->gateway_image : '';
         }
 
-        if ($request['gateway_title'] == null){
+        if ($request['gateway_title'] == null) {
             Toastr::error(translate('payment_gateway_title_is_required!'));
             return back();
         }
@@ -399,7 +416,12 @@ class BusinessSettingsController extends Controller
 
     }
 
-    public function payment_update(Request $request, $name)
+    /**
+     * @param Request $request
+     * @param $name
+     * @return RedirectResponse
+     */
+    public function paymentUpdate(Request $request, $name): RedirectResponse
     {
         if ($name == 'cash_on_delivery') {
             $payment = $this->business_setting->where('key', 'cash_on_delivery')->first();
@@ -421,8 +443,7 @@ class BusinessSettingsController extends Controller
                     'updated_at' => now()
                 ]);
             }
-        }
-        elseif ($name == 'digital_payment') {
+        } elseif ($name == 'digital_payment') {
             $payment = $this->business_setting->where('key', 'digital_payment')->first();
             if (!isset($payment)) {
                 DB::table('business_settings')->insert([
@@ -449,18 +470,10 @@ class BusinessSettingsController extends Controller
     }
 
     /**
-     * @return Application|Factory|View
-     */
-    public function currency_index(): View|Factory|Application
-    {
-        return view('admin-views.business-settings.currency-index');
-    }
-
-    /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function currency_store(Request $request): RedirectResponse
+    public function currencyStore(Request $request): RedirectResponse
     {
         $request->validate([
             'currency_code' => 'required|unique:currencies',
@@ -480,7 +493,7 @@ class BusinessSettingsController extends Controller
      * @param $id
      * @return Application|Factory|View
      */
-    public function currency_edit($id): View|Factory|Application
+    public function currencyEdit($id): View|Factory|Application
     {
         $currency = $this->currency->find($id);
         return view('admin-views.business-settings.currency-update', compact('currency'));
@@ -491,7 +504,7 @@ class BusinessSettingsController extends Controller
      * @param $id
      * @return Application|RedirectResponse|Redirector
      */
-    public function currency_update(Request $request, $id): Redirector|RedirectResponse|Application
+    public function currencyUpdate(Request $request, $id): Redirector|RedirectResponse|Application
     {
         $this->currency->where(['id' => $id])->update([
             "country" => $request['country'],
@@ -507,7 +520,7 @@ class BusinessSettingsController extends Controller
      * @param $id
      * @return RedirectResponse
      */
-    public function currency_delete($id): RedirectResponse
+    public function currencyDelete($id): RedirectResponse
     {
         $this->currency->where(['id' => $id])->delete();
         Toastr::success(translate('Currency removed successfully!'));
@@ -517,10 +530,10 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function terms_and_conditions(): View|Factory|Application
+    public function termsAndConditions(): View|Factory|Application
     {
         $tnc = $this->business_setting->where(['key' => 'terms_and_conditions'])->first();
-        if ($tnc == false) {
+        if (!$tnc) {
             $this->business_setting->insert([
                 'key' => 'terms_and_conditions',
                 'value' => ''
@@ -533,7 +546,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function terms_and_conditions_update(Request $request): RedirectResponse
+    public function termsAndConditionsUpdate(Request $request): RedirectResponse
     {
         $this->business_setting->where(['key' => 'terms_and_conditions'])->update([
             'value' => $request->tnc
@@ -545,7 +558,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function privacy_policy(): View|Factory|Application
+    public function privacyPolicy(): View|Factory|Application
     {
         $data = $this->business_setting->where(['key' => 'privacy_policy'])->first();
         if (!$data) {
@@ -562,7 +575,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function privacy_policy_update(Request $request): RedirectResponse
+    public function privacyPolicyUpdate(Request $request): RedirectResponse
     {
         $this->business_setting->where(['key' => 'privacy_policy'])->update([
             'value' => $request->privacy_policy,
@@ -575,7 +588,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function about_us(): View|Factory|Application
+    public function aboutUs(): View|Factory|Application
     {
         $data = $this->business_setting->where(['key' => 'about_us'])->first();
         if (!$data) {
@@ -592,7 +605,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function about_us_update(Request $request): RedirectResponse
+    public function aboutUsUpdate(Request $request): RedirectResponse
     {
         $this->business_setting->where(['key' => 'about_us'])->update([
             'value' => $request->about_us,
@@ -605,7 +618,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function fcm_index(): View|Factory|Application
+    public function fcmIndex(): View|Factory|Application
     {
         if (!$this->business_setting->where(['key' => 'fcm_topic'])->first()) {
             $this->business_setting->insert([
@@ -723,7 +736,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function update_fcm(Request $request): RedirectResponse
+    public function updateFcm(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'fcm_project_id'], [
             'value' => $request['fcm_project_id']
@@ -741,7 +754,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function update_fcm_messages(Request $request): RedirectResponse
+    public function updateFcmMessages(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'order_pending_message'], [
             'value' => json_encode([
@@ -834,7 +847,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function map_api_settings(): View|Factory|Application
+    public function mapApiSettings(): View|Factory|Application
     {
         return view('admin-views.business-settings.map-api');
     }
@@ -843,7 +856,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function update_map_api(Request $request): RedirectResponse
+    public function updateMapApi(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'map_api_key'], [
             'value' => $request->map_api_key,
@@ -861,7 +874,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function recaptcha_index(Request $request): View|Factory|Application
+    public function recaptchaIndex(Request $request): View|Factory|Application
     {
         return view('admin-views.business-settings.recaptcha-index');
     }
@@ -870,7 +883,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function recaptcha_update(Request $request): RedirectResponse
+    public function recaptchaUpdate(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'recaptcha'], [
             'key' => 'recaptcha',
@@ -891,11 +904,11 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function return_page_index(Request $request): View|Factory|Application
+    public function returnPageIndex(Request $request): View|Factory|Application
     {
         $data = $this->business_setting->where(['key' => 'return_page'])->first();
 
-        if ($data == false) {
+        if (!$data) {
             $data = [
                 'key' => 'return_page',
                 'value' => json_encode([
@@ -905,19 +918,19 @@ class BusinessSettingsController extends Controller
             ];
             $this->business_setting->insert($data);
         }
-        return view('admin-views.business-settings.return_page-index',compact('data'));
+        return view('admin-views.business-settings.return_page-index', compact('data'));
     }
 
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function return_page_update(Request $request): RedirectResponse
+    public function returnPageUpdate(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'return_page'], [
             'key' => 'return_page',
             'value' => json_encode([
-                'status' => $request['status']==1 ? 1 : 0,
+                'status' => $request['status'] == 1 ? 1 : 0,
                 'content' => $request->has('content') ? $request['content'] : null
             ]),
             'created_at' => now(),
@@ -929,13 +942,11 @@ class BusinessSettingsController extends Controller
         return back();
     }
 
-     //refund page
-
     /**
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function refund_page_index(Request $request): View|Factory|Application
+    public function refundPageIndex(Request $request): View|Factory|Application
     {
         $data = $this->business_setting->where(['key' => 'refund_page'])->first();
 
@@ -950,19 +961,19 @@ class BusinessSettingsController extends Controller
             $this->business_setting->insert($data);
         }
 
-        return view('admin-views.business-settings.refund_page-index',compact('data'));
+        return view('admin-views.business-settings.refund_page-index', compact('data'));
     }
 
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function refund_page_update(Request $request): RedirectResponse
+    public function refundPageUpdate(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'refund_page'], [
             'key' => 'refund_page',
             'value' => json_encode([
-                'status' => $request['status']==1 ? 1 : 0,
+                'status' => $request['status'] == 1 ? 1 : 0,
                 'content' => $request->has('content') ? $request['content'] : null
             ]),
             'created_at' => now(),
@@ -976,55 +987,53 @@ class BusinessSettingsController extends Controller
     }
 
 
-     //cancellation page
-
     /**
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function cancellation_page_index(Request $request): View|Factory|Application
+    public function cancellationPageIndex(Request $request): View|Factory|Application
     {
-         $data = $this->business_setting->where(['key' => 'cancellation_page'])->first();
+        $data = $this->business_setting->where(['key' => 'cancellation_page'])->first();
 
-         if ($data == false) {
-             $data = [
-                 'key' => 'cancellation_page',
-                 'value' => json_encode([
-                     'status' => 0,
-                     'content' => null
-                 ]),
-             ];
-             $this->business_setting->insert($data);
-         }
+        if ($data == false) {
+            $data = [
+                'key' => 'cancellation_page',
+                'value' => json_encode([
+                    'status' => 0,
+                    'content' => null
+                ]),
+            ];
+            $this->business_setting->insert($data);
+        }
 
-         return view('admin-views.business-settings.cancellation_page-index',compact('data'));
-     }
+        return view('admin-views.business-settings.cancellation_page-index', compact('data'));
+    }
 
     /**
      * @param Request $request
      * @return RedirectResponse
      */
-    public function cancellation_page_update(Request $request): RedirectResponse
+    public function cancellationPageUpdate(Request $request): RedirectResponse
     {
-         DB::table('business_settings')->updateOrInsert(['key' => 'cancellation_page'], [
-             'key' => 'cancellation_page',
-             'value' => json_encode([
-                 'status' => $request['status']==1 ? 1 : 0,
-                 'content' => $request->has('content') ? $request['content'] : null
-             ]),
-             'created_at' => now(),
-             'updated_at' => now(),
+        DB::table('business_settings')->updateOrInsert(['key' => 'cancellation_page'], [
+            'key' => 'cancellation_page',
+            'value' => json_encode([
+                'status' => $request['status'] == 1 ? 1 : 0,
+                'content' => $request->has('content') ? $request['content'] : null
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
 
-         ]);
+        ]);
 
-         Toastr::success(translate('Updated Successfully'));
-         return back();
-     }
+        Toastr::success(translate('Updated Successfully'));
+        return back();
+    }
 
     /**
      * @return Application|Factory|View
      */
-    public function app_setting_index(): View|Factory|Application
+    public function appSettingIndex(): View|Factory|Application
     {
         return View('admin-views.business-settings.app-setting-index');
     }
@@ -1033,10 +1042,9 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function app_setting_update(Request $request): RedirectResponse
+    public function appSettingUpdate(Request $request): RedirectResponse
     {
-        if($request->platform == 'android')
-        {
+        if ($request->platform == 'android') {
             DB::table('business_settings')->updateOrInsert(['key' => 'play_store_config'], [
                 'value' => json_encode([
                     'status' => $request['play_store_status'],
@@ -1050,8 +1058,7 @@ class BusinessSettingsController extends Controller
             return back();
         }
 
-        if($request->platform == 'ios')
-        {
+        if ($request->platform == 'ios') {
             DB::table('business_settings')->updateOrInsert(['key' => 'app_store_config'], [
                 'value' => json_encode([
                     'status' => $request['app_store_status'],
@@ -1072,7 +1079,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function firebase_message_config_index(): View|Factory|Application
+    public function firebaseMessageConfigIndex(): View|Factory|Application
     {
         return View('admin-views.business-settings.firebase-config-index');
     }
@@ -1081,7 +1088,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function firebase_message_config(Request $request): RedirectResponse
+    public function firebaseMessageConfig(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'firebase_message_config'], [
             'key' => 'firebase_message_config',
@@ -1097,7 +1104,7 @@ class BusinessSettingsController extends Controller
             'updated_at' => now(),
         ]);
 
-        self::firebase_message_config_file_gen();
+        self::firebaseMessageConfigFileGenerate();
 
         Toastr::success(translate('Config Updated Successfully'));
         return back();
@@ -1106,10 +1113,9 @@ class BusinessSettingsController extends Controller
     /**
      * @return void
      */
-    function firebase_message_config_file_gen(): void
+    function firebaseMessageConfigFileGenerate(): void
     {
-        //configs
-        $config=\App\CentralLogics\Helpers::get_business_settings('firebase_message_config');
+        $config = \App\CentralLogics\Helpers::get_business_settings('firebase_message_config');
         $apiKey = $config['apiKey'] ?? '';
         $authDomain = $config['authDomain'] ?? '';
         $projectId = $config['projectId'] ?? '';
@@ -1130,16 +1136,16 @@ class BusinessSettingsController extends Controller
             fwrite($old_file, $new_text);
             fclose($old_file);
 
-        }catch (\Exception $exception) {}
+        } catch (\Exception $exception) {
+        }
 
     }
 
     /**
      * @return Application|Factory|View
      */
-    public function social_media(): View|Factory|Application
+    public function socialMedia(): View|Factory|Application
     {
-        // $about_us = $this->business_setting->where('type', 'about_us')->first();
         return view('admin-views.business-settings.social-media');
     }
 
@@ -1159,7 +1165,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function social_media_store(Request $request): JsonResponse
+    public function socialMediaStore(Request $request): JsonResponse
     {
         try {
             $this->social_media->updateOrInsert([
@@ -1185,7 +1191,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function social_media_edit(Request $request): JsonResponse
+    public function socialMediaEdit(Request $request): JsonResponse
     {
         $data = $this->social_media->where('id', $request->id)->first();
         return response()->json($data);
@@ -1195,12 +1201,12 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function social_media_update(Request $request): JsonResponse
+    public function socialMediaUpdate(Request $request): JsonResponse
     {
-        $social_media = $this->social_media->find($request->id);
-        $social_media->name = $request->name;
-        $social_media->link = $request->link;
-        $social_media->save();
+        $socialMedia = $this->social_media->find($request->id);
+        $socialMedia->name = $request->name;
+        $socialMedia->link = $request->link;
+        $socialMedia->save();
         return response()->json();
     }
 
@@ -1208,10 +1214,10 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function social_media_delete(Request $request): JsonResponse
+    public function socialMediaDelete(Request $request): JsonResponse
     {
-        $br = $this->social_media->find($request->id);
-        $br->delete();
+        $socialMedia = $this->social_media->find($request->id);
+        $socialMedia->delete();
         return response()->json();
     }
 
@@ -1219,11 +1225,12 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function social_media_status_update(Request $request): JsonResponse
+    public function socialMediaStatusUpdate(Request $request): JsonResponse
     {
-        $this->social_media->where(['id' => $request['id']])->update([
-            'status' => $request['status'],
-        ]);
+        $socialMedia = $this->social_media->find($request->id);
+        $socialMedia->status = $socialMedia->status == 1 ? 0 : 1;
+        $socialMedia->save();
+
         return response()->json([
             'success' => 1,
         ], 200);
@@ -1232,7 +1239,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function otp_index(): Factory|View|Application
+    public function otpIndex(): Factory|View|Application
     {
         return view('admin-views.business-settings.otp-setup');
     }
@@ -1241,7 +1248,7 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function update_otp(Request $request): RedirectResponse
+    public function updateOtp(Request $request): RedirectResponse
     {
         DB::table('business_settings')->updateOrInsert(['key' => 'maximum_otp_hit'], [
             'value' => $request['maximum_otp_hit'],
@@ -1266,7 +1273,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function cookies_setup(): Factory|View|Application
+    public function cookiesSetup(): Factory|View|Application
     {
         return view('admin-views.business-settings.cookies-setup');
     }
@@ -1275,9 +1282,8 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function cookies_setup_update(Request $request): RedirectResponse
+    public function cookiesSetupUpdate(Request $request): RedirectResponse
     {
-        //dd($request->all());
         DB::table('business_settings')->updateOrInsert(['key' => 'cookies'], [
             'value' => json_encode([
                 'status' => $request['status'],
@@ -1292,7 +1298,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function delivery_fee_setup(): Factory|View|Application
+    public function deliveryFeeSetup(): Factory|View|Application
     {
         return view('admin-views.business-settings.delivery-fee');
     }
@@ -1301,9 +1307,9 @@ class BusinessSettingsController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function delivery_fee_setup_update(Request $request): RedirectResponse
+    public function deliveryFeeSetupUpdate(Request $request): RedirectResponse
     {
-        if($request->delivery_charge == null) {
+        if ($request->delivery_charge == null) {
             $request->delivery_charge = $this->business_setting->where(['key' => 'delivery_charge'])->first()->value;
         }
 
@@ -1311,10 +1317,10 @@ class BusinessSettingsController extends Controller
             'value' => $request->delivery_charge
         ]);
 
-        if($request['min_shipping_charge'] == null) {
+        if ($request['min_shipping_charge'] == null) {
             $request['min_shipping_charge'] = Helpers::get_business_settings('delivery_management')['min_shipping_charge'];
         }
-        if($request['shipping_per_km'] == null) {
+        if ($request['shipping_per_km'] == null) {
             $request['shipping_per_km'] = Helpers::get_business_settings('delivery_management')['shipping_per_km'];
         }
         if ($request['shipping_status'] == 1) {
@@ -1344,7 +1350,7 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function social_media_login(): Factory|View|Application
+    public function socialMediaLogin(): Factory|View|Application
     {
         return view('admin-views.business-settings.social-media-login');
     }
@@ -1354,14 +1360,13 @@ class BusinessSettingsController extends Controller
      * @param $status
      * @return JsonResponse
      */
-    public function change_social_login_status($medium, $status): JsonResponse
+    public function changeSocialLoginStatus($medium, $status): JsonResponse
     {
-        if ($medium == 'google'){
+        if ($medium == 'google') {
             DB::table('business_settings')->updateOrInsert(['key' => 'google_social_login'], [
                 'value' => $status
             ]);
-        }
-        elseif( $medium == 'facebook'){
+        } elseif ($medium == 'facebook') {
             DB::table('business_settings')->updateOrInsert(['key' => 'facebook_social_login'], [
                 'value' => $status
             ]);
@@ -1372,13 +1377,13 @@ class BusinessSettingsController extends Controller
     /**
      * @return Application|Factory|View
      */
-    public function social_media_chat(): Factory|View|Application
+    public function socialMediaChat(): Factory|View|Application
     {
         if (!$this->business_setting->where(['key' => 'whatsapp'])->first()) {
             $this->business_setting->insert([
-                'key'   => 'whatsapp',
+                'key' => 'whatsapp',
                 'value' => json_encode([
-                    'status'  => 0,
+                    'status' => 0,
                     'number' => '',
                 ]),
             ]);
@@ -1386,9 +1391,9 @@ class BusinessSettingsController extends Controller
 
         if (!$this->business_setting->where(['key' => 'telegram'])->first()) {
             $this->business_setting->insert([
-                'key'   => 'telegram',
+                'key' => 'telegram',
                 'value' => json_encode([
-                    'status'  => 0,
+                    'status' => 0,
                     'user_name' => '',
                 ]),
             ]);
@@ -1396,9 +1401,9 @@ class BusinessSettingsController extends Controller
 
         if (!$this->business_setting->where(['key' => 'messenger'])->first()) {
             $this->business_setting->insert([
-                'key'   => 'messenger',
+                'key' => 'messenger',
                 'value' => json_encode([
-                    'status'  => 0,
+                    'status' => 0,
                     'user_name' => '',
                 ]),
             ]);
@@ -1406,7 +1411,7 @@ class BusinessSettingsController extends Controller
         return view('admin-views.business-settings.chat-index');
     }
 
-    public function update_media_chat(Request $request): \Illuminate\Http\RedirectResponse
+    public function updateSocialMediaChat(Request $request): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'whatsapp_number' => 'required_if:whatsapp_status,1',
@@ -1420,21 +1425,21 @@ class BusinessSettingsController extends Controller
 
         DB::table('business_settings')->updateOrInsert(['key' => 'whatsapp'], [
             'value' => json_encode([
-                'status'  => $request['whatsapp_status'] == 1 ? 1 : 0,
+                'status' => $request['whatsapp_status'] == 1 ? 1 : 0,
                 'number' => $request['whatsapp_number'],
             ]),
         ]);
 
         DB::table('business_settings')->updateOrInsert(['key' => 'telegram'], [
             'value' => json_encode([
-                'status'  => $request['telegram_status'] == 1 ? 1 : 0,
+                'status' => $request['telegram_status'] == 1 ? 1 : 0,
                 'user_name' => $request['telegram_user_name'],
             ]),
         ]);
 
         DB::table('business_settings')->updateOrInsert(['key' => 'messenger'], [
             'value' => json_encode([
-                'status'  => $request['messenger_status'] == 1 ? 1 : 0,
+                'status' => $request['messenger_status'] == 1 ? 1 : 0,
                 'user_name' => $request['messenger_user_name'],
             ]),
         ]);

@@ -2,12 +2,10 @@
 
 namespace App\CentralLogics;
 
-use App\Model\AddOn;
 use App\Model\BusinessSetting;
 use App\Model\Currency;
 use App\Model\DMReview;
 use App\Model\Order;
-use App\Model\Product;
 use App\Model\Review;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
@@ -88,6 +86,9 @@ class Helpers
                         if ($translation->key == 'description') {
                             $item['description'] = $translation->value;
                         }
+                        if ($translation->key == 'codebar') {
+                            $item['codebar'] = $translation->value;
+                        }
                     }
                 }
                 unset($item['translations']);
@@ -132,12 +133,6 @@ class Helpers
                 $detail['product_details'] = gettype($detail['product_details']) != 'array' ? (array) json_decode($detail['product_details'], true) : (array) $detail['product_details'];
                 $detail['variation'] = gettype($detail['variation']) != 'array' ? (array) json_decode($detail['variation'], true) : (array) $detail['variation'];
                 $detail['variant'] = gettype($detail['variant']) != 'array' ? (array) json_decode($detail['variant'], true) : (array) $detail['variant'];
-
-                /*if(count($detail->variation) > 0) {
-                    $detail['variation'] = $detail->variation[0] ?? null; //first element is given, since variation can't be multiple
-                } else {
-                    $detail['variation'] = null;
-                }*/
 
                 if (Order::find($detail->order_id)->order_type == 'pos') {
                     $detail['variation'] = (string)implode('-', array_values($detail['variation'])) ?? null;
@@ -206,9 +201,7 @@ class Helpers
 
     public static function send_push_notif_to_device($fcm_token, $data)
     {
-        /*https://fcm.googleapis.com/v1/projects/myproject-b5ae1/messages:send*/
         $key = BusinessSetting::where(['key' => 'push_notification_key'])->first()->value;
-        /*$project_id = BusinessSetting::where(['key' => 'fcm_project_id'])->first()->value;*/
 
         $url = "https://fcm.googleapis.com/fcm/send";
         $header = array("authorization: key=" . $key . "",
@@ -248,9 +241,7 @@ class Helpers
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
 
-        // Get URL content
         $result = curl_exec($ch);
-        // close handle to release resources
         curl_close($ch);
 
         return $result;
@@ -258,17 +249,12 @@ class Helpers
 
     public static function send_push_notif_to_topic($data, $type)
     {
-        /*https://fcm.googleapis.com/v1/projects/myproject-b5ae1/messages:send*/
         $key = BusinessSetting::where(['key' => 'push_notification_key'])->first()->value;
-        /*$topic = BusinessSetting::where(['key' => 'fcm_topic'])->first()->value;*/
-        /*$project_id = BusinessSetting::where(['key' => 'fcm_project_id'])->first()->value;*/
 
         $url = "https://fcm.googleapis.com/fcm/send";
         $header = array("authorization: key=" . $key . "",
             "content-type: application/json"
         );
-
-        /*"priority": "high",*/
 
         $image = asset('storage/app/public/notification') . '/' . $data['image'];
         $postdata = '{
@@ -304,9 +290,7 @@ class Helpers
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
 
-        // Get URL content
         $result = curl_exec($ch);
-        // close handle to release resources
         curl_close($ch);
 
         return $result;
@@ -700,6 +684,14 @@ class Helpers
         return true;
     }
 
+    public static function onErrorImage($data, $src, $error_src ,$path)
+    {
+        if(isset($data) && strlen($data) >1 && Storage::disk('public')->exists($path.$data)){
+            return $src;
+        }
+        return $error_src;
+    }
+
     public static function get_delivery_charge($distance)
     {
         $config = self::get_business_settings('delivery_management');
@@ -741,3 +733,4 @@ function translate($key)
     }
     return $result;
 }
+

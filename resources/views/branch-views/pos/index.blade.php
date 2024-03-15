@@ -2,22 +2,15 @@
 
 @section('title', translate('POS'))
 
-@push('css_or_js')
-
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="row gy-3 gx-2">
             <div class="col-lg-7">
                 <div class="card overflow-hidden">
-                    <!-- POS Title -->
                     <div class="pos-title">
                         <h4 class="mb-0">{{translate('Product_Section')}}</h4>
                     </div>
-                    <!-- End POS Title -->
 
-                    {{-- POS Filter --}}
                     <div class="d-flex flex-wrap flex-md-nowrap justify-content-between gap-3 gap-xl-4 px-4 py-4">
                         <div class="w-100 mr-xl-2">
                             <select name="category" id="category" class="form-control js-select2-custom mx-1" title="select category" onchange="set_category_filter(this.value)">
@@ -38,13 +31,12 @@
                                     </div>
                                     <input id="datatableSearch" type="search" value="{{$keyword?$keyword:''}}" name="search"
                                         class="form-control border-0 pr-2"
-                                        placeholder="{{\App\CentralLogics\translate('Search here')}}"
+                                        placeholder="{{translate('Search here')}}"
                                         aria-label="Search here">
                                 </div>
                             </form>
                         </div>
                     </div>
-                    {{-- POS Filter --}}
 
                     <div class="card-body pt-0" id="items">
                         <div class="pos-item-wrap justify-content-center">
@@ -58,7 +50,7 @@
                     </div>
                     @if(count($products)==0)
                         <div class="text-center p-4">
-                            <img class="mb-3" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description" style="width: 7rem;">
+                            <img class="mb-3 width-7rem" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="{{ translate('image') }}">
                             <p class="mb-0">{{ translate('No data to show') }}</p>
                         </div>
                     @endif
@@ -66,18 +58,16 @@
             </div>
             <div class="col-lg-5">
                 <div class="card billing-section-wrap">
-                    <!-- POS Title -->
                     <div class="pos-title">
                         <h4 class="mb-0">{{translate('Billing_Section')}}</h4>
                     </div>
-                    <!-- End POS Title -->
 
                     <div class="p-2 p-sm-4">
                         <div class="form-group d-flex flex-wrap flex-sm-nowrap gap-2">
                             <select onchange="store_key('customer_id',this.value)" id='customer' name="customer_id"
                                     data-placeholder="{{translate('Walk In Customer')}}"
                                     class="js-data-example-ajax form-control">
-                                <option disabled selected>{{translate('select Customer')}}</option>
+                                <option disabled selected>{{translate('walk_in_customer')}}</option>
                                 @foreach(\App\User::select('id', 'f_name', 'l_name')->get() as $customer)
                                     <option value="{{$customer['id']}}" {{ session()->get('customer_id') == $customer['id'] ? 'selected' : '' }}>{{$customer['f_name']. ' '. $customer['l_name'] }}</option>
                                 @endforeach
@@ -97,7 +87,6 @@
         </div>
     </div>
 
-    <!-- Quick View Modal -->
     <div class="modal fade" id="quick-view" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" id="quick-view-modal">
@@ -106,8 +95,6 @@
         </div>
     </div>
 
-
-    <!-- ADD Customer Modal -->
     <div class="modal fade" id="add-customer" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -147,7 +134,7 @@
                                         {{translate('Email')}}
                                         <span class="input-label-secondary text-danger">*</span>
                                     </label>
-                                    <input type="email" name="email" class="form-control" value="" placeholder="Ex : ex@example.com" required="">
+                                    <input type="email" name="email" class="form-control" value="" placeholder="{{ translate('Ex : ex@example.com') }}" required="">
                                 </div>
                             </div>
                             <div class="col-lg-6">
@@ -182,16 +169,18 @@
                     <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body row" style="font-family: emoji;">
-                    <div class="col-md-12">
-                        <center>
-                            <input type="button" class="btn btn-primary non-printable" onclick="printDiv('printableArea')"
+                <div class="modal-body row front-emoji">
+                    <div class="col-md-12 text-center">
+                        <div>
+                            <input type="button" class="btn btn-primary non-printable"
+                                   id="print-invoice-div"
+                                   data-divName="printableArea"
                                 value="{{translate('Proceed, If thermal printer is ready.')}}"/>
                             <a href="{{url()->previous()}}" class="btn btn-danger non-printable">{{ translate('Back') }}</a>
-                        </center>
+                        </div>
                         <hr class="non-printable">
                     </div>
-                    <div class="row" id="printableArea" style="margin: auto;">
+                    <div class="row m-auto" id="printableArea">
                         @include('branch-views.pos.order.invoice')
                     </div>
                 </div>
@@ -202,17 +191,23 @@
 @endsection
 
 @push('script_2')
-
-    <!-- JS Plugins Init. -->
     <script>
+        "use strict"
+
         $(document).on('ready', function () {
             @if($order)
             $('#print-invoice').modal('show');
             @endif
         });
+
+        $("#print-invoice-div").on('click', function (){
+            let name = $(this).data('divName');
+            printDiv(name);
+        });
+
         function printDiv(divName) {
-            var printContents = document.getElementById(divName).innerHTML;
-            var originalContents = document.body.innerHTML;
+            let printContents = document.getElementById(divName).innerHTML;
+            let originalContents = document.body.innerHTML;
             document.body.innerHTML = printContents;
             window.print();
             document.body.innerHTML = originalContents;
@@ -220,7 +215,7 @@
         }
 
         function set_category_filter(id) {
-            var nurl = new URL('{!!url()->full()!!}');
+            let nurl = new URL('{!!url()->full()!!}');
             nurl.searchParams.set('category_id', id);
             location.href = nurl;
         }
@@ -228,24 +223,17 @@
 
         $('#search-form').on('submit', function (e) {
             e.preventDefault();
-            var keyword= $('#datatableSearch').val();
-            var nurl = new URL('{!!url()->full()!!}');
+            let keyword= $('#datatableSearch').val();
+            let nurl = new URL('{!!url()->full()!!}');
             nurl.searchParams.set('keyword', keyword);
             location.href = nurl;
         });
 
-        // function addon_quantity_input_toggle(e)
-        // {
-        //     var cb = $(e.target);
-        //     if(cb.is(":checked"))
-        //     {
-        //         cb.siblings('.addon-quantity-input').css({'visibility':'visible'});
-        //     }
-        //     else
-        //     {
-        //         cb.siblings('.addon-quantity-input').css({'visibility':'hidden'});
-        //     }
-        // }
+        $('.pos-single-product-card').on('click', function (){
+            let productId = $(this).data('id');
+            quickView(productId);
+        });
+
         function quickView(product_id) {
             $.ajax({
                 url: '{{route('branch.pos.quick-view')}}',
@@ -253,16 +241,11 @@
                 data: {
                     product_id: product_id
                 },
-                dataType: 'json', // added data type
+                dataType: 'json',
                 beforeSend: function () {
                     $('#loading').show();
                 },
                 success: function (data) {
-                    console.log("success...");
-                    console.log(data);
-
-                    // $("#quick-view").removeClass('fade');
-                    // $("#quick-view").addClass('show');
 
                     $('#quick-view').modal('show');
                     $('#quick-view-modal').empty().html(data.view);
@@ -281,10 +264,10 @@
             $('.btn-number').click(function (e) {
                 e.preventDefault();
 
-                var fieldName = $(this).attr('data-field');
-                var type = $(this).attr('data-type');
-                var input = $("input[name='" + fieldName + "']");
-                var currentVal = parseInt(input.val());
+                let fieldName = $(this).attr('data-field');
+                let type = $(this).attr('data-type');
+                let input = $("input[name='" + fieldName + "']");
+                let currentVal = parseInt(input.val());
 
                 if (!isNaN(currentVal)) {
                     if (type == 'minus') {
@@ -306,7 +289,7 @@
                                 icon: 'error',
                                 title: '{{translate('Cart')}}',
                                 confirmButtonText:'{{translate("Ok")}}',
-                                text: '{{\App\CentralLogics\translate('stock limit exceeded')}}.'
+                                text: '{{translate('stock limit exceeded')}}.'
                             });
                             input.val(currentVal).change();
                         }
@@ -322,11 +305,11 @@
 
             $('.input-number').change(function () {
 
-                minValue = parseInt($(this).attr('min'));
-                maxValue = parseInt($(this).attr('max'));
-                valueCurrent = parseInt($(this).val());
+                let minValue = parseInt($(this).attr('min'));
+                let maxValue = parseInt($(this).attr('max'));
+                let valueCurrent = parseInt($(this).val());
 
-                var name = $(this).attr('name');
+                let name = $(this).attr('name');
                 if (valueCurrent >= minValue) {
                     $(".btn-number[data-type='minus'][data-field='" + name + "']").removeAttr('disabled')
                 } else {
@@ -334,7 +317,7 @@
                         icon: 'error',
                         title: '{{translate('Cart')}}',
                         confirmButtonText:'{{translate("Ok")}}',
-                        text: '{{\App\CentralLogics\translate('Sorry, the minimum value was reached')}}',
+                        text: '{{translate('Sorry, the minimum value was reached')}}',
                     });
                     $(this).val($(this).data('oldValue'));
                 }
@@ -345,22 +328,17 @@
                         icon: 'error',
                         title: '{{translate('Cart')}}',
                         confirmButtonText:'{{translate("Ok")}}',
-                        text: '{{\App\CentralLogics\translate('Sorry, stock limit exceeded')}}.'
+                        text: '{{translate('Sorry, stock limit exceeded')}}.'
                     });
                     $(this).val($(this).data('oldValue'));
                 }
             });
             $(".input-number").keydown(function (e) {
-                // Allow: backspace, delete, tab, escape, enter and .
                 if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 190]) !== -1 ||
-                    // Allow: Ctrl+A
                     (e.keyCode == 65 && e.ctrlKey === true) ||
-                    // Allow: home, end, left, right
                     (e.keyCode >= 35 && e.keyCode <= 39)) {
-                    // let it happen, don't do anything
                     return;
                 }
-                // Ensure that it is a number and stop the keypress
                 if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
                     e.preventDefault();
                 }
@@ -387,6 +365,10 @@
             }
         }
 
+        $('.add-to-shopping-cart').on('click', function (){
+            addToCart();
+        });
+
         function addToCart(form_id = 'add-to-cart-form') {
             if (checkAddToCartValidity()) {
                 $.ajaxSetup({
@@ -407,7 +389,7 @@
                                 icon: 'info',
                                 title: '{{translate('Cart')}}',
                                 confirmButtonText:'{{translate("Ok")}}',
-                                text: "{{\App\CentralLogics\translate('Product already added in cart')}}"
+                                text: "{{translate('Product already added in cart')}}"
                             });
                             return false;
                         } else if (data.data == 0) {
@@ -415,13 +397,13 @@
                                 icon: 'error',
                                 title: '{{translate('Cart')}}',
                                 confirmButtonText:'{{translate("Ok")}}',
-                                text: '{{\App\CentralLogics\translate('Sorry, product out of stock')}}.'
+                                text: '{{translate('Sorry, product out of stock')}}.'
                             });
                             return false;
                         }
                         $('.call-when-done').click();
 
-                        toastr.success('{{\App\CentralLogics\translate('Item has been added in your cart')}}!', {
+                        toastr.success('{{translate('Item has been added in your cart')}}!', {
                             CloseButton: true,
                             ProgressBar: true
                         });
@@ -437,7 +419,7 @@
                     type: 'info',
                     title: '{{translate('Cart')}}',
                     confirmButtonText:'{{translate("Ok")}}',
-                    text: '{{\App\CentralLogics\translate('Please choose all the options')}}'
+                    text: '{{translate('Please choose all the options')}}'
                 });
             }
         }
@@ -453,7 +435,7 @@
                     }
                 } else {
                     updateCart();
-                    toastr.info('{{\App\CentralLogics\translate('Item has been removed from cart')}}', {
+                    toastr.info('{{translate('Item has been removed from cart')}}', {
                         CloseButton: true,
                         ProgressBar: true
                     });
@@ -462,10 +444,14 @@
             });
         }
 
+        $('.pos-empty-cart').on('click', function (){
+            emptyCart();
+        });
+
         function emptyCart() {
             $.post('{{ route('branch.pos.emptyCart') }}', {_token: '{{ csrf_token() }}'}, function (data) {
                 updateCart();
-                toastr.info('{{\App\CentralLogics\translate('Item has been removed from cart')}}', {
+                toastr.info('{{translate('Item has been removed from cart')}}', {
                     CloseButton: true,
                     ProgressBar: true
                 });
@@ -485,12 +471,11 @@
 
 
         function updateQuantity(e){
-            var element = $( e.target );
-            var minValue = parseInt(element.attr('min'));
-            // maxValue = parseInt(element.attr('max'));
-            var valueCurrent = parseInt(element.val());
+            let element = $( e.target );
+            let minValue = parseInt(element.attr('min'));
+            let valueCurrent = parseInt(element.val());
 
-            var key = element.data('key');
+            let key = element.data('key');
             if (valueCurrent >= minValue) {
                 $.post('{{ route('branch.pos.updateQuantity') }}', {_token: '{{ csrf_token() }}', key: key, quantity:valueCurrent}, function (data) {
                     updateCart();
@@ -500,35 +485,28 @@
                     icon: 'error',
                     title: '{{translate('Cart')}}',
                     confirmButtonText:'{{translate("Ok")}}',
-                    text: '{{\App\CentralLogics\translate('Sorry, the minimum value was reached')}}'
+                    text: '{{translate('Sorry, the minimum value was reached')}}'
                 });
                 element.val(element.data('oldValue'));
             }
 
 
-            // Allow: backspace, delete, tab, escape, enter and .
             if(e.type == 'keydown')
             {
                 if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 190]) !== -1 ||
-                    // Allow: Ctrl+A
                     (e.keyCode == 65 && e.ctrlKey === true) ||
-                    // Allow: home, end, left, right
                     (e.keyCode >= 35 && e.keyCode <= 39)) {
-                    // let it happen, don't do anything
                     return;
                 }
-                // Ensure that it is a number and stop the keypress
                 if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
                     e.preventDefault();
                 }
             }
 
-        };
+        }
 
-        // INITIALIZATION OF SELECT2
-        // =======================================================
         $('.js-select2-custom').each(function () {
-            var select2 = $.HSCore.components.HSSelect2.init($(this));
+            let select2 = $.HSCore.components.HSSelect2.init($(this));
         });
 
         $('.js-data-example-ajax').select2({
@@ -536,7 +514,7 @@
                 url: '{{route('branch.pos.customers')}}',
                 data: function (params) {
                     return {
-                        q: params.term, // search term
+                        q: params.term,
                         page: params.page
                     };
                 },
@@ -591,7 +569,6 @@
         }
 
     </script>
-    <!-- IE Support -->
     <script>
         if (/MSIE \d|Trident.*rv:/.test(navigator.userAgent)) document.write('<script src="{{asset('public/assets/admin')}}/vendor/babel-polyfill/polyfill.min.js"><\/script>');
     </script>

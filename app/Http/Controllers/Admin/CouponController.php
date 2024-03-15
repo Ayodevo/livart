@@ -24,9 +24,9 @@ class CouponController extends Controller
      * @param Request $request
      * @return Application|Factory|View
      */
-    public function add_new(Request $request): View|Factory|Application
+    public function index(Request $request): View|Factory|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
@@ -36,12 +36,12 @@ class CouponController extends Controller
                         ->orWhere('code', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }else{
             $coupons = $this->coupon;
         }
 
-        $coupons = $coupons->orderBy('id', 'desc')->paginate(Helpers::pagination_limit())->appends($query_param);
+        $coupons = $coupons->orderBy('id', 'desc')->paginate(Helpers::pagination_limit())->appends($queryParam);
         return view('admin-views.coupon.index', compact('coupons', 'search'));
     }
 

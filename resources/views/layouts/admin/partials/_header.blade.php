@@ -3,22 +3,25 @@
             class="navbar navbar-expand-lg navbar-fixed navbar-height navbar-flush navbar-container navbar-bordered">
         <div class="navbar-nav-wrap">
             <div class="navbar-brand-wrapper">
-                <!-- Logo -->
-                @php($restaurant_logo=\App\Model\BusinessSetting::where(['key'=>'logo'])->first()->value)
+                @php($logo = Helpers::get_business_settings('logo'))
                 <a class="navbar-brand" href="{{route('admin.dashboard')}}" aria-label="">
                     <img class="navbar-brand-logo"
-                         onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                         src="{{asset('storage/app/public/ecommerce/'.$restaurant_logo)}}" alt="Logo">
+                         src="{{Helpers::onErrorImage(
+                            $logo,
+                            asset('storage/app/public/ecommerce').'/' . $logo,
+                            asset('public/assets/admin/img/160x160/img2.jpg') ,
+                            'ecommerce/')}}" alt="{{ translate('Logo') }}">
                     <img class="navbar-brand-logo-mini"
-                         onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                         src="{{asset('storage/app/public/ecommerce/'.$restaurant_logo)}}"
-                         alt="Logo">
+                         src="{{Helpers::onErrorImage(
+                            $logo,
+                            asset('storage/app/public/ecommerce').'/' . $logo,
+                            asset('public/assets/admin/img/160x160/img2.jpg') ,
+                            'ecommerce/')}}"
+                         alt="{{ translate('Logo') }}">
                 </a>
-                <!-- End Logo -->
             </div>
 
             <div class="navbar-nav-wrap-content-left d-xl-none">
-                <!-- Navbar Vertical Toggle -->
                 <button type="button" class="js-navbar-vertical-aside-toggle-invoker close mr-3">
                     <i class="tio-first-page navbar-vertical-aside-toggle-short-align" data-toggle="tooltip"
                        data-placement="right" title="Collapse"></i>
@@ -26,15 +29,11 @@
                        data-template='<div class="tooltip d-none d-sm-block" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>'
                        data-toggle="tooltip" data-placement="right" title="Expand"></i>
                 </button>
-                <!-- End Navbar Vertical Toggle -->
             </div>
 
-            <!-- Secondary Content -->
             <div class="navbar-nav-wrap-content-right">
-                <!-- Navbar -->
                 <ul class="navbar-nav align-items-center flex-row">
                     <li class="nav-item d-none d-sm-inline-block">
-                        <!-- Notification -->
                         <div class="hs-unfold">
                             <a class="js-hs-unfold-invoker btn btn-icon btn-ghost-secondary rounded-circle"
                                href="{{route('admin.message.list')}}">
@@ -45,10 +44,8 @@
                                 @endif
                             </a>
                         </div>
-                        <!-- End Notification -->
                     </li>
                     <li class="nav-item d-none d-sm-inline-block">
-                        <!-- Notification -->
                         <div class="hs-unfold">
                             <a class="js-hs-unfold-invoker btn btn-icon btn-ghost-secondary rounded-circle"
                                href="{{route('admin.order.list',['status'=>'pending'])}}">
@@ -56,12 +53,9 @@
                                 <span class="btn-status btn-status-danger">{{\App\Model\Order::where(['checked' => 0])->count()}}</span>
                             </a>
                         </div>
-                        <!-- End Notification -->
                     </li>
 
-
                     <li class="nav-item ml-md-3">
-                        <!-- Account -->
                         <div class="hs-unfold">
                             <a class="js-hs-unfold-invoker navbar-dropdown-account-wrapper media align-items-center gap-3 bg-transparent dropdown-toggle dropdown-toggle-left-arrow" href="javascript:;"
                                data-hs-unfold-options='{
@@ -74,9 +68,8 @@
                                 </div>
                                 <div class="avatar avatar-sm avatar-circle">
                                     <img class="avatar-img"
-                                         onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                                         src="{{asset('storage/app/public/admin')}}/{{auth('admin')->user()->image}}"
-                                         alt="Image Description">
+                                         src="{{auth('admin')->user()->image_fullpath}}"
+                                         alt="{{ translate('Image') }}">
                                     <span class="avatar-status avatar-sm-status avatar-status-success"></span>
                                 </div>
                             </a>
@@ -87,9 +80,8 @@
                                     <div class="media gap-3 align-items-center">
                                         <div class="avatar avatar-sm avatar-circle mr-2">
                                             <img class="avatar-img"
-                                                 onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                                                 src="{{asset('storage/app/public/admin')}}/{{auth('admin')->user()->image}}"
-                                                 alt="Image Description">
+                                                 src="{{auth('admin')->user()->image_fullpath}}"
+                                                 alt="{{ translate('Image') }}">
                                         </div>
                                         <div class="media-body">
                                             <span class="card-title h5">{{auth('admin')->user()->f_name}}</span>
@@ -126,12 +118,9 @@
                                 </a>
                             </div>
                         </div>
-                        <!-- End Account -->
                     </li>
                 </ul>
-                <!-- End Navbar -->
             </div>
-            <!-- End Secondary Content -->
         </div>
     </header>
 </div>

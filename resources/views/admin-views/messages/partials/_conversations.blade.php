@@ -1,23 +1,21 @@
-<div class="">
-    <!-- Header -->
+<div>
     <div class="border px-3 py-2 rounded mb-3">
         <div class="media gap-3">
             <div class="avatar rounded-circle">
                 <img class="img-fit rounded-circle"
-                     src="{{asset('storage/app/public/profile/'.$user['image'])}}"
-                     onerror="this.src='{{asset('public/assets/admin')}}/img/160x160/img1.jpg'"
-                     alt="Image Description">
+                     src="{{$user['image_fullpath']}}"
+                    alt="{{ translate('image') }}">
             </div>
-            <h5 class="mb-0">
+            <div class="mb-0">
                 <div>{{$user['f_name'].' '.$user['l_name']}}</div>
                 <div class="fs-12 font-weight-normal">{{$user['phone']}}</div>
-            </h5>
+            </div>
         </div>
     </div>
 
     <div class="chat_conversation">
         <div class="row">
-            @foreach($convs as $key=>$con)
+            @foreach($userConversation as $key=>$con)
                 @if(($con->message!=null && $con->reply==null) || $con->is_reply == false)
                     <div class="col-12">
                         <div class="received_msg">
@@ -26,12 +24,11 @@
                                 <span class="time_date">{{date('Y-m-d h:i A', strtotime($con->created_at))}}</span>
                             @endif
                             <?php try {?>
-                            @if($con->attachment != null && $con->attachment != "null" && count(json_decode($con->attachment, true)) > 0)
-                                @php($image_array = json_decode($con->attachment, true))
-                                @foreach($image_array as $image)
+                            @if($con['attachment_fullpath'] != null && $con['attachment_fullpath'] != "null" && count($con['attachment_fullpath']) > 0)
+                                    @foreach($con['attachment_fullpath'] as $key=>$image)
                                     <div>
                                         <a href="{{$image}}" data-lightbox >
-                                            <img src="{{$image}}" onerror="this.src='{{asset('public/assets/admin/img/900x400/img1.jpg')}}'">
+                                            <img src="{{$image}}" alt="{{ translate('image') }}">
                                             <br/>
                                         </a>
                                     </div>
@@ -42,7 +39,7 @@
 
                             @if(isset($con->image))
                                     <img class="__img-120" src="{{$con->image}}"
-                                         onerror="this.src='{{asset('public/assets/admin/img/900x400/img1.jpg')}}'">
+                                         alt="{{ translate('image') }}">
                                     <br/>
                                 @endif
                         </div>
@@ -57,14 +54,13 @@
                             @endif
                             <?php try {?>
                             <div class="row">
-                                @if($con->attachment != null && $con->attachment != "null" && count(json_decode($con->attachment, true)) > 0)
-                                    @php($image_array = json_decode($con->attachment, true))
-                                    @foreach($image_array as $key=>$image)
+                                @if($con['attachment_fullpath'] != null && $con['attachment_fullpath'] != "null" && count($con['attachment_fullpath']) > 0)
+                                    @foreach($con['attachment_fullpath'] as $key=>$image)
                                         @php($image_url = $image)
-                                        <div class="col-12 @if(count(json_decode($con->attachment, true)) > 1) col-md-6 @endif">
-                                            <a href="{{asset('storage/app/public/conversation').'/'.$image_url}}" data-lightbox >
-                                                <img class="__img-120" src="{{asset('storage/app/public/conversation').'/'.$image_url}}"
-                                                     onerror="this.src='{{asset('public/assets/admin/img/900x400/img1.jpg')}}'"><br/>
+                                        <div class="col-12 @if(count($con['attachment_fullpath']) > 1) col-md-6 @endif">
+                                            <a href="{{$image_url}}" data-lightbox >
+                                                <img class="__img-120" src="{{$image_url}}"
+                                             alt="{{ translate('image') }}"><br/>
                                             </a>
 
                                         </div>
@@ -85,19 +81,18 @@
     @csrf
     <div class="card mb-2">
         <div class="p-2">
-            <!-- Quill -->
             <div class="quill-custom_">
-                <textarea class="border-0 w-100" name="reply" placeholder="{{\App\CentralLogics\translate('Type Here...')}}"></textarea>
+                <textarea class="border-0 w-100" name="reply" placeholder="{{translate('Type Here...')}}"></textarea>
             </div>
-            <!-- End Quill -->
 
             <div id="accordion" class="d-flex gap-2 justify-content-end">
                 <button class="btn btn-primary btn-sm collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    {{\App\CentralLogics\translate('Upload')}}
+                    {{translate('Upload')}}
                     <i class="tio-upload"></i>
                 </button>
-                <button type="submit" onclick="replyConvs('{{route('admin.message.store',[$user->id])}}')"
-                        class="btn btn-primary btn-sm">{{\App\CentralLogics\translate('send')}} <i class="tio-send"></i>
+                <button type="submit" id="reply-conversation-message"
+                        data-route="{{route('admin.message.store',[$user->id])}}"
+                        class="btn btn-primary btn-sm">{{translate('send')}} <i class="tio-send"></i>
                 </button>
             </div>
 
@@ -106,18 +101,27 @@
             </div>
         </div>
     </div>
+
 </form>
 
+<script src="{{asset('public/assets/admin/js/tags-input.min.js')}}"></script>
+<script src="{{asset('public/assets/admin/js/spartan-multi-image-picker.js')}}"></script>
+
 <script>
+
+    "use strict";
+
+    $("#reply-conversation-message").on('click', function (){
+        let route = $(this).data('route');
+        replyConvs(route);
+    });
+
     $(document).ready(function () {
         $('.scroll-down').animate({
             scrollTop: $('#scroll-here').offset().top
         }, 0);
     });
-</script>
 
-{{-- Multi Image Picker --}}
-<script>
     $('#collapseTwo').on('show.bs.collapse', function () {
         spartanMultiImagePicker();
     })
@@ -126,13 +130,6 @@
         document.querySelector("#coba").innerHTML = "";
     })
 
-
-</script>
-<script src="{{asset('public/assets/admin')}}/js/tags-input.min.js"></script>
-<script src="{{asset('public/assets/admin/js/spartan-multi-image-picker.js')}}"></script>
-
-<script>
-    "use strict";
     var lightbox = function (o) {
         var s = void 0,
             c = void 0,
@@ -311,9 +308,6 @@
         }
     );
 
-</script>
-
-<script>
     function spartanMultiImagePicker() {
         document.querySelector("#coba").innerHTML = "";
 
@@ -323,10 +317,7 @@
             rowHeight: '10%',
             groupClassName: 'col-3',
             maxFileSize: '',
-            {{--placeholderImage: {--}}
-                {{--    image: '{{asset('public/assets/back-end/img/400x400/img2.jpg')}}',--}}
-                {{--    width: '100%',--}}
-                {{--},--}}
+
             dropFileLabel: "Drop Here",
             onAddRow: function (index, file) {
 
@@ -338,13 +329,13 @@
 
             },
             onExtensionErr: function (index, file) {
-                toastr.error('{{\App\CentralLogics\translate("Please only input png or jpg type file")}}', {
+                toastr.error('{{translate("Please only input png or jpg type file")}}', {
                     CloseButton: true,
                     ProgressBar: true
                 });
             },
             onSizeErr: function (index, file) {
-                toastr.error('{{\App\CentralLogics\translate("File size too big")}}', {
+                toastr.error('{{translate("File size too big")}}', {
                     CloseButton: true,
                     ProgressBar: true
                 });

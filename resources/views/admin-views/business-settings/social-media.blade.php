@@ -1,71 +1,66 @@
 @extends('layouts.admin.app')
 
-@section('title', \App\CentralLogics\translate('Social-media Settings'))
-
-@push('css_or_js')
-
-@endpush
+@section('title', translate('Social Media Settings'))
 
 @section('content')
     <div class="content container-fluid">
         <div class="mb-4">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/social_media.png')}}" alt="">
-                {{\App\CentralLogics\translate('Social_Media')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/social_media.png')}}" alt="{{ translate('social_media') }}">
+                {{translate('Social_Media')}}
             </h2>
         </div>
-        
+
         <div class="card mb-3">
             <div class="card-header">
-                <h5 class="mb-0">{{ \App\CentralLogics\translate('social_media_form')}}</h5>
+                <h5 class="mb-0">{{ translate('social_media_form')}}</h5>
             </div>
             <div class="card-body">
                 <form>
                     @csrf
                     <div class="form-group">
-                        <label for="name" class="">{{\App\CentralLogics\translate('name')}}</label>
+                        <label for="name">{{translate('name')}}</label>
                         <select class="form-control" name="name" id="name">
-                            <option>---{{\App\CentralLogics\translate('select')}}---</option>
-                            <option value="instagram">{{\App\CentralLogics\translate('Instagram')}}</option>
-                            <option value="facebook">{{\App\CentralLogics\translate('Facebook')}}</option>
-                            <option value="twitter">{{\App\CentralLogics\translate('Twitter')}}</option>
-                            <option value="linkedin">{{\App\CentralLogics\translate('LinkedIn')}}</option>
-                            <option value="pinterest">{{\App\CentralLogics\translate('Pinterest')}}</option>
+                            <option>---{{translate('select')}}---</option>
+                            <option value="instagram">{{translate('Instagram')}}</option>
+                            <option value="facebook">{{translate('Facebook')}}</option>
+                            <option value="twitter">{{translate('Twitter')}}</option>
+                            <option value="linkedin">{{translate('LinkedIn')}}</option>
+                            <option value="pinterest">{{translate('Pinterest')}}</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <input type="hidden" id="id">
-                        <label for="link">{{ \App\CentralLogics\translate('social_media_link')}}</label>
+                        <label for="link">{{ translate('social_media_link')}}</label>
                         <input type="text" name="link" class="form-control" id="link"
-                                placeholder="{{\App\CentralLogics\translate('Enter Social Media Link')}}" required maxlength="255">
+                                placeholder="{{translate('Enter Social Media Link')}}" required maxlength="255">
                     </div>
-                    <div class="">
+                    <div>
                         <input type="hidden" id="id">
                     </div>
 
                     <div class="d-flex justify-content-end">
-                        <button id="add" class="btn btn-primary">{{ \App\CentralLogics\translate('save')}}</button>
-                        <a id="update" class="btn btn-primary d--none">{{ \App\CentralLogics\translate('update')}}</a>
+                        <button id="add" class="btn btn-primary">{{ translate('save')}}</button>
+                        <a id="update" class="btn btn-primary d--none">{{ translate('update')}}</a>
                     </div>
                 </form>
             </div>
         </div>
-        
+
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">{{ \App\CentralLogics\translate('social_media_table')}}</h5>
+                <h5 class="mb-0">{{ translate('social_media_table')}}</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0"
-                            style="text-align: {{Session::get('direction') === "rtl" ? 'right' : 'left'}};">
+                    <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th scope="col">{{ \App\CentralLogics\translate('sl')}}</th>
-                                <th scope="col">{{ \App\CentralLogics\translate('name')}}</th>
-                                <th scope="col">{{ \App\CentralLogics\translate('link')}}</th>
-                                <th scope="col">{{ \App\CentralLogics\translate('status')}}</th>
-                                <th scope="col" style="width: 120px">{{ \App\CentralLogics\translate('action')}}</th>
+                                <th scope="col">{{ translate('sl')}}</th>
+                                <th scope="col">{{ translate('name')}}</th>
+                                <th scope="col">{{ translate('link')}}</th>
+                                <th scope="col">{{ translate('status')}}</th>
+                                <th class="w-100px" scope="col">{{ translate('action')}}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,10 +73,10 @@
     </div>
 @endsection
 
-@push('script')
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-
+@push('script_2')
     <script>
+        "use strict"
+
         fetch_social_media();
 
         function fetch_social_media() {
@@ -96,19 +91,18 @@
                 success: function (data) {
 
                     if (data.length != 0) {
-                        var html = '';
-                        for (var count = 0; count < data.length; count++) {
+                        let html = '';
+                        for (let count = 0; count < data.length; count++) {
                             html += '<tr>';
                             html += '<td class="column_name" data-column_name="sl" data-id="' + data[count].id + '">' + (count + 1) + '</td>';
                             html += '<td class="column_name" data-column_name="name" data-id="' + data[count].id + '">' + data[count].name + '</td>';
                             html += '<td class="column_name" data-column_name="slug" data-id="' + data[count].id + '">' + data[count].link + '</td>';
-                            html += `<td class="column_name" data-column_name="status" data-id="${data[count].id}">
+                            html += `<td class="column_name status" data-column_name="status" data-id="${data[count].id}">
                                 <label class="switcher">
                                     <input type="checkbox" class="switcher_input" id="${data[count].id}" ${data[count].status == 1 ? "checked" : ""} >
                                     <span class="switcher_control"></span>
                                 </label>
                             </td>`;
-                            // html += '<td><a type="button" class="btn btn-primary btn-xs edit" id="' + data[count].id + '"><i class="fa fa-edit text-white"></i></a> <a type="button" class="btn btn-danger btn-xs delete" id="' + data[count].id + '"><i class="fa fa-trash text-white"></i></a></td></tr>';
                             html += '<td><a type="button" class="btn btn-primary btn-xs edit" id="' + data[count].id + '">{{translate('Edit')}}</a> </td></tr>';
                         }
                         $('tbody').html(html);
@@ -118,15 +112,14 @@
         }
 
         $('#add').on('click', function () {
-            // $('#add').attr("disabled", true);
-            var name = $('#name').val();
-            var link = $('#link').val();
+            let name = $('#name').val();
+            let link = $('#link').val();
             if (name == "") {
-                toastr.error('{{\App\CentralLogics\translate('Social Name Is Requeired')}}.');
+                toastr.error('{{translate('Social Name Is Requeired')}}.');
                 return false;
             }
             if (link == "") {
-                toastr.error('{{\App\CentralLogics\translate('Social Link Is Requeired')}}.');
+                toastr.error('{{translate('Social Link Is Requeired')}}.');
                 return false;
             }
             $.ajaxSetup({
@@ -143,9 +136,9 @@
                 },
                 success: function (response) {
                     if (response.error == 1) {
-                        toastr.error('{{\App\CentralLogics\translate('Social Media Already taken')}}');
+                        toastr.error('{{translate('Social Media Already taken')}}');
                     } else {
-                        toastr.success('{{\App\CentralLogics\translate('Social Media inserted Successfully')}}.');
+                        toastr.success('{{translate('Social Media inserted Successfully')}}.');
                     }
                     $('#name').val('');
                     $('#link').val('');
@@ -155,9 +148,9 @@
         });
         $('#update').on('click', function () {
             $('#update').attr("disabled", true);
-            var id = $('#id').val();
-            var name = $('#name').val();
-            var link = $('#link').val();
+            let id = $('#id').val();
+            let name = $('#name').val();
+            let link = $('#link').val();
 
             $.ajaxSetup({
                 headers: {
@@ -176,7 +169,7 @@
                     $('#name').val('');
                     $('#link').val('');
 
-                    toastr.success('{{\App\CentralLogics\translate('Social info updated Successfully')}}.');
+                    toastr.success('{{translate('Social info updated Successfully')}}.');
                     $('#update').hide();
                     $('#add').show();
                     fetch_social_media();
@@ -186,8 +179,8 @@
             $('#save').hide();
         });
         $(document).on('click', '.delete', function () {
-            var id = $(this).attr("id");
-            if (confirm("{{\App\CentralLogics\translate('Are you sure delete this social media')}}?")) {
+            let id = $(this).attr("id");
+            if (confirm("{{translate('Are you sure delete this social media')}}?")) {
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -199,7 +192,7 @@
                     data: {id: id},
                     success: function (data) {
                         fetch_social_media();
-                        toastr.success('{{\App\CentralLogics\translate('Social media deleted Successfully')}}.');
+                        toastr.success('{{translate('Social media deleted Successfully')}}.');
                     }
                 });
             }
@@ -207,7 +200,7 @@
         $(document).on('click', '.edit', function () {
             $('#update').show();
             $('#add').hide();
-            var id = $(this).attr("id");
+            let id = $(this).attr("id");
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -227,7 +220,7 @@
             });
         });
         $(document).on('change', '.status', function () {
-            var id = $(this).attr("id");
+            let id = $(this).data("id");
             if ($(this).prop("checked") == true) {
                 var status = 1;
             } else if ($(this).prop("checked") == false) {
@@ -247,7 +240,7 @@
                     status: status
                 },
                 success: function () {
-                    toastr.success('{{\App\CentralLogics\translate('Status updated successfully')}}');
+                    toastr.success('{{translate('Status updated successfully')}}');
                 }
             });
         });

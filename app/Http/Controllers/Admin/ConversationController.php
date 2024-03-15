@@ -39,11 +39,11 @@ class ConversationController extends Controller
      */
     public function view($user_id): JsonResponse
     {
-        $convs = $this->conversation->where(['user_id' => $user_id])->get();
+        $userConversation = $this->conversation->where(['user_id' => $user_id])->get();
         $this->conversation->where(['user_id' => $user_id])->update(['checked' => 1]);
         $user = $this->user->find($user_id);
         return response()->json([
-            'view' => view('admin-views.messages.partials._conversations', compact('convs', 'user'))->render()
+            'view' => view('admin-views.messages.partials._conversations', compact('userConversation', 'user'))->render()
         ]);
     }
 
@@ -80,13 +80,12 @@ class ConversationController extends Controller
             'updated_at' => now()
         ]);
 
-        $convs = $this->conversation->where(['user_id' => $user_id])->get();
+        $userConversation = $this->conversation->where(['user_id' => $user_id])->get();
         $user = $this->user->find($user_id);
 
-        //send push notification
         $fcm_token = $user->cm_firebase_token;
         $data = [
-            'title' => \App\CentralLogics\translate('New message arrived'),
+            'title' => translate('New message arrived'),
             'description' => Str::limit($request->reply??'', 500),
             'order_id' => '',
             'image' => '',
@@ -99,7 +98,7 @@ class ConversationController extends Controller
         }
 
         return response()->json([
-            'view' => view('admin-views.messages.partials._conversations', compact('convs', 'user'))->render()
+            'view' => view('admin-views.messages.partials._conversations', compact('userConversation', 'user'))->render()
         ]);
     }
 
@@ -107,7 +106,7 @@ class ConversationController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function update_fcm_token(Request $request): JsonResponse
+    public function updateFcmToken(Request $request): JsonResponse
     {
         try {
             $admin = $this->admin->find(auth('admin')->id());
@@ -124,7 +123,7 @@ class ConversationController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_conversations(Request $request): JsonResponse
+    public function getConversations(Request $request): JsonResponse
     {
         $conversations = DB::table('conversations')->latest()->get();
         return response()->json([
@@ -136,7 +135,7 @@ class ConversationController extends Controller
      * @param Request $request
      * @return mixed|null
      */
-    public function get_firebase_config(Request $request)
+    public function getFirebaseConfig(Request $request)
     {
         $config = Helpers::get_business_settings('firebase_message_config');
         return $config;

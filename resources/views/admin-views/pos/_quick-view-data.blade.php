@@ -1,61 +1,50 @@
 <div class="modal-header p-2">
-    <h4 class="modal-title product-title">
-    </h4>
+    <h4 class="modal-title product-title"></h4>
     <button class="close call-when-done" type="button" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
 <div class="modal-body">
     <div class="media flex-wrap gap-3">
-        <!-- Product gallery-->
         <div class="box-120 rounded border">
             <img class="img-fit rounded"
-                 src="{{asset('storage/app/public/product')}}/{{json_decode($product['image'], true)[0]}}"
-                 onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.jpg')}}'"
-                 data-zoom="{{asset('storage/app/public/product')}}/{{json_decode($product['image'], true)[0]}}"
-                 alt="Product image" width="">
+                 src="{{$product['image_fullpath'][0]}}"
+                 data-zoom="{{$product['image_fullpath'][0]}}"
+                 alt="{{ translate('Product image') }}">
             <div class="cz-image-zoom-pane"></div>
         </div>
 
-        <!-- Product details-->
         <div class="details media-body">
             <h5 class="product-name"><a href="#" class="h3 mb-2 product-title">{{ Str::limit($product->name, 100) }}</a></h5>
 
             <div class="mb-2">
                 <span class="h5 font-weight-normal text-primary">
-                    {{ Helpers::set_symbol(($product['price']- \App\CentralLogics\Helpers::discount_calculate($product, $product['price']))) }}
+                    {{ Helpers::set_symbol(($product['price']- Helpers::discount_calculate($product, $product['price']))) }}
                 </span>
-                {{-- @if($product->discount > 0)
-                    <strike class="fs-12">
-                        {{ Helpers::set_symbol($product['price'])  }}
-                    </strike>
-                @endif --}}
             </div>
 
             @if($product->discount > 0)
                 <div class="mb-0 text-dark">
                     <span>{{ translate('Discount') }} : </span>
                     <span
-                        id="set-discount-amount">{{ Helpers::set_symbol(\App\CentralLogics\Helpers::discount_calculate($product, $product->price)) }}</span>
+                        id="set-discount-amount">{{ Helpers::set_symbol(Helpers::discount_calculate($product, $product->price)) }}</span>
                 </div>
             @endif
-        <!-- Product panels-->
         </div>
     </div>
     <div class="row pt-4">
         <div class="col-12">
             <?php
-            $cart = false;
-            if (session()->has('cart')) {
-                foreach (session()->get('cart') as $key => $cartItem) {
-                    if (is_array($cartItem) && $cartItem['id'] == $product['id']) {
-                        $cart = $cartItem;
+                $cart = false;
+                if (session()->has('cart')) {
+                    foreach (session()->get('cart') as $key => $cartItem) {
+                        if (is_array($cartItem) && $cartItem['id'] == $product['id']) {
+                            $cart = $cartItem;
+                        }
                     }
                 }
-            }
-
             ?>
-            <h2>{{\App\CentralLogics\translate('description')}}</h2>
+            <h2>{{translate('description')}}</h2>
             <span class="d-block text-dark">
                 {!! $product->description !!}
             </span>
@@ -63,9 +52,7 @@
                 @csrf
                 <input type="hidden" name="id" value="{{ $product->id }}">
                 @foreach (json_decode($product->choice_options) as $key => $choice)
-
                     <h3 class="mb-2 pt-4">{{ $choice->title }}</h3>
-
                     <div class="d-flex gap-3 flex-wrap">
                         @foreach ($choice->options as $key => $option)
                             <input class="btn-check" type="radio"
@@ -78,9 +65,8 @@
                     </div>
                 @endforeach
 
-                <!-- Quantity + Add to cart -->
                 <div class="d-flex justify-content-between mt-4">
-                    <h3 class="product-description-label mb-0 text-dark">{{\App\CentralLogics\translate('Quantity')}}:</h3>
+                    <h3 class="product-description-label mb-0 text-dark">{{translate('Quantity')}}:</h3>
 
                     <div class="product-quantity d-flex align-items-center">
                         <div class="product-quantity-group" id="quantity_div">
@@ -102,22 +88,20 @@
 
                 <div class="row no-gutters mt-3 text-dark" id="chosen_price_div">
                     <div class="col-2">
-                        <div class="product-description-label">{{\App\CentralLogics\translate('Total Price')}}:</div>
+                        <div class="product-description-label">{{translate('Total Price')}}:</div>
                     </div>
                     <div class="col-10">
                         <div class="product-price">
-                            <strong id="chosen_price"></strong>  {{ \App\CentralLogics\Helpers::currency_symbol() }}
+                            <strong id="chosen_price"></strong>  {{ Helpers::currency_symbol() }}
                         </div>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-center mt-3">
-                    <button class="btn btn-primary"
-                            onclick="addToCart()"
-                            type="button"
-                            style="width:37%; height: 45px">
+                    <button class="btn btn-primary add-to-shopping-cart"
+                            type="button">
                         <i class="tio-shopping-cart"></i>
-                        {{\App\CentralLogics\translate('add')}}
+                        {{translate('add')}}
                     </button>
                 </div>
             </form>
@@ -131,4 +115,9 @@
     $('#add-to-cart-form input').on('change', function () {
         getVariantPrice();
     });
+
+    $('.add-to-shopping-cart').on('click', function (){
+        addToCart();
+    });
+
 </script>

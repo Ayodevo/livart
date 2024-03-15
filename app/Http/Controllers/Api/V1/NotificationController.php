@@ -11,14 +11,15 @@ class NotificationController extends Controller
 {
     public function __construct(
         private Notification $notification
-    ){}
-
+    )
+    {
+    }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_notifications(Request $request): JsonResponse
+    public function getNotifications(Request $request): JsonResponse
     {
         $userCreatedAt = $request->user()->created_at;
 

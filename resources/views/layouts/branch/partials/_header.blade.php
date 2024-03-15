@@ -3,20 +3,19 @@
             class="navbar navbar-expand-lg navbar-fixed navbar-height navbar-flush navbar-container navbar-bordered">
         <div class="navbar-nav-wrap">
             <div class="navbar-brand-wrapper">
-                <!-- Logo -->
-                @php($restaurant_logo=\App\Model\BusinessSetting::where(['key'=>'logo'])->first()->value)
+                @php($logo = Helpers::get_business_settings('logo'))
                 <a class="navbar-brand" href="{{route('branch.dashboard')}}" aria-label="">
-
                     <img class="navbar-brand-logo-mini"
-                         onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                         src="{{asset('storage/app/public/restaurant/'.$restaurant_logo)}}"
-                         alt="Logo">
+                         src="{{Helpers::onErrorImage(
+                            $logo,
+                            asset('storage/app/public/ecommerce').'/' . $logo,
+                            asset('public/assets/admin/img/160x160/img2.jpg') ,
+                            'ecommerce/')}}"
+                         alt="{{ translate('Logo') }}">
                 </a>
-                <!-- End Logo -->
             </div>
 
             <div class="navbar-nav-wrap-content-left d-xl-none">
-                <!-- Navbar Vertical Toggle -->
                 <button type="button" class="js-navbar-vertical-aside-toggle-invoker close mr-3">
                     <i class="tio-first-page navbar-vertical-aside-toggle-short-align" data-toggle="tooltip"
                        data-placement="right" title="Collapse"></i>
@@ -24,27 +23,23 @@
                        data-template='<div class="tooltip d-none d-sm-block" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>'
                        data-toggle="tooltip" data-placement="right" title="Expand"></i>
                 </button>
-                <!-- End Navbar Vertical Toggle -->
             </div>
 
-            <!-- Secondary Content -->
             <div class="navbar-nav-wrap-content-right">
-                <!-- Navbar -->
                 <ul class="navbar-nav align-items-center flex-row">
                     <li class="nav-item d-none d-sm-inline-block">
-                        <!-- Cart -->
                         <div class="hs-unfold">
                             <a class="js-hs-unfold-invoker btn btn-icon btn-ghost-secondary rounded-circle"
-                               href="{{route('branch.order.list',['status'=>'pending'])}}">
+                               href="{{route('branch.orders.list',['status'=>'all'])}}">
                                 <i class="tio-shopping-cart-outlined"></i>
-                                <span class="btn-status btn-status-danger">0</span>
+                                <span class="btn-status btn-status-danger">
+                                    {{ DB::table('orders')->where(['branch_id' => auth('branch')->id(), 'checked' => 0])->count() }}
+                                </span>
                             </a>
                         </div>
-                        <!-- End Cart -->
                     </li>
 
                     <li class="nav-item">
-                        <!-- Account -->
                         <div class="hs-unfold">
                             <a class="js-hs-unfold-invoker navbar-dropdown-account-wrapper media align-items-center gap-3 bg-transparent dropdown-toggle dropdown-toggle-left-arrow" href="javascript:;"
                                data-hs-unfold-options='{
@@ -58,9 +53,8 @@
                                 </div>
                                 <div class="avatar avatar-sm avatar-circle">
                                     <img class="avatar-img"
-                                         onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                                         src="{{asset('storage/app/public/branch')}}/{{auth('branch')->user()->image}}"
-                                         alt="Image Description">
+                                         src="{{auth('branch')->user()->image_fullpath}}"
+                                         alt="{{ translate('image') }}">
                                     <span class="avatar-status avatar-sm-status avatar-status-success"></span>
                                 </div>
                             </a>
@@ -71,9 +65,8 @@
                                     <div class="media gap-3 align-items-center">
                                         <div class="avatar avatar-sm avatar-circle mr-2">
                                             <img class="avatar-img"
-                                                 onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
-                                                 src="{{asset('storage/app/public/branch')}}/{{auth('branch')->user()->image}}"
-                                                 alt="Image Description">
+                                                 src="{{auth('branch')->user()->image_fullpath}}"
+                                                 alt="{{ translate('Image') }}">
                                         </div>
                                         <div class="media-body">
                                             <span class="card-title h5">{{auth('branch')->user()->name}}</span>
@@ -85,7 +78,7 @@
                                 <div class="dropdown-divider"></div>
 
                                 <a class="dropdown-item" href="{{route('branch.settings')}}">
-                                    <span class="text-truncate pr-2" title="Settings">{{\App\CentralLogics\translate('settings')}}</span>
+                                    <span class="text-truncate pr-2" title="Settings">{{translate('settings')}}</span>
                                 </a>
 
                                 <div class="dropdown-divider"></div>
@@ -106,16 +99,13 @@
                                     Swal.fire('{{translate("Canceled")}}', '', 'info')
                                     }
                                     })">
-                                    <span class="text-truncate pr-2" title="Sign out">{{\App\CentralLogics\translate('sign_out')}}</span>
+                                    <span class="text-truncate pr-2" title="Sign out">{{translate('sign_out')}}</span>
                                 </a>
                             </div>
                         </div>
-                        <!-- End Account -->
                     </li>
                 </ul>
-                <!-- End Navbar -->
             </div>
-            <!-- End Secondary Content -->
         </div>
     </header>
 </div>

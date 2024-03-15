@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Branch\Auth;
 
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
-use Brian2694\Toastr\Facades\Toastr;
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -17,7 +20,7 @@ class LoginController extends Controller
         $this->middleware('guest:branch', ['except' => ['logout']]);
     }
 
-    public function captcha($tmp)
+    public function captcha($tmp): void
     {
         $phrase = new PhraseBuilder;
         $code = $phrase->build(4);
@@ -38,19 +41,31 @@ class LoginController extends Controller
         $builder->output();
     }
 
-    public function login()
+    /**
+     * @return Application|Factory|View
+     */
+    public function login(): View|Factory|Application
     {
-        return view('branch-views.auth.login');
+        $logo = Helpers::get_business_settings('logo');
+        $logo = Helpers::onErrorImage(
+            $logo,
+            asset('storage/app/public/ecommerce') . '/' . $logo,
+            asset('public/assets/admin/img/160x160/img2.jpg'),
+            'ecommerce/');
+        return view('branch-views.auth.login', compact('logo'));
     }
 
-    public function submit(Request $request)
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function submit(Request $request): RedirectResponse
     {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6'
         ]);
 
-        //recaptcha validation
         $recaptcha = Helpers::get_business_settings('recaptcha');
         if (isset($recaptcha) && $recaptcha['status'] == 1) {
             $request->validate([
@@ -85,7 +100,11 @@ class LoginController extends Controller
             ->withErrors(['Credentials does not match.']);
     }
 
-    public function logout(Request $request)
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function logout(Request $request): RedirectResponse
     {
         auth()->guard('branch')->logout();
         return redirect()->route('branch.auth.login');

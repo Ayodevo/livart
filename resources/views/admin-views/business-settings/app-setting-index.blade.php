@@ -2,21 +2,17 @@
 
 @section('title', translate('App Settings'))
 
-@push('css_or_js')
-@endpush
-
 @section('content')
     <div class="content container-fluid">
         <div class="mb-4">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/system-setting.png')}}" alt="">
-                {{\App\CentralLogics\translate('system_setup')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/system-setting.png')}}" alt="{{ translate('image') }}">
+                {{translate('system_setup')}}
             </h2>
         </div>
 
         <div class="inline-page-menu mb-4">
             @include('admin-views.business-settings.partial.system-setup-nav')
-
         </div>
 
         <div class="row gy-3">
@@ -26,10 +22,9 @@
                         <h5 class="mb-0">{{translate('Android')}}</h5>
                     </div>
                     <div class="card-body">
-                        @php($config=\App\CentralLogics\Helpers::get_business_settings('play_store_config'))
+                        @php($config=Helpers::get_business_settings('play_store_config'))
                         <form
-                            action="{{env('APP_MODE')!='demo'?route('admin.business-settings.app_setting',['platform' => 'android']):'javascript:'}}"
-                            method="post">
+                            action="{{env('APP_MODE')!='demo'?route('admin.business-settings.app_setting',['platform' => 'android']):'javascript:'}}" method="post">
                             @csrf
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <label class="text-dark font-weight-bold mb-0" for="play_store_status">{{ translate('Enable download link for web footer') }}</label>
@@ -41,16 +36,13 @@
                             </div>
 
                             <div class="mb-4">
-                                <label class="text-dark"
-                                        for="app_store_link">{{ translate('Download link') }}
-                                </label>
+                                <label class="text-dark" for="app_store_link">{{ translate('Download link') }}</label>
                                 <input type="text" id="play_store_link" name="play_store_link"
-                                        value="{{$config['link']??''}}" class="form-control" placeholder="">
+                                        value="{{$config['link']??''}}" class="form-control">
                             </div>
 
                             <div class="mb-4">
-                                <label class="text-dark"
-                                        for="android_min_version">{{ translate('Minimum version for force update') }}
+                                <label class="text-dark" for="android_min_version">{{ translate('Minimum version for force update') }}
                                     <i class="tio-info text-danger" data-toggle="tooltip" data-placement="right"
                                         title="{{ translate("If there is any update available in the admin panel and for that, the previous user app will not work, you can force the customer from here by providing the minimum version for force update. That means if a customer has an app below this version the customers must need to update the app first. If you don't need a force update just insert here zero (0) and ignore it.") }}"></i>
                                 </label>
@@ -61,8 +53,8 @@
 
                             <div class="d-flex justify-content-end">
                                 <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
-                                    onclick="{{env('APP_MODE')!='demo'?'':'call_demo()'}}"
-                                    class="btn btn-primary">{{translate('save')}}</button>
+                                    class="btn btn-primary demo-form-submit">{{translate('save')}}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -74,10 +66,8 @@
                         <h5 class="mb-0">{{translate('IOS')}}</h5>
                     </div>
                     <div class="card-body">
-                        @php($config=\App\CentralLogics\Helpers::get_business_settings('app_store_config'))
-                        <form
-                            action="{{env('APP_MODE')!='demo'?route('admin.business-settings.app_setting',['platform' => 'ios']):'javascript:'}}"
-                            method="post">
+                        @php($config=Helpers::get_business_settings('app_store_config'))
+                        <form action="{{env('APP_MODE')!='demo'?route('admin.business-settings.app_setting',['platform' => 'ios']):'javascript:'}}" method="post">
                             @csrf
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <label class="text-dark font-weight-bold mb-0" for="app_store_status2">{{ translate('Enable download link for web footer') }}</label>
@@ -109,19 +99,12 @@
 
                             <div class="d-flex justify-content-end">
                                 <button type="{{env('APP_MODE')!='demo'?'submit':'button'}}"
-                                    onclick="{{env('APP_MODE')!='demo'?'':'call_demo()'}}"
-                                    class="btn btn-primary">{{translate('save')}}</button>
+                                    class="btn btn-primary demo-form-submit">{{translate('save')}}</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-
-
     </div>
 @endsection
-
-@push('script_2')
-
-@endpush

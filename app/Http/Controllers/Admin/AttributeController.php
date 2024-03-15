@@ -26,22 +26,21 @@ class AttributeController extends Controller
      */
     function index(Request $request): View|Factory|Application
     {
-        $query_param = [];
+        $queryParam = [];
         $search = $request['search'];
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $attributes = $this->attribute->where(function ($q) use ($key) {
+            $attributes = $this->attribute->where(function ($query) use ($key) {
                 foreach ($key as $value) {
-                    $q->orWhere('name', 'like', "%{$value}%");
+                    $query->orWhere('name', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }else{
             $attributes = $this->attribute;
         }
 
-
-        $attributes = $attributes->orderBy('name')->paginate(Helpers::pagination_limit())->appends($query_param);
+        $attributes = $attributes->orderBy('name')->paginate(Helpers::pagination_limit())->appends($queryParam);
         return view('admin-views.attribute.index', compact('attributes', 'search'));
     }
 
@@ -57,7 +56,7 @@ class AttributeController extends Controller
 
         foreach ($request->name as $name) {
             if (strlen($name) > 255) {
-                toastr::error(\App\CentralLogics\translate('Name is too long!'));
+                toastr::error(translate('Name is too long!'));
                 return back();
             }
         }
@@ -111,7 +110,7 @@ class AttributeController extends Controller
 
         foreach ($request->name as $name) {
             if (strlen($name) > 255) {
-                toastr::error(\App\CentralLogics\translate('Name is too long!'));
+                toastr::error(translate('Name is too long!'));
                 return back();
             }
         }

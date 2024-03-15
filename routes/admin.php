@@ -3,184 +3,207 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\FlashSaleController;
 use App\Http\Controllers\Admin\System\AddonController;
+use App\Http\Controllers\Admin\AttributeController;
+use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\BusinessSettingsController;
+use App\Http\Controllers\Admin\DatabaseSettingsController;
+use App\Http\Controllers\Admin\LocationSettingsController;
+use App\Http\Controllers\Admin\SMSModuleController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ConversationController;
+use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DeliveryManController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\POSController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ReviewsController;
+use App\Http\Controllers\Admin\SystemController;
+use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\Auth\LoginController;
+
+
+Route::get('link/order/{id}', [POSController::class, 'handleLinkOrder'])->name('handleLinkOrder');
+
+
 
 
 Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
-    /*authentication*/
     Route::group(['namespace' => 'Auth', 'prefix' => 'auth', 'as' => 'auth.'], function () {
-        Route::get('/code/captcha/{tmp}', 'LoginController@captcha')->name('default-captcha');
-        Route::get('login', 'LoginController@login')->name('login');
-        Route::post('login', 'LoginController@submit')->middleware('actch');
-        Route::get('logout', 'LoginController@logout')->name('logout');
+        Route::get('/code/captcha/{tmp}', [LoginController::class, 'captcha'])->name('default-captcha');
+        Route::get('login', [LoginController::class, 'login'])->name('login');
+        Route::post('login', [LoginController::class, 'submit'])->middleware('actch');
+        Route::get('logout', [LoginController::class, 'logout'])->name('logout');
     });
-    /*authentication*/
 
     Route::group(['middleware' => ['admin']], function () {
-        Route::get('/fcm/{id}', 'SystemController@fcm')->name('dashboard');     //test route
-        Route::get('/', 'SystemController@dashboard')->name('dashboard');
-        Route::post('order-stats', 'SystemController@order_stats')->name('order-stats');
-        Route::get('settings', 'SystemController@settings')->name('settings');
-        Route::post('settings', 'SystemController@settings_update');
-        Route::post('settings-password', 'SystemController@settings_password_update')->name('settings-password');
-        Route::get('/get-restaurant-data', 'SystemController@restaurant_data')->name('get-restaurant-data');
-        Route::get('dashboard/earning-statistics', 'SystemController@get_earning_statitics')->name('dashboard.earning-statistics');
-        Route::get('ignore-check-order', 'SystemController@ignore_check_order')->name('ignore-check-order');
+        Route::get('/fcm/{id}', [SystemController::class, 'fcm'])->name('dashboard');
+        Route::get('/', [SystemController::class, 'dashboard'])->name('dashboard');
+        Route::post('order-stats', [SystemController::class, 'orderStats'])->name('order-stats');
+        Route::get('settings', [SystemController::class, 'settings'])->name('settings');
+        Route::post('settings', [SystemController::class, 'settingsUpdate']);
+        Route::post('settings-password', [SystemController::class, 'settingsPasswordUpdate'])->name('settings-password');
+        Route::get('/get-restaurant-data', [SystemController::class, 'restaurantData'])->name('get-restaurant-data');
+        Route::get('dashboard/earning-statistics', [SystemController::class, 'getEarningStatitics'])->name('dashboard.earning-statistics');
+        Route::get('ignore-check-order', [SystemController::class, 'ignoreCheckOrder'])->name('ignore-check-order');
 
         Route::group(['prefix' => 'pos', 'as' => 'pos.'], function () {
-            Route::get('/', 'POSController@index')->name('index');
-            Route::get('quick-view', 'POSController@quick_view')->name('quick-view');
-            Route::post('variant_price', 'POSController@variant_price')->name('variant_price');
-            Route::post('add-to-cart', 'POSController@addToCart')->name('add-to-cart');
-            Route::post('remove-from-cart', 'POSController@removeFromCart')->name('remove-from-cart');
-            Route::post('cart-items', 'POSController@cart_items')->name('cart_items');
-            Route::post('update-quantity', 'POSController@updateQuantity')->name('updateQuantity');
-            Route::post('empty-cart', 'POSController@emptyCart')->name('emptyCart');
-            Route::post('tax', 'POSController@update_tax')->name('tax');
-            Route::post('discount', 'POSController@update_discount')->name('discount');
-            Route::get('customers', 'POSController@get_customers')->name('customers');
-            Route::post('order', 'POSController@place_order')->name('order');
-            Route::get('orders', 'POSController@order_list')->name('orders');
-            Route::get('order-details/{id}', 'POSController@order_details')->name('order-details');
-            Route::get('invoice/{id}', 'POSController@generate_invoice');
-            Route::any('store-keys', 'POSController@store_keys')->name('store-keys');
-            Route::post('customer-store', 'POSController@customer_store')->name('customer-store');
-            Route::get('orders/export', 'POSController@export_orders')->name('orders.export');
-            Route::get('order-details/{id}', 'POSController@details')->name('order-details');
+            Route::get('/', [POSController::class, 'index'])->name('index');
+            Route::get('quick-view', [POSController::class, 'quickView'])->name('quick-view');
+            Route::post('variant_price', [POSController::class, 'variantPrice'])->name('variant_price');
+            Route::post('add-to-cart', [POSController::class,'addToCart'])->name('add-to-cart');
+            Route::post('remove-from-cart', [POSController::class, 'removeFromCart'])->name('remove-from-cart');
+            Route::post('cart-items', [POSController::class, 'cartItems'])->name('cart_items');
+            Route::post('update-quantity', [POSController::class, 'updateQuantity'])->name('updateQuantity');
+            Route::post('empty-cart', [POSController::class, 'emptyCart'])->name('emptyCart');
+            Route::post('tax', [POSController::class, 'updateTax'])->name('tax');
+            Route::post('discount', [POSController::class, 'updateDiscount'])->name('discount');
+            Route::get('customers', [POSController::class, 'getCustomers'])->name('customers');
+            Route::post('order', [POSController::class, 'placeOrder'])->name('order');
+            Route::get('orders', [POSController::class, 'orderList'])->name('orders');
+            Route::get('order-details/{id}', [POSController::class, 'orderDetails'])->name('order-details');
+            Route::get('delete/order/{id}', [POSController::class, 'handleDeletePOSOrder'])->name('handleDeletePOSOrder');
+            Route::get('invoice/{id}', [POSController::class, 'generateInvoice']);
+            Route::any('store-keys', [POSController::class, 'storeKeys'])->name('store-keys');
+            Route::post('customer-store', [POSController::class, 'customerStore'])->name('customer-store');
+            Route::put('customer-update', [POSController::class, 'customerUpdate'])->name('customer-update');
+            Route::get('customer-delete/{id}', [POSController::class, 'handleDeleteUser'])->name('customer-delete');
+            Route::get('orders/export', [POSController::class, 'exportOrders'])->name('orders.export');
         });
 
         Route::group(['prefix' => 'banner', 'as' => 'banner.'], function () {
-            Route::get('add-new', 'BannerController@index')->name('add-new');
-            Route::post('store', 'BannerController@store')->name('store');
-            Route::get('edit/{id}', 'BannerController@edit')->name('edit');
-            Route::put('update/{id}', 'BannerController@update')->name('update');
-            Route::get('list', 'BannerController@list')->name('list');
-            Route::get('status/{id}/{status}', 'BannerController@status')->name('status');
-            Route::delete('delete/{id}', 'BannerController@delete')->name('delete');
+            Route::get('add-new', [BannerController::class, 'index'])->name('add-new');
+            Route::post('store', [BannerController::class, 'store'])->name('store');
+            Route::get('edit/{id}', [BannerController::class, 'edit'])->name('edit');
+            Route::put('update/{id}', [BannerController::class, 'update'])->name('update');
+            Route::get('list', [BannerController::class, 'list'])->name('list');
+            Route::get('status/{id}/{status}', [BannerController::class, 'status'])->name('status');
+            Route::delete('delete/{id}', [BannerController::class, 'delete'])->name('delete');
         });
 
         Route::group(['prefix' => 'attribute', 'as' => 'attribute.'], function () {
-            Route::get('add-new', 'AttributeController@index')->name('add-new');
-            Route::post('store', 'AttributeController@store')->name('store');
-            Route::get('edit/{id}', 'AttributeController@edit')->name('edit');
-            Route::post('update/{id}', 'AttributeController@update')->name('update');
-            Route::delete('delete/{id}', 'AttributeController@delete')->name('delete');
+            Route::get('add-new', [AttributeController::class, 'index'])->name('add-new');
+            Route::post('store', [AttributeController::class, 'store'])->name('store');
+            Route::get('edit/{id}', [AttributeController::class, 'edit'])->name('edit');
+            Route::post('update/{id}', [AttributeController::class, 'update'])->name('update');
+            Route::delete('delete/{id}', [AttributeController::class, 'delete'])->name('delete');
         });
 
         Route::group(['prefix' => 'branch', 'as' => 'branch.'], function () {
-            Route::get('add-new', 'BranchController@index')->name('add-new');
-            Route::get('list', 'BranchController@list')->name('list');
-            Route::post('store', 'BranchController@store')->name('store');
-            Route::get('edit/{id}', 'BranchController@edit')->name('edit');
-            Route::post('update/{id}', 'BranchController@update')->name('update');
-            Route::delete('delete/{id}', 'BranchController@delete')->name('delete');
+            Route::get('add-new', [BranchController::class, 'index'])->name('add-new');
+            Route::get('list', [BranchController::class, 'list'])->name('list');
+            Route::post('store', [BranchController::class, 'store'])->name('store');
+            Route::get('edit/{id}', [BranchController::class, 'edit'])->name('edit');
+            Route::post('update/{id}', [BranchController::class, 'update'])->name('update');
+            Route::delete('delete/{id}', [BranchController::class, 'delete'])->name('delete');
         });
 
         Route::group(['prefix' => 'delivery-man', 'as' => 'delivery-man.'], function () {
-            Route::get('add', 'DeliveryManController@index')->name('add');
-            Route::post('store', 'DeliveryManController@store')->name('store');
-            Route::get('list', 'DeliveryManController@list')->name('list');
-            Route::get('preview/{id}', 'DeliveryManController@preview')->name('preview');
-            Route::get('edit/{id}', 'DeliveryManController@edit')->name('edit');
-            Route::post('update/{id}', 'DeliveryManController@update')->name('update');
-            Route::delete('delete/{id}', 'DeliveryManController@delete')->name('delete');
-            Route::post('search', 'DeliveryManController@search')->name('search');
-            Route::get('pending/list', 'DeliveryManController@pending_list')->name('pending');
-            Route::get('denied/list', 'DeliveryManController@denied_list')->name('denied');
-            Route::get('update-application/{id}/{status}', 'DeliveryManController@update_application')->name('application');
+            Route::get('add', [DeliveryManController::class, 'index'])->name('add');
+            Route::post('store', [DeliveryManController::class, 'store'])->name('store');
+            Route::get('list', [DeliveryManController::class, 'list'])->name('list');
+            Route::get('preview/{id}', [DeliveryManController::class, 'preview'])->name('preview');
+            Route::get('edit/{id}', [DeliveryManController::class, 'edit'])->name('edit');
+            Route::post('update/{id}', [DeliveryManController::class, 'update'])->name('update');
+            Route::delete('delete/{id}', [DeliveryManController::class, 'delete'])->name('delete');
+            Route::post('search', [DeliveryManController::class, 'search'])->name('search');
+            Route::get('pending/list', [DeliveryManController::class, 'pendingList'])->name('pending');
+            Route::get('denied/list', [DeliveryManController::class, 'deniedList'])->name('denied');
+            Route::get('update-application/{id}/{status}', [DeliveryManController::class, 'updateApplication'])->name('application');
 
 
             Route::group(['prefix' => 'reviews', 'as' => 'reviews.'], function () {
-                Route::get('list', 'DeliveryManController@reviews_list')->name('list');
+                Route::get('list', [DeliveryManController::class, 'reviewsList'])->name('list');
             });
         });
 
         Route::group(['prefix' => 'notification', 'as' => 'notification.'], function () {
-            Route::get('add-new', 'NotificationController@index')->name('add-new');
-            Route::post('store', 'NotificationController@store')->name('store');
-            Route::get('edit/{id}', 'NotificationController@edit')->name('edit');
-            Route::post('update/{id}', 'NotificationController@update')->name('update');
-            Route::get('status/{id}/{status}', 'NotificationController@status')->name('status');
-            Route::delete('delete/{id}', 'NotificationController@delete')->name('delete');
+            Route::get('add-new', [NotificationController::class, 'index'])->name('add-new');
+            Route::post('store', [NotificationController::class, 'store'])->name('store');
+            Route::get('edit/{id}', [NotificationController::class, 'edit'])->name('edit');
+            Route::post('update/{id}', [NotificationController::class, 'update'])->name('update');
+            Route::get('status/{id}/{status}', [NotificationController::class, 'status'])->name('status');
+            Route::delete('delete/{id}', [NotificationController::class, 'delete'])->name('delete');
         });
 
         Route::group(['prefix' => 'product', 'as' => 'product.'], function () {
-            Route::get('add-new', 'ProductController@index')->name('add-new');
-            Route::post('variant-combination', 'ProductController@variant_combination')->name('variant-combination');
-            Route::post('store', 'ProductController@store')->name('store');
-            Route::get('edit/{id}', 'ProductController@edit')->name('edit');
-            Route::post('update/{id}', 'ProductController@update')->name('update');
-            Route::get('list', 'ProductController@list')->name('list');
-            Route::delete('delete/{id}', 'ProductController@delete')->name('delete');
-            Route::get('status/{id}/{status}', 'ProductController@status')->name('status');
-            Route::post('search', 'ProductController@search')->name('search');
-            Route::get('bulk-import', 'ProductController@bulk_import_index')->name('bulk-import');
-            Route::post('bulk-import', 'ProductController@bulk_import_data');
-            Route::get('bulk-export', 'ProductController@bulk_export_data')->name('bulk-export');
-
-            Route::get('view/{id}', 'ProductController@view')->name('view');
-            Route::get('remove-image/{id}/{name}', 'ProductController@remove_image')->name('remove-image');
-            //ajax request
-            Route::get('get-categories', 'ProductController@get_categories')->name('get-categories');
-            Route::get('remove-image/{id}/{name}', 'ProductController@remove_image')->name('remove-image');
+            Route::get('add-new', [ProductController::class, 'index'])->name('add-new');
+            Route::get('codebar', [ProductController::class, 'generateUniqueBarcode']);
+            Route::post('variant-combination', [ProductController::class, 'variantCombination'])->name('variant-combination');
+            Route::post('store', [ProductController::class, 'store'])->name('store');
+            Route::get('edit/{id}', [ProductController::class, 'edit'])->name('edit');
+            Route::post('update/{id}', [ProductController::class, 'update'])->name('update');
+            Route::get('list', [ProductController::class, 'list'])->name('list');
+            Route::delete('delete/{id}', [ProductController::class, 'delete'])->name('delete');
+            Route::put('/update/stock/{id}', [ProductController::class, 'handleUpdateStock'])->name('handleUpdateStock');
+            Route::get('status/{id}/{status}', [ProductController::class, 'status'])->name('status');
+            Route::post('search', [ProductController::class, 'search'])->name('search');
+            Route::get('bulk-import', [ProductController::class, 'bulkImportIndex'])->name('bulk-import');
+            Route::post('bulk-import', [ProductController::class, 'bulkImportProduct']);
+            Route::get('bulk-export', [ProductController::class, 'bulkExportProduct'])->name('bulk-export');
+            Route::get('view/{id}', [ProductController::class, 'view'])->name('view');
+            Route::get('get-categories', [ProductController::class, 'getCategories'])->name('get-categories');
+            Route::get('remove-image/{id}/{name}', [ProductController::class, 'removeImage'])->name('remove-image');
         });
 
         Route::group(['prefix' => 'orders', 'as' => 'orders.'], function () {
-            Route::get('list/{status}', 'OrderController@list')->name('list');
-            Route::get('details/{id}', 'OrderController@details')->name('details');
-            Route::get('status', 'OrderController@status')->name('status');
-            Route::get('add-delivery-man/{order_id}/{delivery_man_id}', 'OrderController@add_delivery_man')->name('add-delivery-man');
-            Route::get('payment-status', 'OrderController@payment_status')->name('payment-status');
-            Route::post('productStatus', 'OrderController@productStatus')->name('productStatus');
-            Route::get('generate-invoice/{id}', 'OrderController@generate_invoice')->name('generate-invoice');
-            Route::post('add-payment-ref-code/{id}', 'OrderController@add_payment_ref_code')->name('add-payment-ref-code');
-            Route::get('branch-filter/{branch_id}', 'OrderController@branch_filter')->name('branch-filter');
-            Route::get('export/{status}', 'OrderController@export_orders')->name('export');
+            Route::get('list/{status}', [OrderController::class, 'list'])->name('list');
+            Route::get('details/{id}', [OrderController::class, 'details'])->name('details');
+            Route::get('status', [OrderController::class, 'status'])->name('status');
+            Route::get('add-delivery-man/{order_id}/{delivery_man_id}', [OrderController::class, 'addDeliveryman'])->name('add-delivery-man');
+            Route::get('payment-status', [OrderController::class, 'paymentStatus'])->name('payment-status');
+            Route::get('generate-invoice/{id}', [OrderController::class, 'generateInvoice'])->name('generate-invoice');
+            Route::get('generate-invoice-barcode/{id}', [OrderController::class, 'generateInvoiceWithBarCode'])->name('generate-invoice-barcode');
+            Route::post('add-payment-ref-code/{id}', [OrderController::class, 'addPaymentReferenceCode'])->name('add-payment-ref-code');
+            Route::get('branch-filter/{branch_id}', [OrderController::class, 'branchFilter'])->name('branch-filter');
+            Route::get('export/{status}', [OrderController::class, 'exportOrders'])->name('export');
         });
 
         Route::group(['prefix' => 'order', 'as' => 'order.'], function () {
             Route::get('list/{status}', 'OrderController@list')->name('list');
             Route::put('status-update/{id}', 'OrderController@status')->name('status-update');
             Route::get('view/{id}', 'OrderController@view')->name('view');
-            Route::post('update-shipping/{id}', 'OrderController@update_shipping')->name('update-shipping');
+            Route::post('update-shipping/{id}', [OrderController::class, 'updateShipping'])->name('update-shipping');
             Route::delete('delete/{id}', 'OrderController@delete')->name('delete');
         });
 
         Route::group(['prefix' => 'category', 'as' => 'category.'], function () {
-            Route::get('add', 'CategoryController@index')->name('add');
-            Route::get('add-sub-category', 'CategoryController@sub_index')->name('add-sub-category');
-            Route::get('add-sub-sub-category', 'CategoryController@sub_sub_index')->name('add-sub-sub-category');
-            Route::post('store', 'CategoryController@store')->name('store');
-            Route::get('edit/{id}', 'CategoryController@edit')->name('edit');
-            Route::post('update/{id}', 'CategoryController@update')->name('update');
-            Route::post('store', 'CategoryController@store')->name('store');
-            Route::get('status/{id}/{status}', 'CategoryController@status')->name('status');
-            Route::delete('delete/{id}', 'CategoryController@delete')->name('delete');
-            Route::post('search', 'CategoryController@search')->name('search');
-            Route::get('featured/{id}/{featured}', 'CategoryController@featured')->name('featured');
+            Route::get('add', [CategoryController::class, 'index'])->name('add');
+            Route::get('add-sub-category', [CategoryController::class, 'subIndex'])->name('add-sub-category');
+            Route::get('add-sub-sub-category', [CategoryController::class, 'subSubIndex'])->name('add-sub-sub-category');
+            Route::post('store', [CategoryController::class, 'store'])->name('store');
+            Route::get('edit/{id}', [CategoryController::class, 'edit'])->name('edit');
+            Route::post('update/{id}', [CategoryController::class, 'update'])->name('update');
+            Route::post('store', [CategoryController::class, 'store'])->name('store');
+            Route::get('status/{id}/{status}', [CategoryController::class, 'status'])->name('status');
+            Route::delete('delete/{id}', [CategoryController::class, 'delete'])->name('delete');
+            Route::post('search', [CategoryController::class, 'search'])->name('search');
+            Route::get('featured/{id}/{featured}', [CategoryController::class, 'featured'])->name('featured');
         });
 
         Route::group(['prefix' => 'message', 'as' => 'message.'], function () {
-            Route::get('list', 'ConversationController@list')->name('list');
-            Route::post('update-fcm-token', 'ConversationController@update_fcm_token')->name('update_fcm_token');
-            Route::get('get-firebase-config', 'ConversationController@get_firebase_config')->name('get_firebase_config');
-            Route::get('get-conversations', 'ConversationController@get_conversations')->name('get_conversations');
-            Route::post('store/{user_id}', 'ConversationController@store')->name('store');
-            Route::get('view/{user_id}', 'ConversationController@view')->name('view');
+            Route::get('list', [ConversationController::class, 'list'])->name('list');
+            Route::post('update-fcm-token', [ConversationController::class, 'updateFcmToken'])->name('update_fcm_token');
+            Route::get('get-firebase-config', [ConversationController::class, 'getFirebaseConfig'])->name('get_firebase_config');
+            Route::get('get-conversations', [ConversationController::class, 'getConversations'])->name('get_conversations');
+            Route::post('store/{user_id}', [ConversationController::class, 'store'])->name('store');
+            Route::get('view/{user_id}', [ConversationController::class, 'view'])->name('view');
         });
 
         Route::group(['prefix' => 'reviews', 'as' => 'reviews.'], function () {
-            Route::get('list', 'ReviewsController@list')->name('list');
-            Route::post('search', 'ReviewsController@search')->name('search');
+            Route::get('list', [ReviewsController::class, 'list'])->name('list');
         });
 
         Route::group(['prefix' => 'coupon', 'as' => 'coupon.'], function () {
-            Route::get('add-new', 'CouponController@add_new')->name('add-new');
-            Route::post('store', 'CouponController@store')->name('store');
-            Route::get('update/{id}', 'CouponController@edit')->name('update');
-            Route::post('update/{id}', 'CouponController@update');
-            Route::get('status/{id}/{status}', 'CouponController@status')->name('status');
-            Route::delete('delete/{id}', 'CouponController@delete')->name('delete');
-            Route::get('details', 'CouponController@details')->name('details');
+            Route::get('add-new', [CouponController::class, 'index'])->name('add-new');
+            Route::post('store', [CouponController::class, 'store'])->name('store');
+            Route::get('update/{id}', [CouponController::class, 'edit'])->name('update');
+            Route::post('update/{id}', [CouponController::class, 'update']);
+            Route::get('status/{id}/{status}', [CouponController::class, 'status'])->name('status');
+            Route::delete('delete/{id}', [CouponController::class, 'delete'])->name('delete');
+            Route::get('details', [CouponController::class, 'details'])->name('details');
         });
 
         Route::group(['prefix' => 'flash-sale', 'as' => 'flash-sale.'], function () {
@@ -191,141 +214,131 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('status/{id}/{status}', [FlashSaleController::class, 'status'])->name('status');
             Route::delete('delete/{id}', [FlashSaleController::class, 'delete'])->name('delete');
 
-            Route::get('add-product/{flash_sale_id}', [FlashSaleController::class, 'add_product'])->name('add-product');
-            Route::get('add-product-to-session/{flash_sale_id}/{product_id}', [FlashSaleController::class, 'add_product_to_session'])->name('add-product-to-session');
-            Route::get('delete-product-from-session/{flash_sale_id}/{product_id}', [FlashSaleController::class, 'delete_product_from_session'])->name('delete-product-from-session');
-            Route::get('delete-all-products-from-session/{flash_sale_id}', [FlashSaleController::class, 'delete_all_products_from_session'])->name('delete-all-products-from-session');
-            Route::post('add-flash-sale-product/{flash_sale_id}', [FlashSaleController::class, 'flash_sale_product_store'])->name('add_flash_sale_product');
-            Route::delete('product/delete/{flash_sale_id}/{product_id}', [FlashSaleController::class, 'delete_flash_product'])->name('product.delete');
+            Route::get('add-product/{flash_sale_id}', [FlashSaleController::class, 'addProduct'])->name('add-product');
+            Route::get('add-product-to-session/{flash_sale_id}/{product_id}', [FlashSaleController::class, 'addProductToSession'])->name('add-product-to-session');
+            Route::get('delete-product-from-session/{flash_sale_id}/{product_id}', [FlashSaleController::class, 'deleteProductFromSession'])->name('delete-product-from-session');
+            Route::get('delete-all-products-from-session/{flash_sale_id}', [FlashSaleController::class, 'deleteAllProductsFromSession'])->name('delete-all-products-from-session');
+            Route::post('add-flash-sale-product/{flash_sale_id}', [FlashSaleController::class, 'flashSaleProductStore'])->name('add_flash_sale_product');
+            Route::delete('product/delete/{flash_sale_id}/{product_id}', [FlashSaleController::class, 'deleteFlashProduct'])->name('product.delete');
         });
 
         Route::group(['prefix' => 'business-settings', 'as' => 'business-settings.','middleware'=>['actch']], function () {
-            Route::get('ecom-setup', 'BusinessSettingsController@restaurant_index')->name('ecom-setup');
-            Route::post('update-setup', 'BusinessSettingsController@restaurant_setup')->name('update-setup');
+            Route::get('ecom-setup', [BusinessSettingsController::class, 'BusinessSetup'])->name('ecom-setup');
+            Route::post('update-setup', [BusinessSettingsController::class, 'BusinessSetupUpdate'])->name('update-setup');
 
-            Route::get('fcm-index', 'BusinessSettingsController@fcm_index')->name('fcm-index');
-            Route::post('update-fcm', 'BusinessSettingsController@update_fcm')->name('update-fcm');
+            Route::get('fcm-index', [BusinessSettingsController::class, 'fcmIndex'])->name('fcm-index');
+            Route::post('update-fcm', [BusinessSettingsController::class, 'updateFcm'])->name('update-fcm');
 
-            Route::post('update-fcm-messages', 'BusinessSettingsController@update_fcm_messages')->name('update-fcm-messages');
+            Route::post('update-fcm-messages', [BusinessSettingsController::class, 'updateFcmMessages'])->name('update-fcm-messages');
 
-            Route::get('mail-config', 'BusinessSettingsController@mail_index')->name('mail-config');
-            Route::post('mail-send', 'BusinessSettingsController@mail_send')->name('mail-send');
-            Route::post('mail-config', 'BusinessSettingsController@mail_config');
-            Route::get('mail-config/status/{status}', 'BusinessSettingsController@mail_config_status')->name('mail-config.status');
+            Route::get('mail-config', [BusinessSettingsController::class, 'mailIndex'])->name('mail-config');
+            Route::post('mail-send',  [BusinessSettingsController::class, 'mailSend'])->name('mail-send');
+            Route::post('mail-config', [BusinessSettingsController::class, 'mailConfig']);
+            Route::get('mail-config/status/{status}', [BusinessSettingsController::class, 'mailConfigStatus'])->name('mail-config.status');
 
+            Route::get('payment-method', [BusinessSettingsController::class, 'paymentIndex'])->name('payment-method');
+            Route::post('payment-method-update/{payment_method}', [BusinessSettingsController::class, 'paymentUpdate'])->name('payment-method-update');
+            Route::post('payment-config-update', [BusinessSettingsController::class, 'paymentConfigUpdate'])->name('payment-config-update')->middleware('actch');
 
-            Route::get('payment-method', 'BusinessSettingsController@payment_index')->name('payment-method');
-            Route::post('payment-method-update/{payment_method}', 'BusinessSettingsController@payment_update')->name('payment-method-update');
-            Route::post('payment-config-update', 'BusinessSettingsController@payment_config_update')->name('payment-config-update')->middleware('actch');
+            Route::get('currency-add', [BusinessSettingsController::class, 'currency_index'])->name('currency-add');
+            Route::post('currency-add', [BusinessSettingsController::class, 'currencyStore']);
+            Route::get('currency-update/{id}', [BusinessSettingsController::class, 'currencyEdit'])->name('currency-update');
+            Route::put('currency-update/{id}', [BusinessSettingsController::class, 'currencyUpdate']);
+            Route::delete('currency-delete/{id}', [BusinessSettingsController::class, 'currencyDelete'])->name('currency-delete');
 
-            Route::get('currency-add', 'BusinessSettingsController@currency_index')->name('currency-add');
-            Route::post('currency-add', 'BusinessSettingsController@currency_store');
-            Route::get('currency-update/{id}', 'BusinessSettingsController@currency_edit')->name('currency-update');
-            Route::put('currency-update/{id}', 'BusinessSettingsController@currency_update');
-            Route::delete('currency-delete/{id}', 'BusinessSettingsController@currency_delete')->name('currency-delete');
+            Route::get('terms-and-conditions', [BusinessSettingsController::class, 'termsAndConditions'])->name('terms-and-conditions');
+            Route::post('terms-and-conditions', [BusinessSettingsController::class, 'termsAndConditionsUpdate']);
 
-            Route::get('terms-and-conditions', 'BusinessSettingsController@terms_and_conditions')->name('terms-and-conditions');
-            Route::post('terms-and-conditions', 'BusinessSettingsController@terms_and_conditions_update');
+            Route::get('privacy-policy', [BusinessSettingsController::class, 'privacyPolicy'])->name('privacy-policy');
+            Route::post('privacy-policy',  [BusinessSettingsController::class, 'privacyPolicyUpdate']);
 
-            Route::get('privacy-policy', 'BusinessSettingsController@privacy_policy')->name('privacy-policy');
-            Route::post('privacy-policy', 'BusinessSettingsController@privacy_policy_update');
+            Route::get('about-us', [BusinessSettingsController::class, 'aboutUs'])->name('about-us');
+            Route::post('about-us', [BusinessSettingsController::class, 'aboutUsUpdate']);
 
-            Route::get('about-us', 'BusinessSettingsController@about_us')->name('about-us');
-            Route::post('about-us', 'BusinessSettingsController@about_us_update');
+            Route::get('db-index', [DatabaseSettingsController::class, 'databaseIndex'])->name('db-index');
+            Route::post('db-clean', [DatabaseSettingsController::class, 'cleanDatabase'])->name('clean-db');
 
-            Route::get('db-index', 'DatabaseSettingsController@db_index')->name('db-index');
-            Route::post('db-clean', 'DatabaseSettingsController@clean_db')->name('clean-db');
+            Route::get('firebase-message-config', [BusinessSettingsController::class, 'firebaseMessageConfigIndex'])->name('firebase_message_config_index');
+            Route::post('firebase-message-config', [BusinessSettingsController::class, 'firebaseMessageConfig'])->name('firebase_message_config');
 
-            Route::get('firebase-message-config', 'BusinessSettingsController@firebase_message_config_index')->name('firebase_message_config_index');
-            Route::post('firebase-message-config', 'BusinessSettingsController@firebase_message_config')->name('firebase_message_config');
+            Route::get('location-setup', [LocationSettingsController::class, 'locationIndex'])->name('location-setup');
+            Route::post('update-location', [LocationSettingsController::class, 'locationSetup'])->name('update-location');
 
-            Route::get('location-setup', 'LocationSettingsController@location_index')->name('location-setup');
-            Route::post('update-location', 'LocationSettingsController@location_setup')->name('update-location');
+            Route::get('sms-module', [SMSModuleController::class, 'smsIndex'])->name('sms-module');
+            Route::post('sms-module-update/{sms_module}', [SMSModuleController::class, 'smsUpdate'])->name('sms-module-update');
 
-            Route::get('sms-module', 'SMSModuleController@sms_index')->name('sms-module');
-            Route::post('sms-module-update/{sms_module}', 'SMSModuleController@sms_update')->name('sms-module-update');
+            Route::get('recaptcha', [BusinessSettingsController::class, 'recaptchaIndex'])->name('recaptcha_index');
+            Route::post('recaptcha-update', [BusinessSettingsController::class, 'recaptchaUpdate'])->name('recaptcha_update');
 
-            //recaptcha
-            Route::get('recaptcha', 'BusinessSettingsController@recaptcha_index')->name('recaptcha_index');
-            Route::post('recaptcha-update', 'BusinessSettingsController@recaptcha_update')->name('recaptcha_update');
+            Route::get('return-page', [BusinessSettingsController::class, 'returnPageIndex'])->name('return_page_index');
+            Route::post('return-page-update', [BusinessSettingsController::class, 'returnPageUpdate'])->name('return_page_update');
 
-            //pages
-            Route::get('return-page', 'BusinessSettingsController@return_page_index')->name('return_page_index');
-            Route::post('return-page-update', 'BusinessSettingsController@return_page_update')->name('return_page_update');
+            Route::get('refund-page', [BusinessSettingsController::class, 'refundPageIndex'])->name('refund_page_index');
+            Route::post('refund-page-update', [BusinessSettingsController::class, 'refundPageUpdate'])->name('refund_page_update');
 
-            Route::get('refund-page', 'BusinessSettingsController@refund_page_index')->name('refund_page_index');
-            Route::post('refund-page-update', 'BusinessSettingsController@refund_page_update')->name('refund_page_update');
+            Route::get('cancellation-page', [BusinessSettingsController::class, 'cancellationPageIndex'])->name('cancellation_page_index');
+            Route::post('cancellation-page-update', [BusinessSettingsController::class, 'cancellationPageUpdate'])->name('cancellation_page_update');
 
-            Route::get('cancellation-page', 'BusinessSettingsController@cancellation_page_index')->name('cancellation_page_index');
-            Route::post('cancellation-page-update', 'BusinessSettingsController@cancellation_page_update')->name('cancellation_page_update');
+            Route::get('app-setting', [BusinessSettingsController::class, 'appSettingIndex'])->name('app_setting');
+            Route::post('app-setting', [BusinessSettingsController::class, 'appSettingUpdate']);
 
-            //app settings
-            Route::get('app-setting', 'BusinessSettingsController@app_setting_index')->name('app_setting');
-            Route::post('app-setting', 'BusinessSettingsController@app_setting_update');
+            Route::get('currency-position/{position}', [BusinessSettingsController::class, 'currencySymbolPosition'])->name('currency-position');
+            Route::get('maintenance-mode', [BusinessSettingsController::class, 'maintenanceMode'])->name('maintenance-mode');
 
-            Route::get('currency-position/{position}', 'BusinessSettingsController@currency_symbol_position')->name('currency-position');
-            Route::get('maintenance-mode', 'BusinessSettingsController@maintenance_mode')->name('maintenance-mode');
+            Route::get('map-api-settings', [BusinessSettingsController::class, 'mapApiSettings'])->name('map_api_settings');
+            Route::post('map-api-settings', [BusinessSettingsController::class, 'updateMapApi']);
 
-            Route::get('pagination-limit', 'BusinessSettingsController@mail_index')->name('pagination-limit');
-            Route::post('pagination-limit', 'BusinessSettingsController@mail_config');
+            Route::get('social-media', [BusinessSettingsController::class, 'socialMedia'])->name('social-media');
+            Route::get('fetch', [BusinessSettingsController::class, 'fetch'])->name('fetch');
+            Route::post('social-media-store', [BusinessSettingsController::class, 'socialMediaStore'])->name('social-media-store');
+            Route::post('social-media-edit', [BusinessSettingsController::class, 'socialMediaEdit'])->name('social-media-edit');
+            Route::post('social-media-update', [BusinessSettingsController::class, 'socialMediaUpdate'])->name('social-media-update');
+            Route::post('social-media-delete', [BusinessSettingsController::class, 'socialMediaDelete'])->name('social-media-delete');
+            Route::post('social-media-status-update', [BusinessSettingsController::class, 'socialMediaStatusUpdate'])->name('social-media-status-update');
 
-            Route::get('map-api-settings', 'BusinessSettingsController@map_api_settings')->name('map_api_settings');
-            Route::post('map-api-settings', 'BusinessSettingsController@update_map_api');
+            Route::get('otp-setup', [BusinessSettingsController::class, 'otpIndex'])->name('otp-setup');
+            Route::post('update-otp', [BusinessSettingsController::class ,'updateOtp'])->name('update-otp');
 
-            //Social Icon
-            Route::get('social-media', 'BusinessSettingsController@social_media')->name('social-media');
-            Route::get('fetch', 'BusinessSettingsController@fetch')->name('fetch');
-            Route::post('social-media-store', 'BusinessSettingsController@social_media_store')->name('social-media-store');
-            Route::post('social-media-edit', 'BusinessSettingsController@social_media_edit')->name('social-media-edit');
-            Route::post('social-media-update', 'BusinessSettingsController@social_media_update')->name('social-media-update');
-            Route::post('social-media-delete', 'BusinessSettingsController@social_media_delete')->name('social-media-delete');
-            Route::post('social-media-status-update', 'BusinessSettingsController@social_media_status_update')->name('social-media-status-update');
+            Route::get('cookies-setup', [BusinessSettingsController::class, 'cookiesSetup'])->name('cookies-setup');
+            Route::post('update-cookies', [BusinessSettingsController::class, 'cookiesSetupUpdate'])->name('update-cookies');
 
-            Route::get('otp-setup', 'BusinessSettingsController@otp_index')->name('otp-setup');
-            Route::post('update-otp', 'BusinessSettingsController@update_otp')->name('update-otp');
+            Route::get('delivery-fee-setup', [BusinessSettingsController::class, 'deliveryFeeSetup'])->name('delivery-fee-setup');
+            Route::post('update-delivery-fee', [BusinessSettingsController::class, 'deliveryFeeSetupUpdate'])->name('update-delivery-fee');
 
-            Route::get('cookies-setup', 'BusinessSettingsController@cookies_setup')->name('cookies-setup');
-            Route::post('update-cookies', 'BusinessSettingsController@cookies_setup_update')->name('update-cookies');
+            Route::get('social-media-login', [BusinessSettingsController::class, 'socialMediaLogin'])->name('social-media-login');
+            Route::get('social_login_status/{medium}/{status}', [BusinessSettingsController::class, 'changeSocialLoginStatus'])->name('social_login_status');
 
-            Route::get('delivery-fee-setup', 'BusinessSettingsController@delivery_fee_setup')->name('delivery-fee-setup');
-            Route::post('update-delivery-fee', 'BusinessSettingsController@delivery_fee_setup_update')->name('update-delivery-fee');
-
-            Route::get('social-media-login', 'BusinessSettingsController@social_media_login')->name('social-media-login');
-            Route::get('social_login_status/{medium}/{status}', 'BusinessSettingsController@change_social_login_status')->name('social_login_status');
-
-            Route::get('social-media-chat', 'BusinessSettingsController@social_media_chat')->name('social-media-chat');
-            Route::post('update-social-media-chat', 'BusinessSettingsController@update_media_chat')->name('update-social-media-chat');
-
-
+            Route::get('social-media-chat', [BusinessSettingsController::class, 'socialMediaChat'])->name('social-media-chat');
+            Route::post('update-social-media-chat', [BusinessSettingsController::class, 'updateSocialMediaChat'])->name('update-social-media-chat');
         });
 
         Route::group(['prefix' => 'report', 'as' => 'report.'], function () {
-            Route::get('order', 'ReportController@order_index')->name('order');
-            Route::get('earning', 'ReportController@earning_index')->name('earning');
-            Route::post('set-date', 'ReportController@set_date')->name('set-date');
-            Route::get('driver-report', 'ReportController@driver_report')->name('driver-report');
-            Route::post('driver-filter', 'ReportController@driver_filter')->name('driver_filter');
-            Route::get('product-report', 'ReportController@product_report')->name('product-report');
-            Route::post('product-report-filter', 'ReportController@product_report_filter')->name('product-report-filter');
-            Route::get('export-product-report', 'ReportController@export_product_report')->name('export-product-report');
-            Route::get('sale-report', 'ReportController@sale_report')->name('sale-report');
-            Route::post('sale-report-filter', 'ReportController@sale_filter')->name('sale-report-filter');
-            Route::get('export-sale-report', 'ReportController@export_sale_report')->name('export-sale-report');
+            Route::get('order', [ReportController::class, 'orderIndex'])->name('order');
+            Route::get('earning', [ReportController::class, 'earningIndex'])->name('earning');
+            Route::post('set-date', [ReportController::class, 'setDate'])->name('set-date');
+            Route::get('driver-report', [ReportController::class, 'driverReport'])->name('driver-report');
+            Route::get('product-report', [ReportController::class, 'productReport'])->name('product-report');
+            Route::get('export-product-report', [ReportController::class, 'exportProductReport'])->name('export-product-report');
+            Route::get('sale-report', [ReportController::class, 'saleReport'])->name('sale-report');
+            Route::get('export-sale-report', [ReportController::class, 'exportSaleReport'])->name('export-sale-report');
         });
 
         Route::group(['prefix' => 'customer', 'as' => 'customer.'], function () {
-            Route::get('list', 'CustomerController@customer_list')->name('list');
-            Route::get('view/{user_id}', 'CustomerController@view')->name('view');
-            Route::post('search', 'CustomerController@search')->name('search');
-            Route::get('subscribed-emails', 'CustomerController@subscribed_emails')->name('subscribed_emails');
+            Route::get('list', [CustomerController::class, 'customerList'])->name('list');
+            Route::get('view/{user_id}', [CustomerController::class, 'view'])->name('view');
+            Route::get('subscribed-emails', [CustomerController::class, 'subscribedEmails'])->name('subscribed_emails');
         });
+
+        Route::get('system-addons-index', function (){
+            return to_route('admin.system-addon.index');
+        })->name('addon.index');
 
         Route::group(['namespace' => 'System','prefix' => 'system-addon', 'as' => 'system-addon.'], function () {
             Route::get('/', [AddonController::class, 'index'])->name('index');
             Route::post('publish',  [AddonController::class, 'publish'])->name('publish');
             Route::post('activation',  [AddonController::class, 'activation'])->name('activation');
             Route::post('upload',  [AddonController::class, 'upload'])->name('upload');
-            Route::post('delete',  [AddonController::class, 'delete_theme'])->name('delete');
+            Route::post('delete',  [AddonController::class, 'deleteAddon'])->name('delete');
         });
     });
 });

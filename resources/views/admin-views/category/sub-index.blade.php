@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title', \App\CentralLogics\translate('Add new sub category'))
+@section('title', translate('Add new sub category'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -10,11 +10,10 @@
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/brand-setup.png')}}" alt="">
-                {{\App\CentralLogics\translate('sub_category_Setup')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/brand-setup.png')}}" alt="{{ translate('image') }}">
+                {{translate('sub_category_Setup')}}
             </h2>
         </div>
-
 
         <div class="card">
             <div class="card-body">
@@ -28,7 +27,7 @@
                         <ul class="nav nav-tabs mb-4 max-content">
                             @foreach(json_decode($language) as $lang)
                                 <li class="nav-item">
-                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -36,8 +35,8 @@
                             <div class="col-sm-6">
                                 @foreach(json_decode($language) as $lang)
                                     <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
-                                        <label class="input-label" for="exampleFormControlInput1">{{\App\CentralLogics\translate('sub_category')}} {{\App\CentralLogics\translate('name')}} ({{strtoupper($lang)}})</label>
-                                        <input type="text" name="name[]" class="form-control" maxlength="255" placeholder="{{ \App\CentralLogics\translate('New Sub Category') }}" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('sub_category')}} {{translate('name')}} ({{strtoupper($lang)}})</label>
+                                        <input type="text" name="name[]" class="form-control" maxlength="255" placeholder="{{ translate('New Sub Category') }}" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
                                     </div>
                                     <input type="hidden" name="lang[]" value="{{$lang}}">
                                 @endforeach
@@ -45,17 +44,17 @@
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <div class="form-group lang_form" id="{{$default_lang}}-form">
-                                            <label class="input-label" for="exampleFormControlInput1">{{\App\CentralLogics\translate('sub_category')}} {{\App\CentralLogics\translate('name')}}({{strtoupper($lang)}})</label>
-                                            <input type="text" name="name[]" class="form-control" placeholder="{{ \App\CentralLogics\translate('New Sub Category') }}" required>
+                                            <label class="input-label" for="exampleFormControlInput1">{{translate('sub_category')}} {{translate('name')}}({{strtoupper($lang)}})</label>
+                                            <input type="text" name="name[]" class="form-control" placeholder="{{ translate('New Sub Category') }}" required>
                                         </div>
                                         <input type="hidden" name="lang[]" value="{{$default_lang}}">
                                         @endif
-                                        <input name="position" value="1" style="display: none">
+                                        <input name="position" value="1" class="d-none">
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                    for="exampleFormControlSelect1">{{\App\CentralLogics\translate('main')}} {{\App\CentralLogics\translate('category')}}
+                                                    for="exampleFormControlSelect1">{{translate('main')}} {{translate('category')}}
                                                 <span class="input-label-secondary">*</span></label>
                                             <select id="exampleFormControlSelect1" name="parent_id" class="form-control" required>
                                                 @foreach(\App\Model\Category::where(['position'=>0])->get() as $category)
@@ -64,10 +63,35 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <div class="col-md-4">
+                                    <div class="form-group">
+                                    <label class="mb-2">{{translate('Image')}}</label>
+                                    <div class="custom_upload_input ratio-1 max-w-200">
+                                    <input type="file" name="image" class="custom-upload-input-file meta-img h-100" id="" data-imgpreview="pre_meta_image_viewer"
+                                           accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
+                                    
+                                    <span class="delete_file_input btn btn-outline-danger btn-sm square-btn d-none">
+                                        <i class="tio-delete"></i>
+                                    </span>
+                                    
+                                    <div class="img_area_with_preview position-absolute z-index-2">
+                                        <img id="pre_meta_image_viewer" class="h-auto aspect-1 bg-white ratio-1" src="img" onerror="this.classList.add('d-none')">
+                                    </div>
+                                    <div class="position-absolute h-100 top-0 w-100 d-flex align-content-center justify-content-center">
+                                        <div class="d-flex flex-column justify-content-center align-items-center">
+                                            <h3 class="text-muted">{{ translate('Drag & Drop here') }}</h3>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    
+                                    <p class="fs-16 mb-2 text-dark mt-2">{{ translate('Images Ratio') }} 1:1</p>
+                                    <p class="fs-14 text-muted mb-0">{{ translate('Image format : jpg, png, jpeg | Maximum Size') }} : 2 MB</p>
+                                    </div>
+                                    </div>
                                     <div class="col-12">
                                         <div class="d-flex justify-content-end gap-3">
-                                            <button type="reset" class="btn btn-secondary">{{\App\CentralLogics\translate('reset')}}</button>
-                                            <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('submit')}}</button>
+                                            <button type="reset" class="btn btn-secondary">{{translate('reset')}}</button>
+                                            <button type="submit" class="btn btn-primary">{{translate('submit')}}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -80,7 +104,7 @@
                         <div class="row gy-2 align-items-center">
                             <div class="col-lg-8 col-sm-4 col-md-6">
                                 <h5 class="text-capitalize d-flex align-items-center gap-2 mb-0">
-                                    {{\App\CentralLogics\translate('sub_category_table')}}
+                                    {{translate('sub_category_table')}}
                                     <span class="badge badge-soft-dark rounded-50 fz-12">{{ $categories->total() }}</span>
                                 </h5>
                             </div>
@@ -89,10 +113,10 @@
                                     <div class="input-group">
                                         <input id="datatableSearch_" type="search" name="search"
                                                class="form-control"
-                                               placeholder="{{translate('Search by Category')}}" aria-label="Search"
+                                               placeholder="{{translate('Search by Sub Category')}}" aria-label="Search"
                                                value="{{$search}}" required autocomplete="off">
                                         <div class="input-group-append">
-                                            <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('search')}}
+                                            <button type="submit" class="btn btn-primary">{{translate('search')}}
                                             </button>
                                         </div>
                                     </div>
@@ -101,16 +125,15 @@
                         </div>
                     </div>
 
-                    <!-- Table -->
                     <div class="table-responsive datatable-custom">
                         <table class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table">
                             <thead class="thead-light">
                             <tr>
-                                <th>{{\App\CentralLogics\translate('SL')}}</th>
-                                <th>{{\App\CentralLogics\translate('main')}} {{\App\CentralLogics\translate('category')}}</th>
-                                <th>{{\App\CentralLogics\translate('sub_category')}}</th>
-                                <th>{{\App\CentralLogics\translate('status')}}</th>
-                                <th class="text-center">{{\App\CentralLogics\translate('action')}}</th>
+                                <th>{{translate('SL')}}</th>
+                                <th>{{translate('main')}} {{translate('category')}}</th>
+                                <th>{{translate('sub_category')}}</th>
+                                <th>{{translate('status')}}</th>
+                                <th class="text-center">{{translate('action')}}</th>
                             </tr>
 
                             </thead>
@@ -124,14 +147,14 @@
                                     <td>
                                         @if($category['status']==1)
                                             <label class="switcher">
-                                                <input type="checkbox" class="switcher_input" {{$category['status']==1? 'checked' : ''}} id="{{$category['id']}}"
-                                                       onclick="location.href='{{route('admin.category.status',[$category['id'],0])}}'">
+                                                <input type="checkbox" class="switcher_input change-status" {{$category['status']==1? 'checked' : ''}} id="{{$category['id']}}"
+                                                       data-route="{{route('admin.category.status',[$category['id'],0])}}">
                                                 <span class="switcher_control"></span>
                                             </label>
                                         @else
                                             <label class="switcher">
-                                                <input type="checkbox" class="switcher_input" {{$category['status']==1? 'checked' : ''}} id="{{$category['id']}}"
-                                                       onclick="location.href='{{route('admin.category.status',[$category['id'],1])}}'">
+                                                <input type="checkbox" class="switcher_input change-status" {{$category['status']==1? 'checked' : ''}} id="{{$category['id']}}"
+                                                       data-route="{{route('admin.category.status',[$category['id'],1])}}">
                                                 <span class="switcher_control"></span>
                                             </label>
                                         @endif
@@ -141,8 +164,11 @@
                                         <div class="d-flex justify-content-center gap-2">
                                             <a class="btn btn-outline-info square-btn"
                                                 href="{{route('admin.category.edit',[$category['id']])}}"><i class="tio tio-edit"></i></a>
-                                            <a class="btn btn-outline-danger square-btn" href="javascript:"
-                                                onclick="form_alert('category-{{$category['id']}}','{{\App\CentralLogics\translate('Want to delete this ?')}}')"><i class="tio tio-delete"></i></a>
+                                            <a class="btn btn-outline-danger square-btn form-alert" href="javascript:"
+                                               data-id="category-{{$category['id']}}"
+                                               data-message="{{translate('Want to delete this ?')}}">
+                                               <i class="tio tio-delete"></i>
+                                            </a>
                                         </div>
                                         <form action="{{route('admin.category.delete',[$category['id']])}}"
                                                 method="post" id="category-{{$category['id']}}">
@@ -155,7 +181,6 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
                     <div class="table-responsive mt-4 px-3">
                         <div class="d-flex justify-content-end">
                             {!! $categories->links() !!}
@@ -163,7 +188,7 @@
                     </div>
                     @if(count($categories)==0)
                         <div class="text-center p-4">
-                            <img class="mb-3" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description" style="width: 7rem;">
+                            <img class="mb-3 width-7rem" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="{{ translate('Image') }}">
                             <p class="mb-0">{{ translate('No data to show') }}</p>
                         </div>
                     @endif
@@ -172,55 +197,6 @@
         </div>
     </div>
 @endsection
-
 @push('script_2')
-    <script>
-        $(".lang_link").click(function(e){
-            e.preventDefault();
-            $(".lang_link").removeClass('active');
-            $(".lang_form").addClass('d-none');
-            $(this).addClass('active');
-
-            let form_id = this.id;
-            let lang = form_id.split("-")[0];
-            console.log(lang);
-            $("#"+lang+"-form").removeClass('d-none');
-            if(lang == '{{$default_lang}}')
-            {
-                $(".from_part_2").removeClass('d-none');
-            }
-            else
-            {
-                $(".from_part_2").addClass('d-none');
-            }
-        });
-    </script>
-
-    <script>
-        $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.category.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
-    </script>
+    <script src="{{ asset('public/assets/admin/js/category.js') }}"></script>
 @endpush

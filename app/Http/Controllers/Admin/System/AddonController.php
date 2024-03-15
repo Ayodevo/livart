@@ -21,8 +21,8 @@ class AddonController extends Controller
 {
     public function index(): Factory|View|Application
     {
-        $dir = 'Modules';
-        $directories = self::getDirectories($dir);
+        $directory = 'Modules';
+        $directories = self::getDirectories($directory);
 
         $addons = [];
         foreach ($directories as $directory) {
@@ -50,27 +50,25 @@ class AddonController extends Controller
         }
 
         $file = $request->file('file_upload');
-        $filename = $file->getClientOriginalName();
-        $tempPath = $file->storeAs('temp', $filename);
+        $fileName = $file->getClientOriginalName();
+        $tempPath = $file->storeAs('temp', $fileName);
         $zip = new \ZipArchive();
 
-        // Check if a ZIP file with the same name exists in Modules/Gateways
-        if (File::exists(base_path('Modules/') . explode('.', $filename)[0])) {
+        if (File::exists(base_path('Modules/') . explode('.', $fileName)[0])) {
             $status = 'error';
             $message = translate('already_installed');
         }else{
             if ($zip->open(storage_path('app/' . $tempPath)) === TRUE) {
-                // Extract the contents to a directory
                 $extractPath = base_path('Modules/');
                 $zip->extractTo($extractPath);
                 $zip->close();
-                if(File::exists($extractPath.'/'.explode('.', $filename)[0].'/Addon/info.php')){
-                    File::chmod($extractPath.'/'.explode('.', $filename)[0].'/Addon', 0777);
+                if(File::exists($extractPath.'/'.explode('.', $fileName)[0].'/Addon/info.php')){
+                    File::chmod($extractPath.'/'.explode('.', $fileName)[0].'/Addon', 0777);
                     Toastr::success(translate('file_upload_successfully!'));
                     $status = 'success';
                     $message = translate('file_upload_successfully!');
                 }else{
-                    File::deleteDirectory($extractPath.'/'.explode('.', $filename)[0]);
+                    File::deleteDirectory($extractPath.'/'.explode('.', $fileName)[0]);
                     $status = 'error';
                     $message = translate('invalid_file!');
                 }
@@ -94,19 +92,19 @@ class AddonController extends Controller
      */
     public function publish(Request $request): JsonResponse
     {
-        $full_data = include($request['path'] . '/Addon/info.php');
+        $fullData = include($request['path'] . '/Addon/info.php');
         $path = $request['path'];
-        $addon_name = $full_data['name'];
+        $addonName = $fullData['name'];
 
-        if ($full_data['purchase_code'] == null || $full_data['username'] == null) {
+        if ($fullData['purchase_code'] == null || $fullData['username'] == null) {
             return response()->json([
                 'flag' => 'inactive',
-                'view' => view('admin-views.system.addon.partials.activation-modal-data', compact('full_data', 'path', 'addon_name'))->render(),
+                'view' => view('admin-views.system.addon.partials.activation-modal-data', compact('fullData', 'path', 'addonName'))->render(),
             ]);
         }
-        $full_data['is_published'] = $full_data['is_published'] ? 0 : 1;
+        $fullData['is_published'] = $fullData['is_published'] ? 0 : 1;
 
-        $str = "<?php return " . var_export($full_data, true) . ";";
+        $str = "<?php return " . var_export($fullData, true) . ";";
         file_put_contents(base_path($request['path'] . '/Addon/info.php'), $str);
 
         return response()->json([
@@ -123,12 +121,12 @@ class AddonController extends Controller
     {
         $remove = ["http://", "https://", "www."];
         $url = str_replace($remove, "", url('/'));
-        $full_data = include($request['path'] . '/Addon/info.php');
+        $fullData = include($request['path'] . '/Addon/info.php');
 
         $post = [
             base64_decode('dXNlcm5hbWU=') => $request['username'],
             base64_decode('cHVyY2hhc2Vfa2V5') => $request['purchase_code'],
-            base64_decode('c29mdHdhcmVfaWQ=') => $full_data['software_id'],
+            base64_decode('c29mdHdhcmVfaWQ=') => $fullData['software_id'],
             base64_decode('ZG9tYWlu') => $url,
         ];
 
@@ -136,37 +134,37 @@ class AddonController extends Controller
         $status = $response['active'] ?? base64_encode(1);
 
         if ((int)base64_decode($status)) {
-            $full_data['is_published'] = 1;
-            $full_data['username'] = $request['username'];
-            $full_data['purchase_code'] = $request['purchase_code'];
-            $str = "<?php return " . var_export($full_data, true) . ";";
+            $fullData['is_published'] = 1;
+            $fullData['username'] = $request['username'];
+            $fullData['purchase_code'] = $request['purchase_code'];
+            $str = "<?php return " . var_export($fullData, true) . ";";
             file_put_contents(base_path($request['path'] . '/Addon/info.php'), $str);
 
             Toastr::success(\App\CentralLogics\translate('activated_successfully'));
             return back();
         }
 
-        $activation_url = base64_decode('aHR0cHM6Ly9hY3RpdmF0aW9uLjZhbXRlY2guY29t');
-        $activation_url .= '?username=' . $request['username'];
-        $activation_url .= '&purchase_code=' . $request['purchase_code'];
-        $activation_url .= '&domain=' . url('/') . '&';
+        $activationUrl = base64_decode('aHR0cHM6Ly9hY3RpdmF0aW9uLjZhbXRlY2guY29t');
+        $activationUrl .= '?username=' . $request['username'];
+        $activationUrl .= '&purchase_code=' . $request['purchase_code'];
+        $activationUrl .= '&domain=' . url('/') . '&';
 
-        return redirect($activation_url);
+        return redirect($activationUrl);
     }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function delete_theme(Request $request): JsonResponse
+    public function deleteAddon(Request $request): JsonResponse
     {
         $path = $request->path;
-        $full_path = base_path($path);
+        $fullPath = base_path($path);
 
-        if(File::deleteDirectory($full_path)){
-            $payment_trait = base_path('app/Traits/Payment.php');
-            $payment_trait_text_file = base_path('app/Traits/Payment.txt');
-            copy($payment_trait_text_file, $payment_trait);
+        if(File::deleteDirectory($fullPath)){
+            $paymentTrait = base_path('app/Traits/Payment.php');
+            $paymentTraitTextFile = base_path('app/Traits/Payment.txt');
+            copy($paymentTraitTextFile, $paymentTrait);
 
             return response()->json([
                 'status' => 'success',

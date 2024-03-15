@@ -2,55 +2,72 @@
 
 @section('title', translate('Order List'))
 
-@push('css_or_js')
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-@endpush
-
 @section('content')
     <div class="content container-fluid">
-        {{-- Page Title --}}
         <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img src="{{asset('public/assets/admin/img/icons/all_orders.png')}}" alt="">
-                {{\App\CentralLogics\translate('all_orders')}}
+                <img src="{{asset('public/assets/admin/img/icons/all_orders.png')}}" alt="{{ translate('orders') }}">{{translate('all_orders')}}
             </h2>
             <span class="badge badge-soft-dark rounded-50 fs-14">{{$orders->total()}}</span>
         </div>
 
-        <!-- Card -->
         <div class="card">
             <div class="card mb-4">
                 <div class="card-body">
                     <form action="#" id="form-data" method="GET">
                         <div class="row align-items-end gy-3 gx-2">
                             <div class="col-12 pb-0">
-                                <h4>{{\App\CentralLogics\translate('Select_Date_Range')}}</h4>
+                                <h4>{{translate('Select_Date_Range')}}</h4>
                             </div>
                             <div class="col-sm-6 col-md-3">
-                                <label for="filter">{{\App\CentralLogics\translate('Select_Orders')}}</label>
+                                <label for="filter">{{translate('Select_Orders')}}</label>
                                 <select class="custom-select custom-select-sm text-capitalize min-h-45px" name="branch_id">
                                     <option disabled>--- {{translate('select')}} {{translate('branch')}} ---</option>
-                                    <option value="all" {{ $branch_id == 'all' ? 'selected': ''}}>{{translate('all')}} {{translate('branch')}}</option>
+                                    <option value="all" {{ $branchId == 'all' ? 'selected': ''}}>{{translate('all')}} {{translate('branch')}}</option>
                                     @foreach($branches as $branch)
-                                        <option value="{{$branch['id']}}" {{ $branch['id'] == $branch_id ? 'selected' : ''}}>{{$branch['name']}}</option>
+                                        <option value="{{$branch['id']}}" {{ $branch['id'] == $branchId ? 'selected' : ''}}>{{$branch['name']}}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-sm-6 col-md-3">
-                                <div class="">
-                                    <label for="form_date">{{\App\CentralLogics\translate('Start_Date')}}</label>
-                                    <input type="date" id="start_date" name="start_date" value="{{$start_date}}" class="js-flatpickr form-control flatpickr-custom min-h-40px" placeholder="yy-mm-dd" data-hs-flatpickr-options='{ "dateFormat": "Y-m-d"}'>
+                                <div>
+                                    <label for="form_date">{{translate('Start_Date')}}</label>
+                                    <input type="date" id="start_date" name="start_date" value="{{$startDate}}" class="js-flatpickr form-control flatpickr-custom min-h-40px" placeholder="yy-mm-dd" data-hs-flatpickr-options='{ "dateFormat": "Y-m-d"}'>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-3 mt-2 mt-sm-0">
-                                <div class="">
-                                    <label for="to_date">{{\App\CentralLogics\translate('End_date')}}</label>
-                                    <input type="date" id="end_date" name="end_date" value="{{$end_date}}" class="js-flatpickr form-control flatpickr-custom min-h-40px" placeholder="yy-mm-dd" data-hs-flatpickr-options='{ "dateFormat": "Y-m-d"}'>
+                                <div>
+                                    <label for="to_date">{{translate('End_date')}}</label>
+                                    <input type="date" id="end_date" name="end_date" value="{{$endDate}}" class="js-flatpickr form-control flatpickr-custom min-h-40px" placeholder="yy-mm-dd" data-hs-flatpickr-options='{ "dateFormat": "Y-m-d"}'>
                                 </div>
                             </div>
                             <div class="col-sm-6 col-md-3 mt-2 mt-sm-0 __btn-row">
                                 <a href="{{ route('admin.orders.list',[$status]) }}" id="" class="btn w-100 btn--reset min-h-45px">{{translate('clear')}}</a>
-                                <button type="submit" class="btn btn-primary btn-block">{{\App\CentralLogics\translate('Show_Data')}}</button>
+                                <button type="submit" class="btn btn-primary btn-block">{{translate('Show_Data')}}</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form action="{{ url()->current() }}" id="form-data" method="GET">
+                        <div class="row align-items-end gy-3 gx-2">
+                            <div class="col-12 pb-0">
+                                <h4>{{translate('Select_Price_Range')}}</h4>
+                            </div>
+                            <div class="col-sm-6 col-md-5">
+                                <div>
+                                    <label for="form_date">{{translate('Min Price')}}</label>
+                                    <input type="number"  name="min" value="{{$startDate}}" class="js-flatpickr form-control flatpickr-custom min-h-40px" placeholder="100" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4 mt-2 mt-sm-0">
+                                <div>
+                                    <label for="to_date">{{translate('Max Price')}}</label>
+                                    <input type="number"  name="max" value="{{$endDate}}" class="js-flatpickr form-control flatpickr-custom min-h-40px" placeholder="200" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3 mt-2 mt-sm-0 __btn-row">
+                                <a href="{{ route('admin.orders.list',[$status]) }}" id="" class="btn w-100 btn--reset min-h-45px">{{translate('clear')}}</a>
+                                <button type="submit" class="btn btn-primary btn-block">{{translate('Show_Data')}}</button>
                             </div>
                         </div>
                     </form>
@@ -62,29 +79,100 @@
                     <div class="col-sm-8 col-md-6 col-lg-4">
                         <form action="{{url()->current()}}" method="GET">
                             <div class="input-group">
-                                <input id="datatableSearch_" type="search" name="search"
-                                       class="form-control"
-                                       placeholder="{{translate('Search by order ID')}}" aria-label="Search"
-                                       value="{{$search}}" required autocomplete="off">
+                                <select id="orderSelect" class="custom-select min-h-40" name="order">
+                                    <option value="all">{{ translate('All fields') }}</option>
+                                    <option value="id">{{ translate('Order Id') }}</option>
+                                    <option value="payment_status">{{ translate('Payment Status') }}</option>
+                                  
+                                </select>
+                                <div class="col-sm-6 col-md-3" id="paymentStatusSelect" style="display: none;">
+                                    <select class="custom-select min-h-40" name="payment_status">
+                                        <option value="paid">{{ translate('Paid') }}</option>
+                                        <option value="unpaid">{{ translate('Unpaid') }}</option>
+                                    </select>
+                                </div>
+                                <input id="datatableSearch_" type="search" name="search" class="form-control min-h-40" placeholder="{{translate('Search by order ID')}}" aria-label="Search" value="{{$search}}"  autocomplete="off">
                                 <div class="input-group-append">
-                                    <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('search')}}
+                                    <button type="submit" class="btn btn-primary">{{translate('search')}}
                                     </button>
                                 </div>
                             </div>
                         </form>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var orderSelect = document.getElementById('orderSelect');
+                                var searchInput = document.getElementById('datatableSearch_');
+                                var paymentStatusSelect = document.getElementById('paymentStatusSelect');
+                                var selectElements = document.querySelectorAll('select');
+                                selectElements.forEach(function(select) {
+                                    select.addEventListener('change', function() {
+                                        // Vide le champ de recherche
+                                        searchInput.value = '';
+                                    });
+                                });
+
+                                // Écoute l'événement de changement sur le select "État de paiement"
+                                orderSelect.addEventListener('change', function() {
+                                    if (this.value === 'payment_status') {
+                                        // Masque le champ de recherche si "Payment Status" est sélectionné
+                                        searchInput.style.display = 'none';
+                                        paymentStatusSelect.style.display = 'block';
+                                    } else {
+                                        // Affiche le champ de recherche si une autre option est sélectionnée
+                                        searchInput.style.display = 'block';
+                                        paymentStatusSelect.style.display = 'none';
+                                    }
+                                });
+
+                                // Exécute l'événement de changement au chargement de la page pour afficher ou masquer le champ de recherche en fonction de la valeur actuelle
+                                if (orderSelect.value === 'payment_status') {
+                                    searchInput.style.display = 'none';
+                                    paymentStatusSelect.style.display = 'block';
+                                } else {
+                                    searchInput.style.display = 'block';
+                                    paymentStatusSelect.style.display = 'none';
+                                }
+                            });
+                        </script>
+                        <script>
+                            // Get the select element
+                            const orderSelect = document.getElementById('orderSelect');
+                            // Get the current selected value from the query string
+                            const currentOrder = new URLSearchParams(window.location.search).get('order');
+
+                            // Set the selected option based on the current value in the query string
+                            if (currentOrder) {
+                                orderSelect.value = currentOrder;
+                            }
+
+                            // Refresh the page if "All fields" is selected
+                            orderSelect.addEventListener('change', function() {
+                                if (this.value === 'all') {
+                                    window.location.href = 'https://livart.app/backend/admin/orders/list/all'; // Redirige vers la route spécifiée
+                                }
+                            });
+
+                            // Prevent the form from being submitted if the select value is not changed
+                            document.getElementById('searchForm').addEventListener('submit', function(event) {
+                                if (orderSelect.value === currentOrder) {
+                                    event.preventDefault();
+                                }
+                            });
+
+                        </script>
                     </div>
                     <div class="col-sm-4 col-md-6 col-lg-8 d-flex justify-content-end">
                         <div>
                             <button type="button" class="btn btn-outline-primary" data-toggle="dropdown" aria-expanded="false">
-                                <i class="tio-download-to"></i>Export
-                                <i class="tio-chevron-down"></i>
+                                <i class="tio-download-to"></i>{{ translate('Export') }}<i class="tio-chevron-down"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-right w-auto">
                                 <li>
                                     <a type="submit" class="dropdown-item d-flex align-items-center gap-2"
                                        href="{{route('admin.orders.export', [$status, 'branch_id'=>Request::get('branch_id'), 'start_date'=>Request::get('start_date'), 'end_date'=>Request::get('end_date'), 'search'=>Request::get('search')])}}">
-                                        <img width="14" src="{{asset('public/assets/admin/img/icons/excel.png')}}" alt="">
-                                        {{\App\CentralLogics\translate('excel')}}
+                                        <img width="14" src="{{asset('public/assets/admin/img/icons/excel.png')}}" alt="{{ translate('excel') }}">
+                                        {{translate('excel')}}
                                     </a>
                                 </li>
                             </ul>
@@ -93,20 +181,19 @@
                 </div>
             </div>
 
-            <!-- Table -->
             <div class="table-responsive datatable-custom">
                 <table class="table table-hover table-borderless table-thead-bordered table-nowrap table-align-middle card-table text-dark">
                     <thead class="thead-light">
                     <tr>
-                        <th>{{\App\CentralLogics\translate('SL')}}</th>
-                        <th>{{\App\CentralLogics\translate('order_ID')}}</th>
-                        <th>{{\App\CentralLogics\translate('order_date')}}</th>
-                        <th>{{\App\CentralLogics\translate('customer_info')}}</th>
-                        <th>{{\App\CentralLogics\translate('branch')}}</th>
-                        <th>{{\App\CentralLogics\translate('total_amount')}}</th>
-                        <th>{{\App\CentralLogics\translate('order_status')}}</th>
-                        <th>{{\App\CentralLogics\translate('order_type')}}</th>
-                        <th class="text-center">{{\App\CentralLogics\translate('actions')}}</th>
+                        <th>{{translate('SL')}}</th>
+                        <th>{{translate('order_ID')}}</th>
+                        <th>{{translate('order_date')}}</th>
+                        <th>{{translate('customer_info')}}</th>
+                        <th>{{translate('branch')}}</th>
+                        <th>{{translate('total_amount')}}</th>
+                        <th>{{translate('order_status')}}</th>
+                        <th>{{translate('order_type')}}</th>
+                        <th class="text-center">{{translate('actions')}}</th>
                     </tr>
                     </thead>
 
@@ -131,7 +218,7 @@
                                     </a>
                                     <a class="text-dark fs-12" href="tel:{{ $order->customer['phone'] }}">{{ $order->customer['phone'] }}</a>
                                 @else
-                                    <h6 class="text-muted text-capitalize">{{\App\CentralLogics\translate('customer')}} {{\App\CentralLogics\translate('deleted')}}</h6>
+                                    <h6 class="text-muted text-capitalize">{{translate('customer')}} {{translate('deleted')}}</h6>
                                 @endif
                             </td>
                             <td>
@@ -141,54 +228,36 @@
                                 <div class="text-dark">{{ Helpers::set_symbol($order['order_amount']) }}</div>
                                 @if($order->payment_status=='paid')
                                     <span class="text-success">
-                                        {{\App\CentralLogics\translate('paid')}}
+                                        {{translate('paid')}}
                                     </span>
                                 @else
                                     <span class="text-danger">
-                                        {{\App\CentralLogics\translate('unpaid')}}
+                                        {{translate('unpaid')}}
                                     </span>
                                 @endif
                             </td>
                             <td class="text-capitalize">
                                 @if($order['order_status']=='pending')
-                                    <span class="badge badge-soft-info">
-                                      {{\App\CentralLogics\translate('pending')}}
-                                    </span>
+                                    <span class="badge badge-soft-info">{{translate('pending')}}</span>
                                 @elseif($order['order_status']=='confirmed')
-                                    <span class="badge badge-soft-info">
-                                      {{\App\CentralLogics\translate('confirmed')}}
-                                    </span>
+                                    <span class="badge badge-soft-info">{{translate('confirmed')}}</span>
                                 @elseif($order['order_status']=='processing')
-                                    <span class="badge badge-soft-warning">
-                                      {{\App\CentralLogics\translate('processing')}}
-                                    </span>
+                                    <span class="badge badge-soft-warning">{{translate('processing')}}</span>
                                 @elseif($order['order_status']=='out_for_delivery')
-                                    <span class="badge badge-soft-warning">
-                                      {{\App\CentralLogics\translate('out_for_delivery')}}
-                                    </span>
+                                    <span class="badge badge-soft-warning">{{translate('out_for_delivery')}}</span>
                                 @elseif($order['order_status']=='delivered')
-                                    <span class="badge badge-soft-success">
-                                      {{\App\CentralLogics\translate('delivered')}}
-                                    </span>
+                                    <span class="badge badge-soft-success">{{translate('delivered')}}</span>
                                 @else
-                                    <span class="badge badge-soft-danger">
-                                      {{str_replace('_',' ',$order['order_status'])}}
-                                    </span>
+                                    <span class="badge badge-soft-danger">{{str_replace('_',' ',$order['order_status'])}}</span>
                                 @endif
                             </td>
                             <td class="text-capitalize">
                                 @if($order['order_type']=='self_pickup')
-                                    <span class="badge badge-soft-primary">
-                                            {{translate('self_pickup')}}
-                                        </span>
+                                    <span class="badge badge-soft-primary">{{translate('self_pickup')}}</span>
                                 @elseif($order['order_type']=='pos')
-                                    <span class="badge badge-soft-info">
-                                        {{translate('POS')}}
-                                    </span>
+                                    <span class="badge badge-soft-info">{{translate('POS')}}</span>
                                 @else
-                                    <span class="badge badge-soft-success">
-                                        {{translate($order['order_type'])}}
-                                        </span>
+                                    <span class="badge badge-soft-success">{{translate($order['order_type'])}}</span>
                                 @endif
                             </td>
                             <td>
@@ -207,29 +276,18 @@
                     </tbody>
                 </table>
             </div>
-            <!-- End Table -->
 
             <div class="table-responsive mt-4 px-3">
                 <div class="d-flex justify-content-end">
-                    <!-- Pagination -->
                     {!! $orders->links() !!}
                 </div>
             </div>
             @if(count($orders)==0)
                 <div class="text-center p-4">
-                    <img class="mb-3" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description" style="width: 7rem;">
+                    <img class="mb-3 width-7rem" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="{{ translate('image') }}">
                     <p class="mb-0">{{ translate('No data to show') }}</p>
                 </div>
             @endif
         </div>
-        <!-- End Card -->
     </div>
 @endsection
-
-@push('script_2')
-    <script>
-        function filter_branch_orders(id) {
-            location.href = '{{url('/')}}/admin/orders/branch-filter/' + id;
-        }
-    </script>
-@endpush

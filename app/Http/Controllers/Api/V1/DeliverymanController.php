@@ -15,16 +15,18 @@ use Illuminate\Support\Facades\Validator;
 class DeliverymanController extends Controller
 {
     public function __construct(
-        private DeliveryMan $delivery_man,
-        private DeliveryHistory $delivery_history,
-        private Order $order,
-    ){}
+        private DeliveryMan     $deliveryMan,
+        private DeliveryHistory $deliveryHistory,
+        private Order           $order,
+    )
+    {
+    }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_profile(Request $request): JsonResponse
+    public function getProfile(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required'
@@ -32,11 +34,11 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => '401', 'message' => 'Invalid token!']
+                    ['code' => '401', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
@@ -47,7 +49,7 @@ class DeliverymanController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_current_orders(Request $request): JsonResponse
+    public function getCurrentOrders(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required'
@@ -55,11 +57,11 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => '401', 'message' => 'Invalid token!']
+                    ['code' => '401', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
@@ -73,7 +75,7 @@ class DeliverymanController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function record_location_data(Request $request): JsonResponse
+    public function recordLocationData(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required',
@@ -82,11 +84,11 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => '401', 'message' => 'Invalid token!']
+                    ['code' => '401', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
@@ -100,14 +102,14 @@ class DeliverymanController extends Controller
             'created_at' => now(),
             'updated_at' => now()
         ]);
-        return response()->json(['message' => 'location recorded'], 200);
+        return response()->json(['message' => translate('location recorded')], 200);
     }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_order_history(Request $request): JsonResponse
+    public function getOrderHistory(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required',
@@ -116,16 +118,16 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => '401', 'message' => 'Invalid token!']
+                    ['code' => '401', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
 
-        $history = $this->delivery_history->where(['order_id' => $request['order_id'], 'deliveryman_id' => $dm['id']])->get();
+        $history = $this->deliveryHistory->where(['order_id' => $request['order_id'], 'deliveryman_id' => $dm['id']])->get();
         return response()->json($history, 200);
     }
 
@@ -133,7 +135,7 @@ class DeliverymanController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function update_order_status(Request $request): JsonResponse
+    public function updateOrderStatus(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required',
@@ -143,11 +145,11 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => '401', 'message' => 'Invalid token!']
+                    ['code' => '401', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
@@ -155,44 +157,44 @@ class DeliverymanController extends Controller
         $order = $this->order->find($request['order_id']);
 
         if ($order->order_status == 'returned' || $order->order_status == 'failed' || $order->order_status == 'canceled') {
-            return response()->json(['errors' => [['code' => '401', 'message' => 'you can not change the status of '. $order->order_status .' order!']]], 401);
+            return response()->json(['errors' => [['code' => '401', 'message' => 'you can not change the status of ' . $order->order_status . ' order!']]], 401);
         }
 
         $this->order->where(['id' => $request['order_id'], 'delivery_man_id' => $dm['id']])->update([
             'order_status' => $request['status']
         ]);
 
-        $fcm_token=$order->customer->cm_firebase_token;
+        $fcmToken = $order->customer->cm_firebase_token;
 
-        if ($request['status']=='out_for_delivery'){
-            $value=Helpers::order_status_update_message('ord_start');
-        }elseif ($request['status']=='delivered'){
-            $value=Helpers::order_status_update_message('delivery_boy_delivered');
+        if ($request['status'] == 'out_for_delivery') {
+            $value = Helpers::order_status_update_message('ord_start');
+        } elseif ($request['status'] == 'delivered') {
+            $value = Helpers::order_status_update_message('delivery_boy_delivered');
         }
 
         try {
-            if ($value){
-                $data=[
-                    'title'=>'Order',
-                    'description'=>$value,
-                    'order_id'=>$order['id'],
-                    'image'=>'',
+            if ($value) {
+                $data = [
+                    'title' => 'Order',
+                    'description' => $value,
+                    'order_id' => $order['id'],
+                    'image' => '',
                     'type' => 'general',
                 ];
-                Helpers::send_push_notif_to_device($fcm_token,$data);
+                Helpers::send_push_notif_to_device($fcmToken, $data);
             }
         } catch (\Exception $e) {
 
         }
 
-        return response()->json(['message' => 'Status updated'], 200);
+        return response()->json(['message' => translate('Status updated')], 200);
     }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_order_details(Request $request): JsonResponse
+    public function getOrderDetails(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required'
@@ -200,11 +202,11 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => '401', 'message' => 'Invalid token!']
+                    ['code' => '401', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
@@ -223,7 +225,7 @@ class DeliverymanController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_all_orders(Request $request): JsonResponse
+    public function getAllOrders(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required'
@@ -231,17 +233,17 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => '401', 'message' => 'Invalid token!']
+                    ['code' => '401', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
 
         $orders = $this->order
-            ->with(['delivery_address','customer'])
+            ->with(['delivery_address', 'customer'])
             ->whereNotIn('order_status', ['pending', 'processing', 'out_for_delivery', 'confirmed'])
             ->where(['delivery_man_id' => $dm['id']])
             ->get();
@@ -253,7 +255,7 @@ class DeliverymanController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function get_last_location(Request $request): JsonResponse
+    public function getLastLocation(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'order_id' => 'required'
@@ -262,15 +264,15 @@ class DeliverymanController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $last_data = $this->delivery_history->where(['order_id' => $request['order_id']])->latest()->first();
-        return response()->json($last_data, 200);
+        $lastData = $this->deliveryHistory->where(['order_id' => $request['order_id']])->latest()->first();
+        return response()->json($lastData, 200);
     }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function order_payment_status_update(Request $request): JsonResponse
+    public function orderPaymentStatusUpdate(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required'
@@ -279,7 +281,7 @@ class DeliverymanController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
@@ -296,7 +298,7 @@ class DeliverymanController extends Controller
         }
         return response()->json([
             'errors' => [
-                ['code' => 'order', 'message' => 'not found!']
+                ['code' => 'order', 'message' => translate('not found')]
             ]
         ], 404);
     }
@@ -305,7 +307,7 @@ class DeliverymanController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function update_fcm_token(Request $request): JsonResponse
+    public function updateFcmToken(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required'
@@ -313,30 +315,30 @@ class DeliverymanController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
         if (!isset($dm)) {
             return response()->json([
                 'errors' => [
-                    ['code' => 'delivery-man', 'message' => 'Invalid token!']
+                    ['code' => 'delivery-man', 'message' => translate('Invalid token')]
                 ]
             ], 401);
         }
 
-        $this->delivery_man->where(['id' => $dm['id']])->update([
+        $this->deliveryMan->where(['id' => $dm['id']])->update([
             'fcm_token' => $request['fcm_token']
         ]);
 
-        return response()->json(['message'=>'successfully updated!'], 200);
+        return response()->json(['message' => translate('successfully updated')], 200);
     }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function remove_account(Request $request): JsonResponse
+    public function removeAccount(Request $request): JsonResponse
     {
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
-        if(isset($dm)) {
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
+        if (isset($dm)) {
             Helpers::file_remover('delivery-man/', $dm->image);
             $dm->delete();
 
@@ -351,9 +353,9 @@ class DeliverymanController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function order_model(Request $request): JsonResponse
+    public function orderModel(Request $request): JsonResponse
     {
-        $dm = $this->delivery_man->where(['auth_token' => $request['token']])->first();
+        $dm = $this->deliveryMan->where(['auth_token' => $request['token']])->first();
 
         if (!isset($dm)) {
 
@@ -366,7 +368,6 @@ class DeliverymanController extends Controller
 
         $order = $this->order
             ->with(['customer', 'branch'])
-            //->whereIn('order_status', ['pending', 'confirmed', 'processing', 'out_for_delivery'])
             ->where(['delivery_man_id' => $dm['id'], 'id' => $request->id])
             ->first();
 

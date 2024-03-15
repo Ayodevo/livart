@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Banner extends Model
 {
@@ -16,5 +17,18 @@ class Banner extends Model
     public function scopeActive($query)
     {
         return $query->where('status', '=', 1);
+    }
+
+    protected $appends = ['image_fullpath'];
+
+    public function getImageFullPathAttribute()
+    {
+        $image = $this->image ?? null;
+        $path = asset('public/assets/admin/img/160x160/img2.jpg');
+
+        if (!is_null($image) && Storage::disk('public')->exists('banner/' . $image)) {
+            $path = asset('storage/app/public/banner/' . $image);
+        }
+        return $path;
     }
 }

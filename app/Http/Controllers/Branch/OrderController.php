@@ -23,7 +23,7 @@ class OrderController extends Controller
 {
     public function __construct(
         private Order $order,
-        private OrderDetail $order_detail,
+        private OrderDetail $orderDetail,
         private Product $product,
     ){}
 
@@ -34,28 +34,47 @@ class OrderController extends Controller
      */
     public function list($status, Request $request): View|Factory|Application
     {
-        $query_param = [];
+        $queryParams = [];
         $search = $request['search'];
+        $startDate = $request['start_date'];
+        $endDate = $request['end_date'];
+
+        $this->order->where(['checked' => 0, 'branch_id' => auth('branch')->id()])->update(['checked' => 1]);
+
         $orders= $this->order->where(['branch_id' => auth('branch')->id()]);
+
+        if ($status != 'all') {
+            $query = $this->order->with(['customer'])->where(['branch_id' => auth('branch')->id()])
+                ->when((!is_null($startDate) && !is_null($endDate)), function ($query) use ($startDate, $endDate) {
+                    return $query->whereDate('created_at', '>=', $startDate)
+                        ->whereDate('created_at', '<=', $endDate);
+                })->where(['order_status' => $status]);
+
+        } else {
+            $query = $this->order->with(['customer'])->where(['branch_id' => auth('branch')->id()])
+                ->when((!is_null($startDate) && !is_null($endDate)), function ($query) use ($startDate, $endDate) {
+                    return $query->whereDate('created_at', '>=', $startDate)
+                        ->whereDate('created_at', '<=', $endDate);
+                });
+        }
+
+        $queryParam = ['start_date' => $startDate,'end_date' => $endDate ];
+
         if ($request->has('search')) {
             $key = explode(' ', $request['search']);
-            $orders=$orders->where(function ($q) use ($key) {
+            $query = $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('id', 'like', "%{$value}%")
                         ->orWhere('order_status', 'like', "%{$value}%")
-                        ->orWhere('transaction_reference', 'like', "%{$value}%");
+                        ->orWhere('payment_status', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParam = ['search' => $request['search']];
         }
 
-        $this->order->where(['checked' => 0, 'branch_id' => auth('branch')->id()])->update(['checked' => 1]);
-        if ($status != 'all') {
-            $orders = $orders->where(['order_status' => $status]);
-        }
+        $orders = $query->notPos()->orderByDesc('id')->paginate(Helpers::pagination_limit())->appends($queryParam);
 
-        $orders = $orders->notPos()->orderByDesc('id')->with(['customer'])->latest()->paginate(Helpers::pagination_limit())->appends($query_param);
-        return view('branch-views.order.list', compact('orders', 'status', 'search'));
+        return view('branch-views.order.list', compact('orders', 'status', 'search', 'startDate', 'endDate'));
     }
 
     /**
@@ -100,7 +119,6 @@ class OrderController extends Controller
     {
         $order = $this->order->where(['id' => $request->id, 'branch_id' => auth('branch')->id()])->first();
 
-        //Branch can not change order status after being delivered
         if (in_array($order->order_status, ['returned', 'delivered', 'failed', 'canceled'])) {
             Toastr::warning(translate('you_can_not_change_the_status_of '. $order->order_status .' order'));
             return back();
@@ -126,24 +144,25 @@ class OrderController extends Controller
                 if ($detail['is_stock_decreased'] == 1) {
                     $product = $this->product->find($detail['product_id']);
 
-                    if($product != null){
-                        $type = json_decode($detail['variation'])[0]->type;
-                        $var_store = [];
-                        foreach (json_decode($product['variations'], true) as $var) {
-                            if ($type == $var['type']) {
-                                $var['stock'] += $detail['quantity'];
+                    if($product != null) {
+                        $varStore = [];
+                        if (count(json_decode($detail['variation'])) > 0 ){
+                            $type = json_decode($detail['variation'])[0]->type;
+                            foreach (json_decode($product['variations'], true) as $var) {
+                                if ($type == $var['type']) {
+                                    $var['stock'] += $detail['quantity'];
+                                }
+                                $varStore[] = $var;
                             }
-                            $var_store[] = $var;
                         }
                         $this->product->where(['id' => $product['id']])->update([
-                            'variations' => json_encode($var_store),
+                            'variations' => json_encode($varStore),
                             'total_stock' => $product['total_stock'] + $detail['quantity'],
                         ]);
-                        $this->order_detail->where(['id' => $detail['id']])->update([
+                        $this->orderDetail->where(['id' => $detail['id']])->update([
                             'is_stock_decreased' => 0
                         ]);
                     }
-
                 }
             }
         } else {
@@ -152,7 +171,6 @@ class OrderController extends Controller
                     $product = $this->product->find($detail['product_id']);
 
                     if($product != null){
-                        //check stock
                         foreach ($order->details as $c) {
                             $product = $this->product->find($c['product_id']);
                             $type = json_decode($c['variation'])[0]->type;
@@ -165,18 +183,18 @@ class OrderController extends Controller
                         }
 
                         $type = json_decode($detail['variation'])[0]->type;
-                        $var_store = [];
+                        $varStore = [];
                         foreach (json_decode($product['variations'], true) as $var) {
                             if ($type == $var['type']) {
                                 $var['stock'] -= $detail['quantity'];
                             }
-                            $var_store[] = $var;
+                            $varStore[] = $var;
                         }
                         $this->product->where(['id' => $product['id']])->update([
-                            'variations' => json_encode($var_store),
+                            'variations' => json_encode($varStore),
                             'total_stock' => $product['total_stock'] - $detail['quantity'],
                         ]);
-                        $this->order_detail->where(['id' => $detail['id']])->update([
+                        $this->orderDetail->where(['id' => $detail['id']])->update([
                             'is_stock_decreased' => 1
                         ]);
                     }
@@ -186,7 +204,7 @@ class OrderController extends Controller
 
         $order->order_status = $request->order_status;
         $order->save();
-        $fcm_token = isset($order->customer) ? $order->customer->cm_firebase_token : null;
+        $fcmToken = isset($order->customer) ? $order->customer->cm_firebase_token : null;
         $value = Helpers::order_status_update_message($request->order_status);
         try {
             if ($value) {
@@ -197,22 +215,21 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'type' => 'general',
                 ];
-                if($fcm_token != null) {
-                    Helpers::send_push_notif_to_device($fcm_token, $data);
+                if($fcmToken != null) {
+                    Helpers::send_push_notif_to_device($fcmToken, $data);
                 }
             }
         } catch (\Exception $e) {
             Toastr::warning(\App\CentralLogics\translate('Push notification failed for Customer!'));
         }
 
-        //delivery man notification
         if (in_array($request->order_status, ['processing', 'out_for_delivery', 'returned', 'failed', 'canceled'])) {
 
-            $fcm_token = $order->delivery_man?->fcm_token ?? null;
+            $fcmToken = $order->delivery_man?->fcm_token ?? null;
             $value = translate('One of your order is '. $request->order_status);
 
             try {
-                if (!is_null($fcm_token)) {
+                if (!is_null($fcmToken)) {
                     $data = [
                         'title' => \App\CentralLogics\translate('Order'),
                         'description' => $value,
@@ -220,7 +237,7 @@ class OrderController extends Controller
                         'image' => '',
                         'type' => 'general',
                     ];
-                    Helpers::send_push_notif_to_device($fcm_token, $data);
+                    Helpers::send_push_notif_to_device($fcmToken, $data);
                 }
             } catch (\Exception $e) {
                 Toastr::warning(\App\CentralLogics\translate('Push notification failed for DeliveryMan!'));
@@ -232,26 +249,26 @@ class OrderController extends Controller
     }
 
     /**
-     * @param $order_id
-     * @param $delivery_man_id
+     * @param $orderId
+     * @param $deliveryManId
      * @return JsonResponse
      */
-    public function add_delivery_man($order_id, $delivery_man_id): JsonResponse
+    public function addDeliveryMan($orderId, $deliveryManId): JsonResponse
     {
-        if ($delivery_man_id == 0) {
+        if ($deliveryManId == 0) {
             return response()->json([], 401);
         }
-        $order = $this->order->where(['id' => $order_id, 'branch_id' => auth('branch')->id()])->first();
+        $order = $this->order->where(['id' => $orderId, 'branch_id' => auth('branch')->id()])->first();
 
         if($order->order_status == 'pending' || $order->order_status == 'confirmed' || $order->order_status == 'delivered' || $order->order_status == 'returned' || $order->order_status == 'failed' || $order->order_status == 'canceled') {
             return response()->json(['status' => false, 'message' => 'You can not add delivery man when the status is '. $order->order_status ], 200);
         }
 
-        $order->delivery_man_id = $delivery_man_id;
+        $order->delivery_man_id = $deliveryManId;
         $order->save();
 
-        $fcm_token = $order->delivery_man->fcm_token;
-        $customer_fcm_token = isset($order->customer) ? $order->customer->cm_firebase_token : null;
+        $fcmToken = $order->delivery_man->fcm_token;
+        $customerFcmToken = isset($order->customer) ? $order->customer->cm_firebase_token : null;
         $value = Helpers::order_status_update_message('del_assign');
 
         try {
@@ -263,12 +280,12 @@ class OrderController extends Controller
                     'image' => '',
                     'type' => 'general',
                 ];
-                Helpers::send_push_notif_to_device($fcm_token, $data);
+                Helpers::send_push_notif_to_device($fcmToken, $data);
                 $cs_notify_message = Helpers::order_status_update_message('customer_notify_message');
                 if($cs_notify_message) {
                     $data['description'] = $cs_notify_message;
-                    if($customer_fcm_token != null) {
-                        Helpers::send_push_notif_to_device($customer_fcm_token, $data);
+                    if($customerFcmToken != null) {
+                        Helpers::send_push_notif_to_device($customerFcmToken, $data);
                     }
                 }
             }
@@ -284,7 +301,7 @@ class OrderController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function payment_status(Request $request): RedirectResponse
+    public function paymentStatus(Request $request): RedirectResponse
     {
         $order = $this->order->where(['id' => $request->id, 'branch_id' => auth('branch')->id()])->first();
         if ($request->payment_status == 'paid' && $order['transaction_reference'] == null && $order['payment_method'] != 'cash_on_delivery') {
@@ -302,7 +319,7 @@ class OrderController extends Controller
      * @param $id
      * @return RedirectResponse
      */
-    public function update_shipping(Request $request, $id): RedirectResponse
+    public function updateShipping(Request $request, $id): RedirectResponse
     {
         $request->validate([
             'contact_person_name' => 'required',
@@ -334,7 +351,7 @@ class OrderController extends Controller
      * @param $id
      * @return Application|Factory|View
      */
-    public function generate_invoice($id): Factory|View|Application
+    public function generateInvoice($id): Factory|View|Application
     {
         $order = $this->order->where(['id' => $id, 'branch_id' => auth('branch')->id()])->first();
         return view('branch-views.order.invoice', compact('order'));
@@ -345,7 +362,7 @@ class OrderController extends Controller
      * @param $id
      * @return RedirectResponse
      */
-    public function add_payment_ref_code(Request $request, $id): RedirectResponse
+    public function addPaymentRefCode(Request $request, $id): RedirectResponse
     {
         $this->order->where(['id' => $id, 'branch_id' => auth('branch')->id()])->update([
             'transaction_reference' => $request['transaction_reference']
@@ -355,9 +372,9 @@ class OrderController extends Controller
         return back();
     }
 
-    public function export_orders(Request $request, $status): StreamedResponse|string
+    public function exportOrders(Request $request, $status): StreamedResponse|string
     {
-        $query_param = [];
+        $queryParams = [];
         $search = $request['search'];
         $start_date = $request['start_date'];
         $end_date = $request['end_date'];
@@ -385,7 +402,7 @@ class OrderController extends Controller
                         ->orWhere('payment_status', 'like', "%{$value}%");
                 }
             });
-            $query_param = ['search' => $request['search']];
+            $queryParams = ['search' => $request['search']];
         }
 
         $orders = $query->notPos()->orderBy('id', 'desc')->get();
@@ -395,7 +412,7 @@ class OrderController extends Controller
         foreach($orders as $order){
             $branch = $order->branch ? $order->branch->name : '';
             $customer = $order->customer ? $order->customer->f_name .' '. $order->customer->l_name : 'Customer Deleted';
-            $delivery_man = $order->delivery_man ? $order->delivery_man->f_name .' '. $order->delivery_man->l_name : '';
+            $deliveryMan = $order->delivery_man ? $order->delivery_man->f_name .' '. $order->delivery_man->l_name : '';
 
             $storage[] = [
                 'order_id' => $order['id'],
@@ -407,7 +424,7 @@ class OrderController extends Controller
                 'total_tax_amount'=>$order['total_tax_amount'],
                 'payment_method' => $order['payment_method'],
                 'transaction_reference' => $order['transaction_reference'],
-                'delivery_man' => $delivery_man,
+                'delivery_man' => $deliveryMan,
                 'delivery_charge' => $order['delivery_charge'],
                 'coupon_code' => $order['coupon_code'],
                 'order_type' => $order['order_type'],

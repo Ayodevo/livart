@@ -6,7 +6,6 @@ use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Model\DeliveryMan;
 use App\Model\DMReview;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,17 +14,19 @@ use Illuminate\Support\Facades\Validator;
 class DeliveryManReviewController extends Controller
 {
     public function __construct(
-        private DeliveryMan $delivery_man,
-        private DMReview $dm_review,
-    ){}
+        private DeliveryMan $deliveryMan,
+        private DMReview    $dmReview,
+    )
+    {
+    }
 
     /**
      * @param $id
      * @return JsonResponse
      */
-    public function get_reviews($id): JsonResponse
+    public function getReviews($id): JsonResponse
     {
-        $reviews = $this->dm_review->with(['customer', 'delivery_man'])->where(['delivery_man_id' => $id])->get();
+        $reviews = $this->dmReview->with(['customer', 'delivery_man'])->where(['delivery_man_id' => $id])->get();
 
         $storage = [];
         foreach ($reviews as $item) {
@@ -40,10 +41,10 @@ class DeliveryManReviewController extends Controller
      * @param $id
      * @return JsonResponse
      */
-    public function get_rating($id): JsonResponse
+    public function getRating($id): JsonResponse
     {
         try {
-            $totalReviews = $this->dm_review->where(['delivery_man_id' => $id])->get();
+            $totalReviews = $this->dmReview->where(['delivery_man_id' => $id])->get();
             $rating = 0;
             foreach ($totalReviews as $key => $review) {
                 $rating += $review->rating;
@@ -65,7 +66,7 @@ class DeliveryManReviewController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function submit_review(Request $request): JsonResponse
+    public function submitReview(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'delivery_man_id' => 'required',
@@ -74,7 +75,7 @@ class DeliveryManReviewController extends Controller
             'rating' => 'required|numeric|max:5',
         ]);
 
-        $dm = $this->delivery_man->find($request->delivery_man_id);
+        $dm = $this->deliveryMan->find($request->delivery_man_id);
         if (!isset($dm)) {
             $validator->errors()->add('delivery_man_id', 'There is no such delivery man!');
         }
@@ -83,17 +84,17 @@ class DeliveryManReviewController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $multi_review = $this->dm_review->where(['order_id' => $request->order_id, 'delivery_man_id' => $request->delivery_man_id])->first();
-        $review = $multi_review ?? $this->dm_review;
+        $multiReview = $this->dmReview->where(['order_id' => $request->order_id, 'delivery_man_id' => $request->delivery_man_id])->first();
+        $review = $multiReview ?? $this->dmReview;
 
-        $image_array = [];
+        $imageArray = [];
         if (!empty($request->file('attachment'))) {
             foreach ($request->file('attachment') as $image) {
                 if ($image != null) {
                     if (!Storage::disk('public')->exists('review')) {
                         Storage::disk('public')->makeDirectory('review');
                     }
-                    $image_array[] = Storage::disk('public')->put('review', $image);
+                    $imageArray[] = Storage::disk('public')->put('review', $image);
                 }
             }
         }
@@ -103,9 +104,9 @@ class DeliveryManReviewController extends Controller
         $review->order_id = $request->order_id;
         $review->comment = $request->comment;
         $review->rating = $request->rating;
-        $review->attachment = json_encode($image_array);
+        $review->attachment = json_encode($imageArray);
         $review->save();
 
-        return response()->json(['message' => 'successfully review submitted!'], 200);
+        return response()->json(['message' => translate('successfully review submitted')], 200);
     }
 }

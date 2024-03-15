@@ -50,13 +50,14 @@ class ProductLogic
 
     public static function search_products($name, $price_low, $price_high, $rating, $category_id, $sort_by, $limit = 10, $offset = 1)
     {
-        //dd(json_decode($category_id, true));
         $product_ids = [];
         if (isset($rating)){
             $product_ids = Product::active()
                 ->with('reviews')
-                ->whereHas('reviews', function ($q) use($rating){
-                    $q->havingRaw("AVG(reviews.rating) <= $rating");
+                ->whereHas('reviews', function ($q) use ($rating) {
+                    $q->select('product_id')
+                        ->groupBy('product_id')
+                        ->havingRaw("AVG(rating) <= ?", [$rating]);
                 })
                 ->pluck('id')
                 ->toArray();
@@ -76,7 +77,7 @@ class ProductLogic
         }
 
         $key = explode(' ', $name);
-        $paginator = Product::active()
+        $searched_products = Product::active()
             ->withCount(['wishlist'])
             ->with(['rating'])
             ->when($key, function ($query) use ($key) {
@@ -100,13 +101,19 @@ class ProductLogic
             })
             ->when(isset($rating), function ($query) use ($product_ids) {
                 $query->whereIn('id', $product_ids);
-            })
-            ->paginate($limit, ['*'], 'page', $offset);
+            });
+
+        $lowest_price = $price_low ?? $searched_products->min('price');
+        $highest_price = $price_high ?? $searched_products->max('price');
+
+        $paginator = $searched_products->paginate($limit, ['*'], 'page', $offset);
 
         return [
             'total_size' => $paginator->total(),
             'limit' => $limit,
             'offset' => $offset,
+            'lowest_price' => (int) $lowest_price ?? 0,
+            'highest_price' => (int) $highest_price ?? 0,
             'products' => $paginator->items()
         ];
     }

@@ -11,8 +11,8 @@
     <div class="content container-fluid">
         <div class="mb-3">
             <h2 class="text-capitalize mb-0 d-flex align-items-center gap-2">
-                <img width="20" src="{{asset('public/assets/admin/img/icons/product.png')}}" alt="">
-                {{\App\CentralLogics\translate('add_new_product')}}
+                <img width="20" src="{{asset('public/assets/admin/img/icons/product.png')}}" alt="{{ translate('product') }}">
+                {{translate('add_new_product')}}
             </h2>
         </div>
 
@@ -26,40 +26,40 @@
                     @php($language = $language->value ?? null)
                     @php($default_lang = 'bn')
                     @if($language)
-                    @php($default_lang = json_decode($language)[0])
-                    <ul class="nav nav-tabs mb-4 max-content">
+                        @php($default_lang = json_decode($language)[0])
+                        <ul class="nav nav-tabs mb-4 max-content">
 
+                            @foreach(json_decode($language) as $lang)
+                                <li class="nav-item">
+                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                </li>
+                            @endforeach
+
+                        </ul>
                         @foreach(json_decode($language) as $lang)
-                            <li class="nav-item">
-                                <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
-                            </li>
+                            <div class="card mb-3 card-body {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
+                                <div class="form-group">
+                                    <label class="input-label" for="{{$lang}}_name">{{translate('name')}} ({{strtoupper($lang)}})</label>
+                                    <input type="text" {{$lang == $default_lang? 'required':''}} name="name[]" id="{{$lang}}_name" class="form-control" placeholder="{{ translate('New Product') }}" oninvalid="document.getElementById('en-link').click()">
+                                </div>
+                                <input type="hidden" name="lang[]" value="{{$lang}}">
+                                <div class="form-group pt-4">
+                                    <label class="input-label"
+                                           for="{{$lang}}_description">{{translate('short')}} {{translate('description')}}  ({{strtoupper($lang)}})</label>
+                                    <div id="{{$lang}}_editor"></div>
+                                    <textarea name="description[]" style="display:none" id="{{$lang}}_hiddenArea"></textarea>
+                                </div>
+                            </div>
                         @endforeach
-
-                    </ul>
-                    @foreach(json_decode($language) as $lang)
-                        <div class="card mb-3 card-body {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
-                            <div class="form-group">
-                                <label class="input-label" for="{{$lang}}_name">{{\App\CentralLogics\translate('name')}} ({{strtoupper($lang)}})</label>
-                                <input type="text" {{$lang == $default_lang? 'required':''}} name="name[]" id="{{$lang}}_name" class="form-control" placeholder="{{ translate('New Product') }}" oninvalid="document.getElementById('en-link').click()">
-                            </div>
-                            <input type="hidden" name="lang[]" value="{{$lang}}">
-                            <div class="form-group pt-4">
-                                <label class="input-label"
-                                        for="{{$lang}}_description">{{\App\CentralLogics\translate('short')}} {{\App\CentralLogics\translate('description')}}  ({{strtoupper($lang)}})</label>
-                                <div id="{{$lang}}_editor"></div>
-                                <textarea name="description[]" style="display:none" id="{{$lang}}_hiddenArea"></textarea>
-                            </div>
-                        </div>
-                    @endforeach
                     @else
                         <div class="card p-4" id="{{$default_lang}}-form">
                             <div class="form-group">
-                                <label class="input-label">{{\App\CentralLogics\translate('name')}} (EN)</label>
+                                <label class="input-label">{{translate('name')}} (EN)</label>
                                 <input type="text" name="name[]" class="form-control" placeholder="{{ translate('new_product') }}" required>
                             </div>
                             <input type="hidden" name="lang[]" value="en">
                             <div class="form-group pt-4">
-                                <label class="input-label">{{\App\CentralLogics\translate('short')}} {{\App\CentralLogics\translate('description')}} (EN)</label>
+                                <label class="input-label">{{translate('short')}} {{translate('description')}} (EN)</label>
                                 <div id="editor"></div>
                                 <textarea name="description[]" style="display:none" id="hiddenArea"></textarea>
                             </div>
@@ -73,40 +73,40 @@
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlInput1">{{\App\CentralLogics\translate('price')}}</label>
+                                                   for="exampleFormControlInput1">{{translate('price')}}</label>
                                             <input type="number" min="1" max="100000000" step="0.01" value="1" name="price"
-                                                class="form-control"
-                                                placeholder="{{ translate('Ex : 100') }}" required>
+                                                   class="form-control"
+                                                   placeholder="{{ translate('Ex : 100') }}" required>
                                         </div>
                                     </div>
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlInput1">{{\App\CentralLogics\translate('unit')}}</label>
+                                                   for="exampleFormControlInput1">{{translate('unit')}}</label>
                                             <select name="unit" class="form-control js-select2-custom">
-                                                <option value="kg">{{\App\CentralLogics\translate('kg')}}</option>
-                                                <option value="gm">{{\App\CentralLogics\translate('gm')}}</option>
-                                                <option value="ltr">{{\App\CentralLogics\translate('ltr')}}</option>
-                                                <option value="pc">{{\App\CentralLogics\translate('pc')}}</option>
+                                                <option value="kg">{{translate('kg')}}</option>
+                                                <option value="gm">{{translate('gm')}}</option>
+                                                <option value="ltr">{{translate('ltr')}}</option>
+                                                <option value="pc">{{translate('pc')}}</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlInput1">{{\App\CentralLogics\translate('tax')}}</label>
+                                                   for="exampleFormControlInput1">{{translate('tax')}}</label>
                                             <input type="number" min="0" value="0" step="0.01" max="100000" name="tax"
-                                                class="form-control"
-                                                placeholder="{{ translate('Ex : 7') }}" required>
+                                                   class="form-control"
+                                                   placeholder="{{ translate('Ex : 7') }}" required>
                                         </div>
                                     </div>
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlInput1">{{\App\CentralLogics\translate('tax')}} {{\App\CentralLogics\translate('type')}}</label>
+                                                   for="exampleFormControlInput1">{{translate('tax')}} {{translate('type')}}</label>
                                             <select name="tax_type" class="form-control js-select2-custom">
-                                                <option value="percent">{{\App\CentralLogics\translate('percent')}}</option>
-                                                <option value="amount">{{\App\CentralLogics\translate('amount')}}</option>
+                                                <option value="percent">{{translate('percent')}}</option>
+                                                <option value="amount">{{translate('amount')}}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -114,38 +114,38 @@
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlInput1">{{\App\CentralLogics\translate('discount')}}</label>
+                                                   for="exampleFormControlInput1">{{translate('discount')}}</label>
                                             <input type="number" min="0" max="100000" value="0" step="0.01" name="discount" class="form-control"
-                                                placeholder="{{ translate('Ex : 100') }}" required>
+                                                   placeholder="{{ translate('Ex : 100') }}" required>
                                         </div>
                                     </div>
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlInput1">{{\App\CentralLogics\translate('discount')}} {{\App\CentralLogics\translate('type')}}</label>
+                                                   for="exampleFormControlInput1">{{translate('discount')}} {{translate('type')}}</label>
                                             <select name="discount_type" class="form-control js-select2-custom">
-                                                <option value="percent">{{\App\CentralLogics\translate('percent')}}</option>
-                                                <option value="amount">{{\App\CentralLogics\translate('amount')}}</option>
+                                                <option value="percent">{{translate('percent')}}</option>
+                                                <option value="amount">{{translate('amount')}}</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlInput1">{{\App\CentralLogics\translate('stock')}}</label>
+                                                   for="exampleFormControlInput1">{{translate('stock')}}</label>
                                             <input type="number" min="0" max="100000000" value="0" name="total_stock" class="form-control"
-                                                placeholder="{{ translate('Ex : 100') }}">
+                                                   placeholder="{{ translate('Ex : 100') }}">
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlSelect1">{{\App\CentralLogics\translate('category')}}<span
+                                                   for="exampleFormControlSelect1">{{translate('category')}}<span
                                                     class="input-label-secondary">*</span></label>
                                             <select name="category_id" class="form-control js-select2-custom"
                                                     onchange="getRequest('{{url('/')}}/admin/product/get-categories?parent_id='+this.value,'sub-categories')">
-                                                <option value="">---{{\App\CentralLogics\translate('select category')}}---</option>
+                                                <option value="">---{{translate('select category')}}---</option>
                                                 @foreach($categories as $category)
                                                     <option value="{{$category['id']}}">{{$category['name']}}</option>
                                                 @endforeach
@@ -155,7 +155,7 @@
                                     <div class="col-lg-4 col-sm-6">
                                         <div class="form-group">
                                             <label class="input-label"
-                                                for="exampleFormControlSelect1">{{\App\CentralLogics\translate('sub_category')}}<span
+                                                   for="exampleFormControlSelect1">{{translate('sub_category')}}<span
                                                     class="input-label-secondary"></span></label>
                                             <select name="sub_category_id" id="sub-categories"
                                                     class="form-control js-select2-custom"
@@ -164,20 +164,10 @@
                                             </select>
                                         </div>
                                     </div>
-                                    {{--<div class="col-md-4 col-6">
-                                        <div class="form-group">
-                                            <label class="input-label" for="exampleFormControlSelect1">Sub Sub Category<span
-                                                    class="input-label-secondary"></span></label>
-                                            <select name="sub_sub_category_id" id="sub-sub-categories"
-                                                    class="form-control js-select2-custom">
-
-                                            </select>
-                                        </div>
-                                    </div>--}}
                                     <div class="col-12">
                                         <div class="form-group">
                                             <label class="input-label">
-                                                {{\App\CentralLogics\translate('select_attributes')}}
+                                                {{translate('select_attributes')}}
                                                 <span class="input-label-secondary"></span>
                                             </label>
                                             <select name="attribute_id[]" id="choice_attributes"
@@ -190,16 +180,18 @@
                                         </div>
                                         <div class="customer_choice_options mb-4" id="customer_choice_options"></div>
                                         <div class="variant_combination mb-4" id="variant_combination"></div>
-                                        <div class="">
+                                        <div>
                                             <div class="mb-2">
-                                                <label class="text-capitalize">{{\App\CentralLogics\translate('product_image')}}</label>
-                                                <small class="text-danger"> * ( {{\App\CentralLogics\translate('ratio')}} 1:1 )</small>
+                                                <label class="text-capitalize">{{translate('product_image')}}</label>
+                                                <small class="text-danger"> * ( {{translate('ratio')}} 1:1 )</small>
                                             </div>
+                                            
                                             <div class="row" id="coba"></div>
                                         </div>
+                                        <div>
                                         <div class="d-flex justify-content-end gap-3">
-                                            <button type="reset" class="btn btn-secondary">{{\App\CentralLogics\translate('reset')}}</button>
-                                            <button type="submit" class="btn btn-primary">{{\App\CentralLogics\translate('submit')}}</button>
+                                            <button type="reset" class="btn btn-secondary">{{translate('reset')}}</button>
+                                            <button type="submit" class="btn btn-primary">{{translate('submit')}}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -213,13 +205,14 @@
 
 @endsection
 
-@push('script')
-
-@endpush
-
 @push('script_2')
     <script src="{{asset('public/assets/admin/js/spartan-multi-image-picker.js')}}"></script>
+    <script src="{{asset('public/assets/admin')}}/js/tags-input.min.js"></script>
+    <script src="{{ asset('public/assets/admin/js/quill-editor.js') }}"></script>
+
     <script>
+        "use strict";
+
         $(".lang_link").click(function(e){
             e.preventDefault();
             $(".lang_link").removeClass('active');
@@ -239,8 +232,7 @@
                 $("#from_part_2").addClass('d-none');
             }
         })
-    </script>
-    <script type="text/javascript">
+
         $(function () {
             $("#coba").spartanMultiImagePicker({
                 fieldName: 'images[]',
@@ -276,9 +268,7 @@
                 }
             });
         });
-    </script>
 
-    <script>
         function getRequest(route, id) {
             $.get({
                 url: route,
@@ -288,19 +278,13 @@
                 },
             });
         }
-    </script>
 
-    <script>
         $(document).on('ready', function () {
             $('.js-select2-custom').each(function () {
                 var select2 = $.HSCore.components.HSSelect2.init($(this));
             });
         });
-    </script>
 
-    <script src="{{asset('public/assets/admin')}}/js/tags-input.min.js"></script>
-
-    <script>
         $('#choice_attributes').on('change', function () {
             $('#customer_choice_options').html(null);
             $.each($("#choice_attributes option:selected"), function () {
@@ -335,11 +319,7 @@
                 }
             });
         }
-    </script>
 
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-
-    <script>
         @if($language)
         @foreach(json_decode($language) as $lang)
         var en_quill = new Quill('#{{$lang}}_editor', {
@@ -394,9 +374,7 @@
                 }
             });
         });
-    </script>
 
-    <script>
         function update_qty() {
             var total_qty = 0;
             var qty_elements = $('input[name^="stock_"]');
@@ -408,7 +386,6 @@
             {
                 $('input[name="total_stock"]').attr("readonly", true);
                 $('input[name="total_stock"]').val(total_qty);
-                console.log(total_qty)
             }
             else{
                 $('input[name="total_stock"]').attr("readonly", false);
@@ -416,5 +393,3 @@
         }
     </script>
 @endpush
-
-

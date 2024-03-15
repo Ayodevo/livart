@@ -14,20 +14,22 @@ class WishlistController extends Controller
 {
     public function __construct(
         private Wishlist $wishlist
-    ){}
+    )
+    {
+    }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function add_to_wishlist(Request $request): JsonResponse
+    public function addToWishlist(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'product_ids' => 'required|array',
         ],
             [
-                'product_ids.required' => 'product_ids ' .translate('is required'),
-                'product_ids.array' => 'product_ids ' .translate('must be an array')
+                'product_ids.required' => 'product_ids ' . translate('is required'),
+                'product_ids.array' => 'product_ids ' . translate('must be an array')
             ]
         );
 
@@ -35,7 +37,7 @@ class WishlistController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $favorite_ids = [];
+        $favoriteIds = [];
         foreach ($request->product_ids as $id) {
             $values = [
                 'user_id' => $request->user()->id,
@@ -43,14 +45,12 @@ class WishlistController extends Controller
                 'created_at' => now(),
                 'updated_at' => now()
             ];
-            $favorite_ids[] = $values;
+            $favoriteIds[] = $values;
             $this->wishlist->updateOrInsert(
                 ['user_id' => $values['user_id'], 'product_id' => $values['product_id']],
                 $values
             );
         }
-        //$this->wishlist->insert($favorite_ids);
-
         return response()->json(['message' => translate('Item added to wishlist!')], 200);
     }
 
@@ -59,14 +59,14 @@ class WishlistController extends Controller
      * @return JsonResponse
      */
 
-    public function remove_from_wishlist(Request $request): JsonResponse
+    public function removeFromWishlist(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'product_ids' => 'required|array',
         ],
             [
-                'product_ids.required' => 'product_ids ' .translate('is required'),
-                'product_ids.array' => 'product_ids ' .translate('must be an array')
+                'product_ids.required' => 'product_ids ' . translate('is required'),
+                'product_ids.array' => 'product_ids ' . translate('must be an array')
             ]
         );
 
@@ -84,7 +84,7 @@ class WishlistController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function wish_list(Request $request): JsonResponse
+    public function wishlist(Request $request): JsonResponse
     {
         $products = ProductLogic::get_favorite_products($request['limit'], $request['offset'], $request->user()->id);
         return response()->json($products, 200);
